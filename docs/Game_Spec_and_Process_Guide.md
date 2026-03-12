@@ -1,393 +1,285 @@
 ﻿# Project Chill
 
-## 1. Vision
+## 1. Vision (Reference-Driven)
 
-Project Chill is a small, cozy Godot 4 demo about spending quiet time with an AI companion in a warm bedroom-like space.
+The demo style follows your reference image: a warm room scene with the female character always visible, viewed from a fixed camera.
 
-The feeling we want:
+This is a visual-novel style companion experience, not a movement game.
 
-- calm
-- safe
-- emotionally warm
-- low pressure
-- easy to understand
+Core interaction style:
 
-The player should be able to enter the room, move around a little, sit down, interact with the companion, and have short conversations that feel personal because the companion remembers a few recent details.
+- no player avatar
+- no WASD movement
+- immediate entry into character scene
+- interaction by clicking character hotspots or dialogue UI
+- player replies by preset choices or free text (AI mode)
 
-This is a demo, not a full commercial game. The goal is to build a polished vertical slice that proves the mood, interaction loop, and technical direction.
+## 2. Product Goal
 
-## 2. Demo Goal
+Build a polished vertical slice where the player can:
 
-Build a first playable demo with:
+- open the app and directly see the character in her room
+- start conversation by clicking character or textbox
+- choose scripted options most of the time
+- switch to AI mode for free chat when needed
+- hear voiced character responses
+- feel remembered across sessions by lightweight memory
 
-- one main room
-- one companion character
-- simple player movement
-- one or two interaction points
-- a dialogue UI
-- lightweight memory of recent player topics
-- save/load for a small amount of state
+## 3. Experience Loop
 
-If the demo feels soothing and the companion feels responsive, it is successful.
+1. Game starts into `main_scene` with fixed composition.
+2. Character idles with subtle animation and ambient audio.
+3. Player clicks character or dialogue area to open interaction.
+4. Dialogue system offers:
+   - scripted branch choices (default)
+   - optional AI free-text input
+5. Character responds with text + voice.
+6. Memory system stores selected player facts and follow-up hooks.
+7. On future login, system can surface context-aware lines (example: "How was school?").
 
-## 3. Core Player Experience
-
-The intended loop is:
-
-1. The player enters a cozy room.
-2. The player walks to the companion or an interactable object.
-3. The player presses an interact button.
-4. The game opens a dialogue panel or short contextual interaction.
-5. The companion replies with warmth and remembers a few recent things.
-6. The player stays, explores, or ends the session feeling relaxed.
-
-This should feel more like a comforting digital space than a challenge-based game.
-
-## 4. Design Pillars
-
-Use these pillars to guide decisions. If a feature does not support at least one of them, it can wait.
-
-### Emotional warmth
-
-The companion should feel kind, grounded, and gentle.
-
-### Simplicity
-
-The first demo should stay small enough to finish.
-
-### Readability
-
-UI, controls, and scenes should be understandable to a beginner developer and easy for a player to use.
-
-### Stability
-
-Prefer simple, reliable systems over ambitious but fragile ones.
-
-## 5. Scope For Version 0.1
+## 4. Scope (v0.1)
 
 ### In scope
 
-- single-room environment
-- player movement
-- camera setup
-- one companion with idle animation
-- interaction prompt
-- dialogue panel
-- typed player input or button-based prompts
-- memory list with the last few key topics
-- local save data in JSON or Godot save format
-- placeholder art and placeholder audio if needed
+- fixed camera scene with character-centric composition
+- click interactions (character + UI controls)
+- dialogue panel with both:
+  - preset response buttons
+  - free-text chat input in AI mode
+- hybrid dialogue router (scripted first, AI fallback/augment)
+- memory extraction + persistence
+- TTS voice playback for character lines
+- session restore and login greeting logic
 
-### Out of scope for now
+### Out of scope for v0.1
 
-- online multiplayer
-- complex quests
-- large branching narrative system
-- procedural world generation
-- full voice acting pipeline
-- mobile export optimization
-- advanced inventory systems
-- large-scale AI autonomy
+- full open-world navigation
+- complex inventory and quest systems
+- full emotional simulation engine
+- multiplayer
+- advanced real-time lip sync
 
-## 6. Suggested First Demo Features
+## 5. Scene and UI Direction
 
-### Room scene
+Use the reference image as the visual target:
 
-One room is enough. It can include:
+- warm sunset color palette
+- character as the visual anchor at center-right
+- decorative room props for cozy mood
+- utility buttons as subtle overlays
+- dialogue panel on lower third
 
-- desk
-- chair or bed
-- window
-- lamp
-- companion position
+Recommended first layout layers:
 
-### Player controller
+1. background layer (room image/video)
+2. character layer (sprite, Live2D, or animated image)
+3. interaction hotspots (character/head/desk)
+4. dialogue and choice UI
+5. utility HUD (settings, log, save/load)
 
-Start with simple movement:
+## 6. Core Systems
 
-- move with keyboard
-- optional run toggle later
-- face the interaction target
+### A. Interaction System (click-first)
 
-For a beginner-friendly first pass, use a top-down or angled 2D/2.5D presentation instead of full free-camera 3D.
+- click character -> default greeting/action
+- click hotspot -> contextual line
+- click textbox/focus input -> submit text
 
-### Companion interaction
+### B. Dialogue System (hybrid)
 
-The first interaction can support:
+- default path: scripted nodes and choices
+- AI mode path: generate response using persona + memory context
+- fallback rules when AI unavailable: use scripted safe lines
 
-- approach companion
-- press `E` or an input action like `interact`
-- open dialogue panel
-- send a short player message
-- display companion reply
+### C. Memory System (lightweight but useful)
 
-### Memory system
+Use two memory tiers:
 
-Keep it small and predictable:
+- short-term memory: last 20 message highlights
+- pinned memory: durable facts (school, exam, favorite song, etc.)
 
-- store the last 10 important player topics or mood words
-- include those topics in future prompt context
-- save only lightweight text data
+Store metadata:
 
-### Save system
+- `fact`
+- `confidence`
+- `source_message`
+- `last_seen_at`
+- `follow_up_tag`
 
-The demo only needs to save:
+### D. Voice System
 
-- player position
-- recent memory list
-- simple session flags
+- scripted lines: pre-generate and cache voice audio
+- AI lines: request TTS at runtime, then cache by text hash
+- playback through `AudioStreamPlayer`
+- subtitle/text always shown for accessibility
 
-## 7. Technical Direction
+### E. Save/Profile System
 
-### Engine
+Persist locally (JSON for prototype):
 
-- Godot 4.x
-- GDScript
+- conversation state
+- pinned memories
+- recent summaries
+- last logout intent
+- last login timestamp
 
-### Assistant
+## 7. Best-Practice Architecture For Your Use Case
 
-- Codex
+This architecture fits your goal of mostly scripted narrative with selective AI:
 
-Codex will help with:
+1. `dialogue_router.gd`
+   - decides scripted vs AI path
+2. `scripted_dialogue_manager.gd`
+   - handles authored branches and choices
+3. `ai_dialogue_service.gd`
+   - calls model API when AI mode is active
+4. `memory_manager.gd`
+   - extracts and stores memory entries
+5. `session_manager.gd`
+   - login/logout hooks and save/load
+6. `voice_manager.gd`
+   - audio generation/caching/playback
+7. `ui_dialogue_panel.gd`
+   - messages, choices, text input, mode toggle
 
-- planning
-- writing GDScript
-- reviewing bugs
-- refactoring
-- proposing scene structure
-- documenting decisions
+## 8. How To Accomplish "Remember School Tomorrow" Reliably
 
-The Godot editor will still be used by you for:
+Do not rely on raw model memory alone. Use explicit game-side memory.
 
-- creating scenes
-- placing nodes
-- connecting some signals
-- importing assets
-- testing the game feel
+Implementation pattern:
 
-## 8. Human and Codex Responsibilities
+1. Player says: "I need to go to school tomorrow."
+2. Memory extractor stores fact:
+   - `topic=school`
+   - `intent=upcoming_event`
+   - `time_hint=tomorrow`
+   - `follow_up_tag=ask_about_school`
+3. On next login, `session_manager` checks pending follow-up tags.
+4. If present, injects a scripted greeting candidate:
+   - "Welcome back. How was school today?"
+5. Dialogue router prioritizes this line before normal chat.
 
-### You
+This gives deterministic continuity even if the AI provider changes.
 
-- decide the mood and creative direction
-- choose or create art, music, and writing tone
-- test scenes in Godot
-- tell Codex what worked, what felt wrong, and what you want next
+## 9. AI Model Strategy
 
-### Codex
+You can absolutely use a pre-trained model with fixed personality/story framing.
 
-- write and explain code
-- propose file structures
-- help debug errors
-- turn ideas into concrete tasks
-- keep docs updated
-- suggest safe next steps for a beginner
+Recommended pattern:
 
-## 9. Working Style With Codex
+- persona and lore live in your own system prompt/profile file
+- scripted dialogue remains the main narrative backbone
+- AI is used for:
+  - free chat moments
+  - natural transitions
+  - paraphrasing contextual replies
 
-When asking for help, try to give:
+Keep AI bounded:
 
-- the goal
-- the file name or scene name
-- the error message if there is one
-- what you expected to happen
-- what actually happened
+- include short memory summary, not full chat history
+- enforce style constraints (tone, max length, no lore breaks)
+- keep a safety fallback line if API fails
 
-Good prompt examples:
-
-- "Create a Godot 4 player controller in GDScript for a CharacterBody2D with WASD movement."
-- "Help me build a dialogue panel scene for Godot 4 and explain each node."
-- "Here is my error from Godot. Please fix the script and explain why it happened."
-- "Suggest the next smallest step for this prototype."
-
-## 10. Recommended Folder Structure
-
-Use a structure like this as the project grows:
+## 10. Folder Structure (VN-Oriented)
 
 ```text
 project_root/
   assets/
+    art/
+      backgrounds/
+      character/
+      ui/
     audio/
-    fonts/
-    sprites/
-    backgrounds/
+      bgm/
+      sfx/
+      voice_cache/
   scenes/
     main/
-    player/
-    companion/
+      main_scene.tscn
     ui/
-    props/
+      dialogue_panel.tscn
+      choice_button.tscn
+    character/
+      companion_view.tscn
   scripts/
-    player/
+    core/
+      dialogue_router.gd
+      session_manager.gd
     dialogue/
-    systems/
+      scripted_dialogue_manager.gd
+      ai_dialogue_service.gd
+      memory_manager.gd
+    audio/
+      voice_manager.gd
     ui/
+      ui_dialogue_panel.gd
   data/
     dialogue/
+      scripted_nodes.json
+      persona_profile.json
     saves/
+      player_profile.json
   docs/
     Game_Spec_and_Process_Guide.md
     Development_Summary.md
-    Design_Log.md
+    AI_Dialogue_Infrastructure.md
 ```
 
-This is only a guide. We can adjust it once real scenes and scripts exist.
+## 11. Development Phases
 
-## 11. Coding Conventions
+### Phase 1: Visual Novel Foundation
 
-Use these defaults unless the project later needs something different:
+- fixed main scene
+- character sprite/view and idle presentation
+- dialogue panel and choice buttons
+- click-to-talk interaction
 
-- Godot 4 syntax only
-- `snake_case` for variables and functions
-- `PascalCase` for class names
-- clear node names in scenes
-- short scripts with one responsibility each
-- exported variables for values you may tweak in the editor
-- comments only where they help explain non-obvious logic
+### Phase 2: Scripted Dialogue Backbone
 
-## 12. Architecture For The First Prototype
+- branch nodes
+- choice consequences
+- save/load dialogue progress
 
-Keep the first version modular but simple.
+### Phase 3: AI Mode + Memory
 
-### Suggested systems
+- free-text input mode
+- model call abstraction
+- memory extraction and storage
+- follow-up trigger on next login
 
-- `player_controller.gd`
-- `interaction_component.gd`
-- `dialogue_manager.gd`
-- `memory_system.gd`
-- `save_manager.gd`
-- `dialogue_panel.gd`
+### Phase 4: Voice
 
-### Suggested flow
-
-1. Main scene loads room, player, companion, and UI.
-2. Player enters interaction range.
-3. Interaction prompt appears.
-4. Player presses interact.
-5. Dialogue UI opens.
-6. Dialogue manager sends player text to local logic or API layer.
-7. Memory system updates tracked topics.
-8. Response appears in UI.
-9. Save manager can persist memory and simple state.
-
-## 13. AI Dialogue Strategy
-
-Start with a local placeholder dialogue system before using any online AI API.
-
-Why:
-
-- easier to debug
-- cheaper
-- faster to build
-- no networking problems while learning the basics
-
-Recommended progression:
-
-1. Stage A: fake responses from a local list
-2. Stage B: add memory tracking
-3. Stage C: add optional API integration
-4. Stage D: polish tone and persistence
-
-This lets us prove the game loop before adding complexity.
-
-## 14. Development Phases
-
-### Phase 1: Foundation
-
-- create docs
-- create folder structure
-- create main scene
-- create player movement
-- test camera and room scale
-
-### Phase 2: Interaction
-
-- create companion scene
-- add interaction zone
-- add input action for interaction
-- show simple prompt
-
-### Phase 3: Dialogue
-
-- create dialogue panel
-- send simple player input
-- return placeholder companion replies
-
-### Phase 4: Memory
-
-- track recent topics
-- show memory affecting future responses
-- save and load memory
+- voice manager
+- pre-generated voice for scripted lines
+- runtime TTS + cache for AI lines
 
 ### Phase 5: Polish
 
-- improve visuals
-- tune pacing
-- improve transitions and audio
-- prepare demo build
+- transitions
+- button feedback and animation
+- typing effect and audio timing
+- mood consistency pass
 
-## 15. Beginner-Friendly Development Routine
+## 12. Immediate Next Build Steps
 
-For each work session, do only one small, testable task.
+1. Create VN-oriented folders and scene stubs.
+2. Build `main_scene.tscn` with fixed character composition.
+3. Build `dialogue_panel.tscn` with:
+   - dialogue text
+   - choice container
+   - text input
+   - `AI Mode` toggle
+4. Implement scripted dialogue only (no API yet).
+5. Add local memory save/load.
+6. Add AI mode using stub responses first.
+7. Integrate real model API and voice after flow is stable.
 
-Good session examples:
+## 13. Definition Of Success (First Demo)
 
-- create the player scene
-- make movement feel correct
-- add the companion node
-- build the dialogue panel layout
-- save one variable to disk
+The demo is successful when:
 
-Avoid trying to solve everything in one session.
-
-## 16. Testing Checklist
-
-Whenever we add a feature, test:
-
-- does the scene run without errors
-- does the player understand what to do
-- does the feature work twice in a row
-- does saving and loading keep the expected data
-- does the game still feel calm and uncluttered
-
-## 17. Risks To Manage Early
-
-### Scope creep
-
-It is easy to add too many systems too early. Keep the first demo small.
-
-### AI complexity
-
-Real AI integration can wait until the non-AI version feels good.
-
-### Asset overload
-
-Placeholder assets are fine at the start.
-
-### Beginner overwhelm
-
-We should always pick the next smallest meaningful step.
-
-## 18. Definition Of Success For The First Demo
-
-The first demo is successful if:
-
-- the player can move around a cozy room
-- the player can interact with the companion
-- the companion can respond in a believable way
-- the game remembers a few recent player details
-- the whole flow works reliably from launch to quit
-
-## 19. Immediate Next Steps
-
-Start here, in this order:
-
-1. Create the project folders listed above.
-2. Create a `main` scene for the room.
-3. Create a simple `player` scene with movement.
-4. Add a placeholder companion scene.
-5. Add an `interact` input action in Godot.
-6. Build a basic dialogue panel with placeholder text.
-7. Test the loop: move -> interact -> open panel -> close panel.
-
-Once that works, we can start writing the actual scripts together.
+- user can immediately enter a cozy character scene
+- user can converse using choices or AI chat input
+- character voice plays with responses
+- at least one remembered fact is used correctly in a later session
+- experience feels calm, intimate, and stable

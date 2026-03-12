@@ -1,0 +1,161 @@
+[gd_scene format=3 uid="uid://veumbjakewke"]
+
+[ext_resource type="Texture2D" uid="uid://c5csdgvwscoc1" path="res://assets/art/character/Character_temp.png" id="1_kb4hv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hotspot"]
+bg_color = Color(1, 0.741176, 0.584314, 0.14)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.85098, 0.733333, 0.45)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nameplate"]
+bg_color = Color(0.0862745, 0.0627451, 0.0862745, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.792157, 0.623529, 0.4)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[node name="CompanionView" type="Control" unique_id=428014037]
+custom_minimum_size = Vector2(460, 620)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PortraitGlow" type="ColorRect" parent="." unique_id=832786376]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.48
+anchor_right = 0.5
+anchor_bottom = 0.48
+offset_left = -140.0
+offset_top = -180.0
+offset_right = 140.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.682353, 0.482353, 0.18)
+
+[node name="Portrait" type="TextureRect" parent="." unique_id=552820984]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -375.0
+offset_top = -250.0
+offset_right = 375.0
+offset_bottom = 500.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_kb4hv")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="CharacterClickArea" type="Button" parent="." unique_id=1952336863]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -185.0
+offset_top = -250.0
+offset_right = 185.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+flat = true
+
+[node name="Hotspots" type="Control" parent="." unique_id=651648753]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HeadHotspot" type="Button" parent="Hotspots" unique_id=1374441376]
+custom_minimum_size = Vector2(92, 92)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.58
+anchor_top = 0.28
+anchor_right = 0.58
+anchor_bottom = 0.28
+offset_left = -46.0
+offset_top = -46.0
+offset_right = 46.0
+offset_bottom = 46.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_hotspot")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hotspot")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hotspot")
+disabled = true
+flat = true
+
+[node name="DeskHotspot" type="Button" parent="Hotspots" unique_id=1090464130]
+custom_minimum_size = Vector2(118, 118)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.36
+anchor_top = 0.76
+anchor_right = 0.36
+anchor_bottom = 0.76
+offset_left = -59.0
+offset_top = -59.0
+offset_right = 59.0
+offset_bottom = 59.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_hotspot")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hotspot")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hotspot")
+disabled = true
+flat = true
+
+[node name="Nameplate" type="PanelContainer" parent="." unique_id=774903413]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -52.0
+offset_right = 120.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_nameplate")
+
+[node name="NameMargin" type="MarginContainer" parent="Nameplate" unique_id=1499157439]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="CharacterLabel" type="Label" parent="Nameplate/NameMargin" unique_id=1137344606]
+layout_mode = 2
+text = "Yukino"
+horizontal_alignment = 1
+

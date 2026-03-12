@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cw6bjkhrlw84q"
+path="res://.godot/imported/Persona 5 chill mix - GVirusInfected.mp3-360b19f5693a3730b7f7884b5cf37ac6.mp3str"
+
+[deps]
+
+source_file="res://assets/bgm/Persona 5 chill mix - GVirusInfected.mp3"
+dest_files=["res://.godot/imported/Persona 5 chill mix - GVirusInfected.mp3-360b19f5693a3730b7f7884b5cf37ac6.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

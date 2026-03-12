@@ -1,74 +1,65 @@
-﻿# Development Summary
+﻿# Development Summary (Visual Novel Direction)
 
-## What This Project Is
+## Finalized Direction
 
-Project Chill is a cozy Godot 4 demo focused on a quiet room, a comforting companion, and simple conversation with lightweight memory.
+Project Chill will be a visual-novel style companion demo inspired by your reference image.
 
-## What We Are Building First
+Important constraints:
 
-The first playable version should include:
+- no player avatar
+- no WASD movement
+- fixed camera toward the female character
+- click/tap and dialogue UI driven interaction
 
-- one room
-- one controllable player
-- one companion character
-- one interaction button
-- one dialogue panel
-- simple remembered topics
+## Core Interaction Modes
 
-## How We Will Build It
+1. Scripted mode (default): player selects predefined response options.
+2. AI mode (optional): player types in a chatbox and gets generated responses.
 
-We will build in small layers:
+## Voice Requirement
 
-1. Room and player movement
-2. Companion interaction
-3. Dialogue UI
-4. Memory system
-5. Save/load
-6. Polish
+Character responses should include voice output:
 
-## How Codex Fits In
+- scripted lines can use pre-generated voice assets
+- AI lines can use runtime TTS and cached audio
 
-Codex will help by:
+## Memory Requirement
 
-- writing GDScript
-- explaining each step
-- fixing errors
-- suggesting structure
-- keeping the plan organized
-
-## How You Should Work
-
-Each session:
-
-1. Pick one small feature.
-2. Build it.
-3. Test it in Godot.
-4. Tell Codex what happened.
-5. Move to the next smallest step.
-
-## Best Starting Task
-
-The best first implementation task is:
-
-Create a simple main scene and a player scene with movement.
-
-That gives us a playable base for everything else.
-
-## Beginner Rule
-
-If a task feels confusing, reduce it until it fits one sentence.
+Most dialogue remains scripted, but game should remember recent player facts for continuity.
 
 Example:
 
-- too big: "build the AI companion system"
-- better: "make the interact prompt appear when the player is near the companion"
+- player says they are going to school
+- memory stores `school` follow-up tag
+- on next login, character can ask how school went
 
-## Current Recommendation
+## Recommended Technical Pattern
 
-Next, we should create:
+Use hybrid routing:
 
-- `scenes/main/main.tscn`
-- `scenes/player/player.tscn`
-- `scripts/player/player_controller.gd`
+- scripted dialogue engine is primary
+- AI generation is secondary and bounded by persona rules
+- memory is owned by game-side data, not model-side history
 
-After that, I can write the first movement script and guide you through wiring it up in Godot.
+## First Build Sprint
+
+1. Build fixed `main_scene.tscn` with character and background.
+2. Build `dialogue_panel.tscn` with text, choices, and chat input.
+3. Implement `scripted_dialogue_manager.gd`.
+4. Implement `memory_manager.gd` with JSON persistence.
+5. Implement `dialogue_router.gd` to switch scripted vs AI mode.
+6. Add `voice_manager.gd` and play voice with each response.
+
+## What To Do Next
+
+Next implementation target:
+
+- create scene stubs
+- create script stubs
+- wire a working scripted conversation loop first
+
+After this baseline works, add AI API and runtime TTS.
+
+## Audio Import Note
+
+For reliable BGM seek/progress in Godot, prefer OGG. If you import an MP3, open it in the Import dock, set Format to Ogg Vorbis, and reimport.

@@ -1,0 +1,17 @@
+Asset: room_background.png
+Purpose: Background-only scene art for the fixed main visual-novel camera.
+Recommended size: 1920x1080
+Format: PNG
+
+Prompt:
+Anime-inspired cozy bedroom studio at sunset, empty black-and-red gaming chair at a wooden desk, widescreen monitor glowing softly on the left edge, desk lamp turned on, keyboard, coffee mug, stacked books, sticky notes, small potted plant, cassette radio on the desk, large floor-to-ceiling windows with warm orange-pink sunset sky, bookshelf and bed in the back right, soft cinematic lighting, calm intimate mood, painterly stylized shading, clean shapes, gentle atmospheric haze, visual novel background art, fixed camera composition, center-right space reserved for a seated girl character overlay, no person in the scene, no hands, no body, no silhouette, no character reflection, highly cohesive color palette, warm orange, coral, amber, muted browns, polished anime environment illustration.
+
+Composition notes:
+- Keep the chair fully visible on the right-center.
+- Keep the left side desk and monitor readable but not dominant.
+- Leave clear open space around the chair for a separate character sprite overlay.
+- Avoid important props behind where the character torso and head will sit.
+- Match a cozy sunset palette so dialogue UI can sit on the lower third.
+
+Negative prompt:
+person, girl, woman, human, face, hands, extra limbs, duplicate chair, cluttered composition, fisheye lens, extreme perspective, photorealistic skin, 3d render look, messy linework, blurry details, text, watermark, logo, UI, subtitles, bed in foreground, centered chair blocking the scene, harsh neon lighting

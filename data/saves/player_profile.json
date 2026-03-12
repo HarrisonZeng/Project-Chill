@@ -1,0 +1,19 @@
+{
+	"last_login_at": "2026-03-12T22:40:40",
+	"last_node_id": "greeting",
+	"memories": [
+		{
+			"confidence": 0.9,
+			"expires_in_days": 7.0,
+			"fact": "User mentioned school.",
+			"follow_up_tag": "ask_about_school",
+			"id": "mem_20260312_203000",
+			"last_seen_at": "2026-03-12T20:30:00+08:00",
+			"source_message": "I have school tomorrow.",
+			"topic": "school",
+			"type": "plan"
+		}
+	],
+	"pending_follow_ups": [],
+	"recent_summary": "User mentioned school and exam preparation."
+}

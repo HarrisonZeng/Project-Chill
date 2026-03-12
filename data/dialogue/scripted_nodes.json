@@ -1,0 +1,49 @@
+{
+  "fallback_id": "idle",
+  "nodes": [
+    {
+      "id": "idle",
+      "line": "Click on the character to start talking.",
+      "choices": []
+    },
+    {
+      "id": "greeting",
+      "line": "Hey, welcome back. Want to chill for a bit?",
+      "choices": [
+        { "text": "How are you today?", "next": "mood" },
+        { "text": "Let us plan my next session.", "next": "plan" },
+        { "text": "I need to go offline soon.", "next": "goodbye" }
+      ]
+    },
+    {
+      "id": "mood",
+      "line": "Pretty good. The sunset vibe helps. How is your day going?",
+      "choices": [
+        { "text": "Good day.", "next": "greeting" },
+        { "text": "Busy day.", "next": "plan" }
+      ]
+    },
+    {
+      "id": "plan",
+      "line": "You can use the timer and todo panel on the right. Want a 25-minute focus block?",
+      "choices": [
+        { "text": "Yes, start focus.", "next": "focus_tip" },
+        { "text": "Maybe later.", "next": "greeting" }
+      ]
+    },
+    {
+      "id": "focus_tip",
+      "line": "Press Start Focus on the right and I will keep you company.",
+      "choices": [
+        { "text": "Back", "next": "greeting" }
+      ]
+    },
+    {
+      "id": "goodbye",
+      "line": "Before you go, tell me one thing about tomorrow in AI mode so I can follow up later.",
+      "choices": [
+        { "text": "Back", "next": "greeting" }
+      ]
+    }
+  ]
+}

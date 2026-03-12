@@ -1,0 +1,17 @@
+Asset: companion_character.png
+Purpose: Separate character art layered over the background in the main scene.
+Recommended size: 1024x1536
+Format: PNG with transparent background
+
+Prompt:
+Anime-style young woman companion seated in a gaming chair, medium shot, facing slightly left toward a desk monitor, short dark brown bob haircut with soft volume, round glasses, red over-ear headphones, calm gentle expression, relaxed focused pose, cream hoodie with a red sporty jacket with striped sleeves, warm sunset rim light from behind, soft desk-lamp fill light from front-left, clean painterly cel shading, polished visual novel character art, elegant hands resting near a keyboard position, cozy intimate tone, full upper body visible, transparent background, designed as a separate sprite for a visual novel, centered composition, high readability silhouette, refined anime illustration.
+
+Composition notes:
+- Transparent background only.
+- Frame from about mid-thigh or waist-up depending on model strength, but keep head, shoulders, arms, and chair contact readable.
+- Face should sit slightly above center so it aligns with the existing hotspot placement.
+- Character should feel seated naturally, not floating.
+- Keep the pose self-contained so it layers cleanly over the room background.
+
+Negative prompt:
+background, room, desk, window, bookshelf, bed, extra arms, extra fingers, broken hands, malformed glasses, asymmetrical eyes, open mouth smile, exaggerated pose, dynamic action pose, full body standing, side profile only, cropped head, cropped hands, photorealism, 3d render, watermark, text, logo, low detail face
