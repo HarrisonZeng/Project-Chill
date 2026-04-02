@@ -23,12 +23,23 @@ class MockAiProvider extends AiProvider:
 	func generate_reply_async(request: Dictionary) -> Dictionary:
 		await service.get_tree().process_frame
 		var user_text: String = str(request.get("user_text", ""))
-		var response: String = "Mock AI (warm): " + user_text + " - thanks for sharing."
+		var mode_id: String = str(request.get("mode_id", ""))
+		var prefix: String = "Yua"
+		if not mode_id.is_empty():
+			prefix += " (" + mode_id + ")"
+		var response: String = prefix + ": " + _mock_reply_for(user_text)
 		return {
 			"text": response,
 			"success": true,
 			"provider": "mock"
 		}
+
+	func _mock_reply_for(user_text: String) -> String:
+		if user_text.is_empty():
+			return "Hi. I'm here."
+		if user_text.length() > 80:
+			return "Mm. That sounds like a lot. Want to keep it small?"
+		return "Mm. I hear you. Do you want to say a little more?"
 
 class PoeAiProvider extends AiProvider:
 	var service: Node
@@ -67,6 +78,14 @@ class PoeAiProvider extends AiProvider:
 		var memory_context: String = str(request.get("memory_context", ""))
 		if not memory_context.is_empty():
 			messages.append({"role": "system", "content": memory_context})
+
+		var runtime_rules: String = str(request.get("runtime_rules", ""))
+		if not runtime_rules.is_empty():
+			messages.append({"role": "system", "content": runtime_rules})
+
+		var mode_context: String = str(request.get("mode_context", ""))
+		if not mode_context.is_empty():
+			messages.append({"role": "system", "content": mode_context})
 
 		messages.append({
 			"role": "user",

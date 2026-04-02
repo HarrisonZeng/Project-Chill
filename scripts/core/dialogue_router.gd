@@ -5,7 +5,7 @@ var ai_service: Node = null
 func set_ai_service(service: Node) -> void:
 	ai_service = service
 
-func route_player_text_async(player_text: String, ai_mode_enabled: bool, memory_context: String, persona_text: String) -> Dictionary:
+func route_player_text_async(player_text: String, ai_mode_enabled: bool, memory_context: String, persona_text: String, runtime_rules: String, mode_context: String, mode_id: String) -> Dictionary:
 	if not ai_mode_enabled:
 		return {
 			"mode": "scripted"
@@ -16,7 +16,10 @@ func route_player_text_async(player_text: String, ai_mode_enabled: bool, memory_
 			"user_text": player_text,
 			"tone": "warm",
 			"memory_context": memory_context,
-			"persona": persona_text
+			"persona": persona_text,
+			"runtime_rules": runtime_rules,
+			"mode_context": mode_context,
+			"mode_id": mode_id
 		})
 
 		return {

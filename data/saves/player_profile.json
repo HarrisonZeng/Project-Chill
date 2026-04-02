@@ -1,5 +1,5 @@
 {
-	"last_login_at": "2026-03-12T22:40:40",
+	"last_login_at": "2026-03-25T04:02:38",
 	"last_node_id": "greeting",
 	"memories": [
 		{
@@ -10,6 +10,28 @@
 			"id": "mem_20260312_203000",
 			"last_seen_at": "2026-03-12T20:30:00+08:00",
 			"source_message": "I have school tomorrow.",
+			"topic": "school",
+			"type": "plan"
+		},
+		{
+			"confidence": 0.85,
+			"expires_in_days": 7.0,
+			"fact": "User mentioned work.",
+			"follow_up_tag": "ask_about_work",
+			"id": "mem_20260325_040123",
+			"last_seen_at": "2026-03-25T04:01:23",
+			"source_message": "imma start working",
+			"topic": "work",
+			"type": "plan"
+		},
+		{
+			"confidence": 0.85,
+			"expires_in_days": 7.0,
+			"fact": "User mentioned school.",
+			"follow_up_tag": "ask_about_school",
+			"id": "mem_20260325_040230",
+			"last_seen_at": "2026-03-25T04:02:30",
+			"source_message": "imma go to my computer science class, be back in 5 hours",
 			"topic": "school",
 			"type": "plan"
 		}

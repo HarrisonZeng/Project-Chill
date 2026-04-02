@@ -137,13 +137,13 @@ func _build_memory_entry(source_text: String, rule: Dictionary) -> Dictionary:
 func _follow_up_line_for_tag(tag: String) -> String:
 	match tag:
 		"ask_about_school":
-			return "Welcome back. How was school?"
+			return "You mentioned school before. I was a little curious... how did it go?"
 		"ask_about_exam":
-			return "Hey, how did your exam go?"
+			return "You had that exam coming up, right? I hope it felt a little kinder than expected."
 		"ask_about_sleep":
-			return "Did you manage to get some rest?"
+			return "You seemed tired last time. Did you get any proper rest after that?"
 		"ask_about_work":
-			return "How is work going today?"
+			return "Last time sounded a little busy. Is work still like that?"
 		_:
 			return ""
 

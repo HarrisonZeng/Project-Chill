@@ -3,7 +3,9 @@ extends Control
 const FOCUS_DURATION_SECONDS: float = 25.0 * 60.0
 const SAVE_PATH := "user://player_profile.json"
 const FOCUS_COMPLETE_LINE := "Focus block complete. Nice work."
-const PERSONA_TEXT := """You are Yukino, a nerdy, kind, cute, friendly girl who writes novels at home.\nYou are using this video app to study together with the player.\nYou do not know the player well yet, but you are looking forward to studying together.\nStay warm, supportive, and focused on gentle study companionship."""
+const PERSONA_PATH := "res://data/dialogue/yua_system_prompt.txt"
+const RUNTIME_RULES_PATH := "res://data/dialogue/yua_runtime_rules.txt"
+const DEFAULT_MODE_CONTEXT := "Scene type: short return-after-task check-in\nReply briefly in 1-3 sentences\nYua should sound gently curious and reserved\nThis is a small side conversation and should return to the main flow soon"
 
 @onready var dialogue_text: RichTextLabel = $BottomPanel/DialoguePanel/Margin/VBox/DialogueCard/DialogueMargin/DialogueText
 @onready var choice_list: VBoxContainer = $BottomPanel/DialoguePanel/Margin/VBox/ChoiceList
@@ -37,16 +39,21 @@ var bgm_paused: bool = true
 var memory_manager: Node
 var ai_dialogue_service: Node
 var dialogue_router: Node
+var persona_text: String = ""
+var runtime_rules_text: String = ""
 
 func _ready() -> void:
 	_wire_signals()
 	_load_persistent_state()
+	_load_prompt_assets()
 	if todo_list.item_count == 0:
 		_seed_todo_items()
 	_update_datetime_labels()
 	_update_timer_label()
 	add_child(scripted_dialogue_manager)
 	scripted_dialogue_manager.load_from_path("res://data/dialogue/scripted_nodes.json")
+	if not scripted_dialogue_manager.has_dialogue_node(current_node_id):
+		current_node_id = "idle"
 	_setup_dialogue_services()
 	_show_node(current_node_id)
 	_maybe_show_follow_up()
@@ -57,6 +64,20 @@ func _process(delta: float) -> void:
 	_update_focus_timer()
 	_maybe_autosave()
 	_update_music_progress()
+
+func _load_prompt_assets() -> void:
+	persona_text = _load_text_file(PERSONA_PATH)
+	runtime_rules_text = _load_text_file(RUNTIME_RULES_PATH)
+
+func _load_text_file(path: String) -> String:
+	if not FileAccess.file_exists(path):
+		return ""
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return ""
+	var content := file.get_as_text()
+	file.close()
+	return content
 
 func _setup_dialogue_services() -> void:
 	memory_manager = preload("res://scripts/dialogue/memory_manager.gd").new()
@@ -79,7 +100,7 @@ func _maybe_show_follow_up() -> void:
 	current_node_id = "follow_up"
 	dialogue_text.text = follow_up_line
 	_render_choices([
-		{"text": "Continue", "next": "greeting"}
+		{"text": "Continue", "next": "greeting_01"}
 	])
 	_play_voice_for_line("follow_up", dialogue_text.text)
 
@@ -134,23 +155,34 @@ func _render_choices(choices: Array) -> void:
 		var choice_button := Button.new()
 		choice_button.text = str(choice.get("text", "Continue"))
 		choice_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		choice_button.pressed.connect(_on_choice_selected.bind(str(choice.get("next", "greeting"))))
+		choice_button.pressed.connect(_on_choice_selected.bind(str(choice.get("next", "greeting_01"))))
 		choice_list.add_child(choice_button)
 
 func _on_character_clicked() -> void:
 	if current_node_id == "idle":
-		_show_node("greeting")
+		_show_node("greeting_01")
 		return
 
 	dialogue_text.text = "I am here. You can pick a response below or type in AI mode."
 	_play_voice_for_line("prompt_pick_response", dialogue_text.text)
 
 func _on_choice_selected(next_node_id: String) -> void:
+	if next_node_id.begins_with("AI_MODE_"):
+		_handle_ai_mode_choice(next_node_id)
+		return
 	if not scripted_dialogue_manager.validate_choice_transition(current_node_id, next_node_id):
 		var error_node := scripted_dialogue_manager.make_transition_error_node(current_node_id, next_node_id)
 		_show_node_data(error_node)
 		return
 	_show_node(next_node_id)
+
+func _handle_ai_mode_choice(mode_id: String) -> void:
+	if not ai_mode_toggle.button_pressed:
+		ai_mode_toggle.button_pressed = true
+	dialogue_text.text = "AI mode: type your response below."
+	_render_choices([
+		{"text": "Back to scripted choices", "next": "greeting_01"}
+	])
 
 func _on_send_pressed() -> void:
 	_handle_player_text(player_input.text)
@@ -169,17 +201,44 @@ func _handle_player_text(raw_text: String) -> void:
 		dialogue_text.text = "Thinking..."
 		memory_manager.process_player_message(text)
 		var memory_context: String = memory_manager.get_memory_context()
-		var route: Dictionary = await dialogue_router.route_player_text_async(text, true, memory_context, PERSONA_TEXT)
+		var mode_context := _get_mode_context_for_node(current_node_id)
+		var route: Dictionary = await dialogue_router.route_player_text_async(
+			text,
+			true,
+			memory_context,
+			persona_text,
+			runtime_rules_text,
+			mode_context,
+			current_node_id
+		)
 		_handle_ai_route(route)
 		return
 
 	dialogue_text.text = "Scripted mode is active. Use response buttons or toggle AI mode for free text."
 	_play_voice_for_line("scripted_mode_hint", dialogue_text.text)
 
+func _get_mode_context_for_node(node_id: String) -> String:
+	match node_id:
+		"AI_MODE_SHORT_GREETING":
+			return "Scene type: short greeting\nReply briefly in 1-3 sentences\nYua should sound gentle and slightly reserved\nThis is a small side conversation and should return to the main flow soon"
+		"AI_MODE_SHORT_CHECKIN":
+			return "Scene type: short return-after-task check-in\nReply briefly in 1-3 sentences\nYua should sound gently curious and reserved\nThis is a small side conversation and should return to the main flow soon"
+		"AI_MODE_SHORT_STRESS":
+			return "Scene type: brief stress check-in\nReply briefly in 1-3 sentences\nYua should offer comfort plus light encouragement\nDo not overanalyze\nKeep the emotional depth light and safe"
+		"AI_MODE_SHORT_COMFORT":
+			return "Scene type: brief comfort scene\nReply briefly in 1-3 sentences\nYua should offer comfort plus light encouragement\nDo not overanalyze\nKeep the emotional depth light and safe"
+		"AI_MODE_SHORT_PLAYFUL":
+			return "Scene type: light playful exchange\nReply briefly in 1-3 sentences\nYua can tease gently, but stay subtle and warm\nDo not become overly flirty\nReturn to the main flow soon"
+		"AI_MODE_MEMORY_FOLLOWUP":
+			return "Scene type: memory follow-up\nReply briefly in 1-3 sentences\nUse memory naturally and indirectly\nDo not repeat the memory too many times\nKeep the tone soft and low-pressure"
+		_:
+			return DEFAULT_MODE_CONTEXT
+
 func _handle_ai_route(route: Dictionary) -> void:
 	dialogue_text.text = str(route.get("text", ""))
 	_render_choices([
-		{"text": "Back to scripted choices", "next": "greeting"}
+		{"text": "Back to scripted choices", "next": "greeting_01"},
+		{"text": "Try another AI reply", "next": current_node_id}
 	])
 	_play_voice_for_line("ai_response", dialogue_text.text)
 
@@ -323,6 +382,11 @@ func _update_focus_timer() -> void:
 
 	_update_timer_label()
 
+func _safe_node_id() -> String:
+	if scripted_dialogue_manager != null and scripted_dialogue_manager.has_dialogue_node(current_node_id):
+		return current_node_id
+	return "idle"
+
 func _maybe_autosave() -> void:
 	var current_second := int(focus_time_left)
 	if focus_running and current_second != last_saved_second:
@@ -342,7 +406,7 @@ func _save_persistent_state() -> void:
 		"focus_duration_seconds": focus_duration_seconds,
 		"focus_running": focus_running,
 		"todos": todo_payload,
-		"last_node_id": current_node_id
+		"last_node_id": _safe_node_id()
 	}
 
 	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)

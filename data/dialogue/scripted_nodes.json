@@ -3,47 +3,308 @@
   "nodes": [
     {
       "id": "idle",
-      "line": "Click on the character to start talking.",
+      "line": "Click on her to start.",
       "choices": []
     },
     {
-      "id": "greeting",
-      "line": "Hey, welcome back. Want to chill for a bit?",
+      "id": "follow_up",
+      "line": "Welcome back.",
       "choices": [
-        { "text": "How are you today?", "next": "mood" },
-        { "text": "Let us plan my next session.", "next": "plan" },
-        { "text": "I need to go offline soon.", "next": "goodbye" }
+        { "text": "Continue", "next": "greeting_01" }
       ]
     },
     {
-      "id": "mood",
-      "line": "Pretty good. The sunset vibe helps. How is your day going?",
+      "id": "greeting_01",
+      "line": "Hi... you're here. That makes the room feel a little less quiet.",
       "choices": [
-        { "text": "Good day.", "next": "greeting" },
-        { "text": "Busy day.", "next": "plan" }
+        { "text": "Were you waiting for me?", "next": "greeting_01_wait" },
+        { "text": "I just got back.", "next": "greeting_01_back" },
+        { "text": "...Hi, Yua.", "next": "greeting_01_hi" }
       ]
     },
     {
-      "id": "plan",
-      "line": "You can use the timer and todo panel on the right. Want a 25-minute focus block?",
+      "id": "greeting_01_wait",
+      "line": "Maybe a little. I was trying to look busy about it.",
       "choices": [
-        { "text": "Yes, start focus.", "next": "focus_tip" },
-        { "text": "Maybe later.", "next": "greeting" }
+        { "text": "That's adorable.", "next": "soft_end_01" },
+        { "text": "You're not very convincing.", "next": "playful_end_01" },
+        { "text": "Sorry for making you wait.", "next": "warm_end_01" }
       ]
     },
     {
-      "id": "focus_tip",
-      "line": "Press Start Focus on the right and I will keep you company.",
+      "id": "greeting_01_back",
+      "line": "Welcome back, then. You look like today took a bit out of you.",
       "choices": [
-        { "text": "Back", "next": "greeting" }
+        { "text": "Yeah, kind of.", "next": "comfort_01" },
+        { "text": "I'm okay.", "next": "soft_end_02" },
+        { "text": "Can we just sit quietly for a bit?", "next": "quiet_end_01" }
       ]
     },
     {
-      "id": "goodbye",
-      "line": "Before you go, tell me one thing about tomorrow in AI mode so I can follow up later.",
+      "id": "greeting_01_hi",
+      "line": "Hi. You always sound calmer when you say my name like that.",
       "choices": [
-        { "text": "Back", "next": "greeting" }
+        { "text": "You're imagining things.", "next": "playful_end_02" },
+        { "text": "Maybe I am calmer.", "next": "warm_end_02" },
+        { "text": "(Tell her in my own words)", "next": "AI_MODE_SHORT_GREETING" }
       ]
+    },
+    {
+      "id": "return_task_01",
+      "line": "You're back. How did it go? Was it one of those slow hours... or a productive one?",
+      "choices": [
+        { "text": "Pretty productive, actually.", "next": "return_task_01_productive" },
+        { "text": "I got distracted.", "next": "return_task_01_distracted" },
+        { "text": "(Tell her in my own words)", "next": "AI_MODE_SHORT_CHECKIN" }
+      ]
+    },
+    {
+      "id": "return_task_01_productive",
+      "line": "Oh? That's nice. Then maybe I should look a little impressed.",
+      "choices": [
+        { "text": "Please do.", "next": "playful_end_03" },
+        { "text": "It doesn't happen often.", "next": "soft_end_03" },
+        { "text": "I'm still tired, though.", "next": "comfort_02" }
+      ]
+    },
+    {
+      "id": "return_task_01_distracted",
+      "line": "Mm. It happens. Starting again still counts, you know.",
+      "choices": [
+        { "text": "It still feels bad.", "next": "comfort_03" },
+        { "text": "I'll try again.", "next": "warm_end_03" },
+        { "text": "(Explain what happened)", "next": "AI_MODE_SHORT_STRESS" }
+      ]
+    },
+    {
+      "id": "comfort_01",
+      "line": "I'm sorry. You can set it down for a minute here, if that helps.",
+      "choices": [
+        { "text": "Thanks. I needed that.", "next": "warm_end_04" },
+        { "text": "I'm still thinking about it.", "next": "comfort_03" },
+        { "text": "(Say more)", "next": "AI_MODE_SHORT_COMFORT" }
+      ]
+    },
+    {
+      "id": "comfort_02",
+      "line": "You can do well and still be tired. Those two things get along more than people admit.",
+      "choices": [
+        { "text": "That's... actually true.", "next": "warm_end_05" },
+        { "text": "Maybe I should rest a little.", "next": "soft_end_04" },
+        { "text": "I still have more to do.", "next": "comfort_04" }
+      ]
+    },
+    {
+      "id": "comfort_03",
+      "line": "I know. But you don't have to solve the whole thing in one breath.",
+      "choices": [
+        { "text": "Then maybe I'll do one small part.", "next": "warm_end_06" },
+        { "text": "Stay with me a little first.", "next": "quiet_end_02" },
+        { "text": "(Tell her what you're stressed about)", "next": "AI_MODE_SHORT_COMFORT" }
+      ]
+    },
+    {
+      "id": "comfort_04",
+      "line": "Then do the smallest next thing. Not the scariest one. Just the next one.",
+      "choices": [
+        { "text": "Okay. I can do that.", "next": "warm_end_07" },
+        { "text": "Maybe.", "next": "soft_end_05" },
+        { "text": "(Type my own response)", "next": "AI_MODE_SHORT_STRESS" }
+      ]
+    },
+    {
+      "id": "playful_01",
+      "line": "You have a very specific way of looking tired. It's almost cute.",
+      "choices": [
+        { "text": "Almost?", "next": "playful_01_almost" },
+        { "text": "That's rude.", "next": "playful_01_rude" },
+        { "text": "You noticed?", "next": "playful_01_noticed" }
+      ]
+    },
+    {
+      "id": "playful_01_almost",
+      "line": "I said almost. I'm trying to be fair.",
+      "choices": [
+        { "text": "You're being unfair on purpose.", "next": "playful_end_04" },
+        { "text": "I'll accept that.", "next": "soft_end_06" },
+        { "text": "(Say something back)", "next": "AI_MODE_SHORT_PLAYFUL" }
+      ]
+    },
+    {
+      "id": "playful_01_rude",
+      "line": "Only a little. You'll survive.",
+      "choices": [
+        { "text": "You're such a bully.", "next": "playful_end_05" },
+        { "text": "Maybe it was worth it.", "next": "soft_end_07" },
+        { "text": "(Respond in your own words)", "next": "AI_MODE_SHORT_PLAYFUL" }
+      ]
+    },
+    {
+      "id": "playful_01_noticed",
+      "line": "I notice more than I say.",
+      "choices": [
+        { "text": "That sounds dangerous.", "next": "playful_end_06" },
+        { "text": "You're really quiet about it.", "next": "warm_end_08" },
+        { "text": "(Ask what else she notices)", "next": "AI_MODE_SHORT_PLAYFUL" }
+      ]
+    },
+    {
+      "id": "logout_01",
+      "line": "Going already? Mm... all right. Go finish what you need to do. I'll be here when you come back.",
+      "choices": [
+        { "text": "I'll be back soon.", "next": "logout_01_backsoon" },
+        { "text": "It might take a while.", "next": "logout_01_late" },
+        { "text": "Good night, Yua.", "next": "logout_01_night" }
+      ]
+    },
+    {
+      "id": "logout_01_backsoon",
+      "line": "Then I'll keep the room nice for you.",
+      "choices": []
+    },
+    {
+      "id": "logout_01_late",
+      "line": "That's okay. Just don't be too hard on yourself while I'm not looking.",
+      "choices": []
+    },
+    {
+      "id": "logout_01_night",
+      "line": "Good night. I hope your thoughts stay quiet enough for sleep.",
+      "choices": []
+    },
+    {
+      "id": "memory_school_followup",
+      "line": "You mentioned school before. I was a little curious... how did it go?",
+      "choices": [
+        { "text": "It went okay.", "next": "memory_school_followup_fine" },
+        { "text": "Not that well.", "next": "memory_school_followup_bad" },
+        { "text": "(Tell her in my own words)", "next": "AI_MODE_MEMORY_FOLLOWUP" }
+      ]
+    },
+    {
+      "id": "memory_school_followup_fine",
+      "line": "Mm. I'm glad it was at least okay. Sometimes that's enough.",
+      "choices": []
+    },
+    {
+      "id": "memory_school_followup_bad",
+      "line": "I'm sorry. Then be a little gentle with yourself today, okay?",
+      "choices": []
+    },
+    {
+      "id": "soft_end_01",
+      "line": "You're making it difficult to stay composed.",
+      "choices": []
+    },
+    {
+      "id": "soft_end_02",
+      "line": "Mm. Even so, you can rest here for a minute.",
+      "choices": []
+    },
+    {
+      "id": "soft_end_03",
+      "line": "Then maybe I should appreciate it while it lasts.",
+      "choices": []
+    },
+    {
+      "id": "soft_end_04",
+      "line": "That sounds wise. Even short rest counts.",
+      "choices": []
+    },
+    {
+      "id": "soft_end_05",
+      "line": "Maybe is enough for now. I won't ask for more than that.",
+      "choices": []
+    },
+    {
+      "id": "soft_end_06",
+      "line": "How generous of you.",
+      "choices": []
+    },
+    {
+      "id": "soft_end_07",
+      "line": "Mm. Then I'll allow it.",
+      "choices": []
+    },
+    {
+      "id": "warm_end_01",
+      "line": "I don't mind very much. You're here now.",
+      "choices": []
+    },
+    {
+      "id": "warm_end_02",
+      "line": "I thought so. You seem softer like this.",
+      "choices": []
+    },
+    {
+      "id": "warm_end_03",
+      "line": "That's enough. You don't need a perfect restart.",
+      "choices": []
+    },
+    {
+      "id": "warm_end_04",
+      "line": "Then I'm glad you said it.",
+      "choices": []
+    },
+    {
+      "id": "warm_end_05",
+      "line": "See? I can be useful sometimes.",
+      "choices": []
+    },
+    {
+      "id": "warm_end_06",
+      "line": "That sounds like enough of a start to me.",
+      "choices": []
+    },
+    {
+      "id": "warm_end_07",
+      "line": "Good. One thing is plenty for now.",
+      "choices": []
+    },
+    {
+      "id": "warm_end_08",
+      "line": "I like being quiet with you. It makes small things easier to notice.",
+      "choices": []
+    },
+    {
+      "id": "playful_end_01",
+      "line": "Mm. I'll do better next time.",
+      "choices": []
+    },
+    {
+      "id": "playful_end_02",
+      "line": "Maybe. I'll keep pretending I noticed anyway.",
+      "choices": []
+    },
+    {
+      "id": "playful_end_03",
+      "line": "Then consider yourself very quietly praised.",
+      "choices": []
+    },
+    {
+      "id": "playful_end_04",
+      "line": "Maybe a little. You make it easy.",
+      "choices": []
+    },
+    {
+      "id": "playful_end_05",
+      "line": "A soft one. Be grateful.",
+      "choices": []
+    },
+    {
+      "id": "playful_end_06",
+      "line": "Only if you're planning to give me more material.",
+      "choices": []
+    },
+    {
+      "id": "quiet_end_01",
+      "line": "Of course. We can let the room do most of the talking for a while.",
+      "choices": []
+    },
+    {
+      "id": "quiet_end_02",
+      "line": "Mm. I can do that.",
+      "choices": []
     }
   ]
 }
