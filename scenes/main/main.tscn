@@ -1,0 +1,99 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/main/main.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/companion/companion.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialogue_panel.tscn" id="4"]
+[ext_resource type="Script" path="res://scripts/systems/memory_system.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/systems/save_manager.gd" id="6"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(1220, 36)
+
+[sub_resource type="RectangleShape2D" id="2"]
+size = Vector2(36, 560)
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Backdrop" type="Polygon2D" parent="."]
+color = Color(0.921569, 0.878431, 0.819608, 1)
+polygon = PackedVector2Array(-920, -700, 920, -700, 920, 700, -920, 700)
+
+[node name="Floor" type="Polygon2D" parent="."]
+color = Color(0.988235, 0.941176, 0.890196, 1)
+polygon = PackedVector2Array(-600, -260, 600, -260, 600, 260, -600, 260)
+
+[node name="Rug" type="Polygon2D" parent="."]
+position = Vector2(0, 110)
+color = Color(0.745098, 0.552941, 0.45098, 1)
+polygon = PackedVector2Array(-180, -70, 180, -70, 180, 70, -180, 70)
+
+[node name="Desk" type="Polygon2D" parent="."]
+position = Vector2(-250, -150)
+color = Color(0.572549, 0.423529, 0.333333, 1)
+polygon = PackedVector2Array(-110, -36, 110, -36, 110, 36, -110, 36)
+
+[node name="Bed" type="Polygon2D" parent="."]
+position = Vector2(280, -110)
+color = Color(0.760784, 0.835294, 0.839216, 1)
+polygon = PackedVector2Array(-120, -55, 120, -55, 120, 55, -120, 55)
+
+[node name="WindowGlow" type="Polygon2D" parent="."]
+position = Vector2(0, -245)
+color = Color(0.984314, 0.956863, 0.705882, 0.45)
+polygon = PackedVector2Array(-110, -22, 110, -22, 110, 22, -110, 22)
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="TopWall" type="StaticBody2D" parent="Walls"]
+position = Vector2(0, -280)
+collision_layer = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/TopWall"]
+shape = SubResource("1")
+
+[node name="BottomWall" type="StaticBody2D" parent="Walls"]
+position = Vector2(0, 280)
+collision_layer = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/BottomWall"]
+shape = SubResource("1")
+
+[node name="LeftWall" type="StaticBody2D" parent="Walls"]
+position = Vector2(-618, 0)
+collision_layer = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/LeftWall"]
+shape = SubResource("2")
+
+[node name="RightWall" type="StaticBody2D" parent="Walls"]
+position = Vector2(618, 0)
+collision_layer = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/RightWall"]
+shape = SubResource("2")
+
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(-180, 90)
+
+[node name="Companion" parent="." instance=ExtResource("3")]
+position = Vector2(180, 40)
+
+[node name="MemorySystem" type="Node" parent="."]
+script = ExtResource("5")
+
+[node name="SaveManager" type="Node" parent="."]
+script = ExtResource("6")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="StatusLabel" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 22.0
+offset_right = 460.0
+offset_bottom = 88.0
+autowrap_mode = 3
+text = "WASD or arrow keys to move. Press E near Mika to talk."
+
+[node name="DialoguePanel" parent="HUD" instance=ExtResource("4")]

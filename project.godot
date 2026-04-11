@@ -16,6 +16,7 @@ config/name="Project Chill"
 run/main_scene="res://scenes/main/main_scene.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+<<<<<<< Updated upstream
 
 [display]
 
@@ -26,6 +27,9 @@ window/stretch/mode="canvas_items"
 [physics]
 
 3d/physics_engine="Jolt Physics"
+=======
+run/main_scene="res://scenes/main/main.tscn"
+>>>>>>> Stashed changes
 
 [rendering]
 

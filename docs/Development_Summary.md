@@ -35,6 +35,7 @@ Example:
 
 ## Recommended Technical Pattern
 
+<<<<<<< Updated upstream
 Use hybrid routing:
 
 - scripted dialogue engine is primary
@@ -63,3 +64,21 @@ After this baseline works, add AI API and runtime TTS.
 ## Audio Import Note
 
 For reliable BGM seek/progress in Godot, prefer OGG. If you import an MP3, open it in the Import dock, set Format to Ogg Vorbis, and reimport.
+=======
+The first playable scaffold now exists:
+
+- `scenes/main/main.tscn`
+- `scenes/player/player.tscn`
+- `scripts/player/player_controller.gd`
+- `scenes/companion/companion.tscn`
+- `scenes/ui/dialogue_panel.tscn`
+- `scripts/systems/memory_system.gd`
+- `scripts/systems/save_manager.gd`
+
+Next, we should improve feel and content:
+
+- tune movement speed and camera feel
+- add companion animation or idle motion
+- expand dialogue writing and reply variety
+- add one more interactable object in the room
+>>>>>>> Stashed changes
