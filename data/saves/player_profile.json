@@ -36,6 +36,7 @@
 			"type": "plan"
 		}
 	],
+	"follow_up_last_served_at": {},
 	"pending_follow_ups": [],
 	"recent_summary": "User mentioned school and exam preparation."
 }

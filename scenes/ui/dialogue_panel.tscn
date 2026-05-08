@@ -46,7 +46,7 @@ corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
 
 [node name="DialoguePanel" type="PanelContainer" unique_id=1102142510]
-custom_minimum_size = Vector2(0, 160)
+custom_minimum_size = Vector2(0, 300)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -56,23 +56,22 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=45148882]
 layout_mode = 2
-theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
 
 [node name="VBox" type="VBoxContainer" parent="Margin" unique_id=804107933]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 14
 
 [node name="HeaderRow" type="HBoxContainer" parent="Margin/VBox" unique_id=1153295238]
-visible = false
+visible = true
 layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="SpeakerBadge" type="PanelContainer" parent="Margin/VBox/HeaderRow" unique_id=776413198]
 layout_mode = 2
-size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_choice")
 
 [node name="SpeakerMargin" type="MarginContainer" parent="Margin/VBox/HeaderRow/SpeakerBadge" unique_id=840734102]
@@ -84,12 +83,14 @@ theme_override_constants/margin_bottom = 6
 
 [node name="SpeakerLabel" type="Label" parent="Margin/VBox/HeaderRow/SpeakerBadge/SpeakerMargin" unique_id=554241519]
 layout_mode = 2
-text = "Yukino"
+text = "Yua"
 
 [node name="ModeHint" type="Label" parent="Margin/VBox/HeaderRow" unique_id=1307756360]
 layout_mode = 2
-text = "Scripted replies by default"
+size_flags_horizontal = 3
+text = "Choose a reply, or type when you want to."
 horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="DialogueCard" type="PanelContainer" parent="Margin/VBox" unique_id=480828083]
 layout_mode = 2
@@ -103,32 +104,46 @@ theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 14
 
 [node name="DialogueText" type="RichTextLabel" parent="Margin/VBox/DialogueCard/DialogueMargin" unique_id=1283719266]
-custom_minimum_size = Vector2(0, 60)
+custom_minimum_size = Vector2(0, 92)
 layout_mode = 2
 text = "Dialogue will appear here."
 fit_content = true
 scroll_active = false
+horizontal_alignment = 0
+autowrap_mode = 3
+
+[node name="PromptLabel" type="Label" parent="Margin/VBox" unique_id=2009566140]
+layout_mode = 2
+text = "Tap a reply, or type below when you want your own words."
 horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="Margin/VBox" unique_id=1488762001]
+visible = false
+layout_mode = 2
+text = "System status appears here."
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="ChoiceList" type="VBoxContainer" parent="Margin/VBox" unique_id=1605307871]
 layout_mode = 2
-theme_override_constants/separation = 8
+size_flags_vertical = 3
+theme_override_constants/separation = 10
 
 [node name="InputRow" type="HBoxContainer" parent="Margin/VBox" unique_id=1912003737]
-custom_minimum_size = Vector2(0, 36)
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="PlayerInput" type="LineEdit" parent="Margin/VBox/InputRow" unique_id=1400556828]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_input")
 theme_override_styles/focus = SubResource("StyleBoxFlat_input")
-placeholder_text = "Type here in AI mode, or use this text to add todo."
+placeholder_text = "Type here, or use this text to add a todo."
 
 [node name="SendButton" type="Button" parent="Margin/VBox/InputRow" unique_id=1286230115]
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(92, 44)
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_choice")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_choice")
@@ -136,6 +151,6 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_choice")
 text = "Send"
 
 [node name="AIModeToggle" type="CheckButton" parent="Margin/VBox/InputRow" unique_id=501993508]
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(102, 44)
 layout_mode = 2
-text = "AI Mode"
+text = "Type Mode"

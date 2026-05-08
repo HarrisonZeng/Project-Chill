@@ -13,6 +13,9 @@ func _ready() -> void:
 		play_default()
 
 func play_default() -> void:
+	play_current()
+
+func play_current() -> void:
 	if playlist.is_empty():
 		return
 	current_index = clampi(current_index, 0, playlist.size() - 1)
@@ -37,6 +40,9 @@ func pause_bgm() -> void:
 
 func resume_bgm() -> void:
 	if bgm_player == null:
+		return
+	if bgm_player.stream == null:
+		play_current()
 		return
 	bgm_player.stream_paused = false
 	if not bgm_player.playing:
@@ -89,6 +95,24 @@ func _resolve_bgm_player() -> AudioStreamPlayer:
 
 	return null
 
+func has_playlist() -> bool:
+	return not playlist.is_empty()
+
+func get_playlist_size() -> int:
+	return playlist.size()
+
+func can_step_tracks() -> bool:
+	return playlist.size() > 1
+
+func get_current_index() -> int:
+	return current_index
+
+func set_current_index(track_index: int) -> void:
+	if playlist.is_empty():
+		current_index = 0
+		return
+	current_index = clampi(track_index, 0, playlist.size() - 1)
+
 func get_now_playing_name() -> String:
 	if bgm_player == null:
 		return "No track loaded"
@@ -97,3 +121,12 @@ func get_now_playing_name() -> String:
 	if bgm_player.stream.resource_path.is_empty():
 		return "Unknown track"
 	return bgm_player.stream.resource_path.get_file().get_basename()
+
+func get_transport_state_text() -> String:
+	if not has_playlist():
+		return "No ambience loaded yet"
+	if bgm_player == null or bgm_player.stream == null:
+		return "Ambience ready"
+	if is_playing():
+		return "Ambience playing"
+	return "Ambience paused"

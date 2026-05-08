@@ -81,6 +81,7 @@ offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
+tooltip_text = "Click to talk"
 flat = true
 
 [node name="Hotspots" type="Control" parent="." unique_id=651648753]
@@ -133,6 +134,7 @@ disabled = true
 flat = true
 
 [node name="Nameplate" type="PanelContainer" parent="." unique_id=774903413]
+visible = false
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -156,6 +158,6 @@ theme_override_constants/margin_bottom = 6
 
 [node name="CharacterLabel" type="Label" parent="Nameplate/NameMargin" unique_id=1137344606]
 layout_mode = 2
-text = "Yukino"
+text = "Yua"
 horizontal_alignment = 1
 

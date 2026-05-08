@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/dialogue_panel.tscn" id="3_r8yf1"]
 [ext_resource type="Texture2D" uid="uid://baffa7l3b1sv7" path="res://assets/art/backgrounds/Background_temp.png" id="4_24sno"]
 [ext_resource type="Script" uid="uid://dqbsps41uqagw" path="res://scripts/audio/bgm_manager.gd" id="5_l7pil"]
-[ext_resource type="AudioStream" uid="uid://cw6bjkhrlw84q" path="res://assets/bgm/Persona 5 chill mix - GVirusInfected.mp3" id="6_271kv"]
+[ext_resource type="Script" uid="uid://c17x6dbr8c6k8" path="res://scripts/audio/voice_manager.gd" id="6_2l5v1"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
 bg_color = Color(0.0823529, 0.0588235, 0.0823529, 0.78)
@@ -90,31 +90,31 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 40.0
-offset_top = 70.0
-offset_right = -280.0
-offset_bottom = -290.0
+offset_left = 84.0
+offset_top = 56.0
+offset_right = -330.0
+offset_bottom = -336.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="CompanionView" parent="CompanionStage" unique_id=1098388039 instance=ExtResource("2_mw3ov")]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.62
-anchor_top = 0.56
-anchor_right = 0.62
-anchor_bottom = 0.56
-offset_left = -230.0
-offset_top = -310.0
-offset_right = 230.0
-offset_bottom = 310.0
+anchor_left = 0.58
+anchor_top = 0.54
+anchor_right = 0.58
+anchor_bottom = 0.54
+offset_left = -250.0
+offset_top = -330.0
+offset_right = 250.0
+offset_bottom = 330.0
 
 [node name="TopLeftHUD" type="PanelContainer" parent="." unique_id=733565535]
 layout_mode = 1
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 280.0
-offset_bottom = 120.0
+offset_left = 28.0
+offset_top = 22.0
+offset_right = 248.0
+offset_bottom = 126.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
 
 [node name="Margin" type="MarginContainer" parent="TopLeftHUD" unique_id=1983580296]
@@ -141,10 +141,10 @@ layout_mode = 1
 anchors_preset = -1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -300.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = 220.0
+offset_left = -284.0
+offset_top = 28.0
+offset_right = -24.0
+offset_bottom = 242.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_rail")
@@ -158,7 +158,7 @@ theme_override_constants/margin_bottom = 14
 
 [node name="TimerVBox" type="VBoxContainer" parent="RightTimerPanel/TimerMargin" unique_id=1028384497]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 12
 
 [node name="TimerTitle" type="Label" parent="RightTimerPanel/TimerMargin/TimerVBox" unique_id=929199616]
 layout_mode = 2
@@ -173,19 +173,22 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="TimerMinutesInput" type="LineEdit" parent="RightTimerPanel/TimerMargin/TimerVBox/TimerInputRow" unique_id=816600591]
-custom_minimum_size = Vector2(100, 0)
+custom_minimum_size = Vector2(112, 36)
 layout_mode = 2
 placeholder_text = "Minutes"
 
 [node name="SetTimerButton" type="Button" parent="RightTimerPanel/TimerMargin/TimerVBox/TimerInputRow" unique_id=1079786154]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Set"
 
 [node name="StartFocusButton" type="Button" parent="RightTimerPanel/TimerMargin/TimerVBox" unique_id=516134104]
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 text = "Start Focus"
 
 [node name="StopFocusButton" type="Button" parent="RightTimerPanel/TimerMargin/TimerVBox" unique_id=1382223618]
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 text = "Reset Focus"
 
@@ -193,12 +196,13 @@ text = "Reset Focus"
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 1.0
-anchor_top = 0.35
+anchor_top = 0.33
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -300.0
-offset_right = -20.0
-offset_bottom = -220.0
+offset_left = -284.0
+offset_top = 10.0
+offset_right = -24.0
+offset_bottom = -28.0
 grow_horizontal = 0
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_rail")
@@ -212,15 +216,16 @@ theme_override_constants/margin_bottom = 14
 
 [node name="TodoVBox" type="VBoxContainer" parent="RightTodoPanel/TodoMargin" unique_id=525161834]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 12
 
 [node name="TodoTitle" type="Label" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=614165287]
 layout_mode = 2
 text = "Todo"
 
 [node name="TodoList" type="ItemList" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=2079788506]
-custom_minimum_size = Vector2(0, 180)
+custom_minimum_size = Vector2(0, 240)
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="TodoButtons" type="HBoxContainer" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=587163638]
 layout_mode = 2
@@ -235,6 +240,7 @@ layout_mode = 2
 text = "Edit Selected"
 
 [node name="SettingsButton" type="Button" parent="." unique_id=812930172]
+visible = false
 layout_mode = 1
 anchors_preset = -1
 anchor_top = 0.5
@@ -249,16 +255,17 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_placeholder")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_placeholder")
 theme_override_styles/hover = SubResource("StyleBoxFlat_placeholder")
 text = "Settings"
+disabled = true
 
 [node name="BottomLeftMusicBar" type="PanelContainer" parent="." unique_id=1015502954]
 layout_mode = 1
 anchors_preset = -1
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = -190.0
-offset_right = 520.0
-offset_bottom = -110.0
+offset_left = 28.0
+offset_top = -150.0
+offset_right = 388.0
+offset_bottom = -28.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
@@ -279,7 +286,7 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="SongLabel" type="Label" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/TopRow" unique_id=1202556902]
-custom_minimum_size = Vector2(220, 0)
+custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "No track loaded"
@@ -290,17 +297,17 @@ theme_override_constants/separation = 6
 alignment = 2
 
 [node name="PrevButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/TopRow/Controls" unique_id=112952394]
-custom_minimum_size = Vector2(36, 0)
+custom_minimum_size = Vector2(34, 0)
 layout_mode = 2
 text = "<<"
 
 [node name="PlayPauseButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/TopRow/Controls" unique_id=801793230]
-custom_minimum_size = Vector2(52, 0)
+custom_minimum_size = Vector2(92, 0)
 layout_mode = 2
 text = "Play"
 
 [node name="NextButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/TopRow/Controls" unique_id=179663867]
-custom_minimum_size = Vector2(36, 0)
+custom_minimum_size = Vector2(34, 0)
 layout_mode = 2
 text = ">>"
 
@@ -314,18 +321,22 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -360.0
-offset_top = -190.0
-offset_right = 360.0
-offset_bottom = -20.0
+offset_left = -390.0
+offset_top = -354.0
+offset_right = 390.0
+offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
 
 [node name="DialoguePanel" parent="BottomPanel" unique_id=827521037 instance=ExtResource("3_r8yf1")]
 layout_mode = 2
 
+[node name="VoiceManager" type="Node" parent="." unique_id=1160024591]
+script = ExtResource("6_2l5v1")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="VoiceManager" unique_id=529110034]
+
 [node name="BgmManager" type="Node" parent="." unique_id=2095597027]
 script = ExtResource("5_l7pil")
-playlist = Array[AudioStream]([ExtResource("6_271kv")])
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="BgmManager" unique_id=605300000]

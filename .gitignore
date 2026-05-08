@@ -2,3 +2,5 @@
 .godot/
 /android/
 assets/bgm/*.mp3
+artifacts/
+tmp/

@@ -7,33 +7,36 @@ const DEFAULT_EXTENSION := ".ogg"
 @export var voice_player_path: NodePath
 
 var voice_player: AudioStreamPlayer
+var last_voice_error: String = ""
 
 func _ready() -> void:
 	voice_player = _resolve_voice_player()
 	_ensure_runtime_cache_dir()
 
-func play_voice_for_line(line_id: String, line_text: String) -> void:
+func play_voice_for_line(line_id: String, line_text: String) -> bool:
 	if line_id.is_empty():
-		return
+		last_voice_error = "line_id_missing"
+		return false
 
 	var pregen_path := _get_pregenerated_path(line_id)
 	if pregen_path != "":
-		_play_stream_from_path(pregen_path)
-		return
+		return _play_stream_from_path(pregen_path)
 
 	var runtime_path := _get_runtime_cache_path(line_text)
 	if FileAccess.file_exists(runtime_path):
-		_play_stream_from_path(runtime_path)
-		return
+		return _play_stream_from_path(runtime_path)
 
-	synthesize_voice_stub(line_text, runtime_path)
+	return synthesize_voice_stub(line_text, runtime_path)
 
-func synthesize_voice_stub(line_text: String, output_path: String) -> void:
+func synthesize_voice_stub(line_text: String, output_path: String) -> bool:
 	if line_text.is_empty():
-		return
+		last_voice_error = "line_text_missing"
+		return false
 
+	last_voice_error = "tts_stub_only"
 	print("[VoiceManager] TTS stub called. Would synthesize: %s" % line_text)
 	print("[VoiceManager] Output target: %s" % output_path)
+	return true
 
 func _get_pregenerated_path(line_id: String) -> String:
 	var candidate := "%s/%s%s" % [PREGENERATED_DIR, line_id, DEFAULT_EXTENSION]
@@ -45,17 +48,21 @@ func _get_runtime_cache_path(line_text: String) -> String:
 	var hash := line_text.sha256_text()
 	return "%s/%s%s" % [RUNTIME_CACHE_DIR, hash, DEFAULT_EXTENSION]
 
-func _play_stream_from_path(path: String) -> void:
+func _play_stream_from_path(path: String) -> bool:
 	if voice_player == null:
-		return
+		last_voice_error = "voice_player_missing"
+		return false
 
 	var stream := load(path)
 	if stream == null:
 		print("[VoiceManager] Failed to load stream: %s" % path)
-		return
+		last_voice_error = "stream_load_failed"
+		return false
 
 	voice_player.stream = stream
 	voice_player.play()
+	last_voice_error = ""
+	return true
 
 func _resolve_voice_player() -> AudioStreamPlayer:
 	if voice_player_path != NodePath():

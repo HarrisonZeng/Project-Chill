@@ -1,186 +1,286 @@
-﻿# Project Chill
+# Project Chill Game Spec And Process Guide
 
-## 1. Vision (Reference-Driven)
+## 1. Vision
 
-The demo style follows your reference image: a warm room scene with the female character always visible, viewed from a fixed camera.
+Project Chill is a 2D fixed-camera online focus companion game.
 
-This is a visual-novel style companion experience, not a movement game.
+Players launch the game when they want company while studying, working, or trying to focus. The fantasy is not "visit a character's room every day." The fantasy is:
 
-Core interaction style:
+> I do not want to work alone. I want someone gentle, believable, and familiar beside me while I get through this.
 
-- no player avatar
-- no WASD movement
-- immediate entry into character scene
-- interaction by clicking character hotspots or dialogue UI
-- player replies by preset choices or free text (AI mode)
+The game is partly a productivity app, but with a strong human/character element and authored story progression.
 
-## 2. Product Goal
+## 2. Reference Understanding
 
-Build a polished vertical slice where the player can:
+The current reference direction is inspired by Chill With You's work/study call structure:
 
-- open the app and directly see the character in her room
-- start conversation by clicking character or textbox
-- choose scripted options most of the time
-- switch to AI mode for free chat when needed
-- hear voiced character responses
-- feel remembered across sessions by lightweight memory
+- remote call framing first, story game second
+- heroine always visible
+- real productivity tools are part of the loop
+- many tiny contextual lines for start, work, break, finish, return, and time of day
+- main story episodes unlock gradually through repeated work together
+- intimacy grows from co-presence and routine, not from constant chat
 
-## 3. Experience Loop
+Project Chill should mirror this structure for now, then diverge into its own character, writing-project story, UI style, and AI-enhanced memory.
 
-1. Game starts into `main_scene` with fixed composition.
-2. Character idles with subtle animation and ambient audio.
-3. Player clicks character or dialogue area to open interaction.
-4. Dialogue system offers:
-   - scripted branch choices (default)
-   - optional AI free-text input
-5. Character responds with text + voice.
-6. Memory system stores selected player facts and follow-up hooks.
-7. On future login, system can surface context-aware lines (example: "How was school?").
+## 3. Product Goal
 
-## 4. Scope (v0.1)
+Build a Steam-worthy focus companion game where the player can:
 
-### In scope
+- open the app and join a cozy video call / online chatroom with Yua
+- do a short AI-assisted check-in about what they are working on
+- set a focus session and task
+- work quietly with Yua on screen
+- receive contextual encouragement without being distracted
+- unlock break chat, story scenes, and Yua's writing progress after completing sessions
+- feel remembered across sessions through game-side memory
+- see atmosphere and greetings respond to real-world time
 
-- fixed camera scene with character-centric composition
-- click interactions (character + UI controls)
-- dialogue panel with both:
-  - preset response buttons
-  - free-text chat input in AI mode
-- hybrid dialogue router (scripted first, AI fallback/augment)
-- memory extraction + persistence
-- TTS voice playback for character lines
-- session restore and login greeting logic
+Voice is deferred. Text, animation, ambience, and strong writing are the immediate priority.
 
-### Out of scope for v0.1
+## 4. Non-Negotiables
 
-- full open-world navigation
-- complex inventory and quest systems
-- full emotional simulation engine
-- multiplayer
-- advanced real-time lip sync
+- No player avatar.
+- No WASD or movement controls.
+- No open-world navigation.
+- Fixed composition focused on Yua and the call UI.
+- Interaction is click/tap, dialogue choices, task input, focus controls, and bounded Type Mode.
+- Focus comes before casual chat/progression.
+- Progression is based on completed focus sessions, total focus time, and milestones.
+- Scripted story remains primary.
+- AI remains optional and bounded.
+- Memory is stored game-side and persists locally.
 
-## 5. Scene and UI Direction
+## 5. Setting And Presentation
 
-Use the reference image as the visual target:
+The gameplay setting is a cozy online call / `xianshang liaotianshi` style focus room.
 
-- warm sunset color palette
-- character as the visual anchor at center-right
-- decorative room props for cozy mood
-- utility buttons as subtle overlays
-- dialogue panel on lower third
+Yua is on the other side of the call. She is not physically in the same room as the player. She is also working, usually writing.
 
-Recommended first layout layers:
+The screen should communicate:
 
-1. background layer (room image/video)
-2. character layer (sprite, Live2D, or animated image)
-3. interaction hotspots (character/head/desk)
-4. dialogue and choice UI
-5. utility HUD (settings, log, save/load)
+- online call presence
+- soft shared workspace
+- Yua always visible
+- real-time lighting and ambience
+- task/focus controls integrated as call tools
+- dialogue lower-third or chat/call overlay
 
-## 6. Core Systems
+Real-world time should matter:
 
-### A. Interaction System (click-first)
+- morning / noon / evening / night lighting
+- time-aware greeting pools
+- time-aware work/rest click reactions
+- late-night concern lines
+- return-after-absence lines
 
-- click character -> default greeting/action
-- click hotspot -> contextual line
-- click textbox/focus input -> submit text
+## 6. Core Gameplay Loop
 
-### B. Dialogue System (hybrid)
+1. Player launches the game.
+2. Yua appears in the call.
+3. Yua gives a time-aware greeting or return line.
+4. Short check-in asks what the player is working on.
+5. Player enters a task and chooses a focus duration.
+6. Focus session starts.
+7. During focus, casual chat is restricted.
+8. Clicking Yua during focus gives short "back to work" or accountability lines.
+9. Session finishes or is abandoned.
+10. Yua reacts based on completion, duration, and context.
+11. Player unlocks break chat, reflection, or a scripted story milestone.
+12. State saves: session count, total focus time, task/memory tags, story flags.
 
-- default path: scripted nodes and choices
-- AI mode path: generate response using persona + memory context
-- fallback rules when AI unavailable: use scripted safe lines
+## 7. Progression Model
 
-### C. Memory System (lightweight but useful)
+Progression is session-based, not day-based.
 
-Use two memory tiers:
+Track:
 
-- short-term memory: last 20 message highlights
-- pinned memory: durable facts (school, exam, favorite song, etc.)
+- completed focus sessions
+- total completed focus time
+- current focus streak or return rhythm
+- short / normal / long session counts
+- abandoned or paused sessions
+- current story milestone
+- Yua writing progress
+- player memory tags
+- relationship/familiarity flags
 
-Store metadata:
+Example gates:
 
-- `fact`
-- `confidence`
-- `source_message`
-- `last_seen_at`
-- `follow_up_tag`
+- after tutorial focus: unlock normal break chat
+- after 1 completed session: first story episode
+- after 3 completed sessions: Yua mentions her writing project
+- after 5 completed sessions: Yua shares a small draft problem
+- after 2 total focus hours: deeper trust variant
+- after repeated late-night focus: special concern/check-in lines
+- after repeated abandoned sessions: gentle reset scene
 
-### D. Voice System
+## 8. Story Spine
 
-- scripted lines: pre-generate and cache voice audio
-- AI lines: request TTS at runtime, then cache by text hash
-- playback through `AudioStreamPlayer`
-- subtitle/text always shown for accessibility
+Yua is a quiet writer who uses shared calls to keep herself accountable. The player is also working or studying. Over many focus sessions, the two build a routine.
 
-### E. Save/Profile System
+Her arc:
 
-Persist locally (JSON for prototype):
+1. polite online focus partner
+2. comfortable quiet coworker
+3. gently teasing familiar presence
+4. admits she is stuck on a writing project
+5. shares small draft fragments or creative worries
+6. uses the player's steady presence to keep going
+7. lets the player influence small aspects of her story direction
 
-- conversation state
-- pinned memories
-- recent summaries
-- last logout intent
-- last login timestamp
+The core emotional promise:
 
-## 7. Best-Practice Architecture For Your Use Case
+- the player makes real progress
+- Yua makes creative progress
+- the shared call becomes meaningful because both sides keep showing up
 
-This architecture fits your goal of mostly scripted narrative with selective AI:
+## 9. Content Structure
 
-1. `dialogue_router.gd`
-   - decides scripted vs AI path
-2. `scripted_dialogue_manager.gd`
-   - handles authored branches and choices
-3. `ai_dialogue_service.gd`
-   - calls model API when AI mode is active
-4. `memory_manager.gd`
-   - extracts and stores memory entries
-5. `session_manager.gd`
-   - login/logout hooks and save/load
-6. `voice_manager.gd`
-   - audio generation/caching/playback
-7. `ui_dialogue_panel.gd`
-   - messages, choices, text input, mode toggle
+Use two layers of content.
 
-## 8. How To Accomplish "Remember School Tomorrow" Reliably
+### A. Main Story Milestones
 
-Do not rely on raw model memory alone. Use explicit game-side memory.
+Authored VN-style episodes unlocked by session progress.
 
-Implementation pattern:
+Examples:
 
-1. Player says: "I need to go to school tomorrow."
-2. Memory extractor stores fact:
-   - `topic=school`
-   - `intent=upcoming_event`
-   - `time_hint=tomorrow`
-   - `follow_up_tag=ask_about_school`
-3. On next login, `session_manager` checks pending follow-up tags.
-4. If present, injects a scripted greeting candidate:
-   - "Welcome back. How was school today?"
-5. Dialogue router prioritizes this line before normal chat.
+- `tutorial_call_01`: first connection and tool introduction
+- `episode_01`: first real focus session together
+- `episode_02`: Yua explains why shared work helps her
+- `episode_03`: Yua reveals she writes
+- `episode_04`: first writing slump
+- `episode_05`: player helps choose a small creative direction
 
-This gives deterministic continuity even if the AI provider changes.
+These scenes are scripted and stable.
 
-## 9. AI Model Strategy
+### B. Reactive Session Lines
 
-You can absolutely use a pre-trained model with fixed personality/story framing.
+Small contextual line pools for everyday use:
 
-Recommended pattern:
+- game start
+- return after short/long absence
+- morning/noon/evening/night greetings
+- focus start
+- continuous/back-to-back focus
+- short focus
+- long focus
+- break start
+- focus finish
+- abandoned/stopped midway
+- click Yua during work
+- click Yua during break
+- app end after short/normal/long use
+- self-talk while idle or working
 
-- persona and lore live in your own system prompt/profile file
-- scripted dialogue remains the main narrative backbone
-- AI is used for:
-  - free chat moments
-  - natural transitions
-  - paraphrasing contextual replies
+These lines are what make the game feel alive during real productivity sessions.
 
-Keep AI bounded:
+## 10. AI Role
 
-- include short memory summary, not full chat history
-- enforce style constraints (tone, max length, no lore breaks)
-- keep a safety fallback line if API fails
+AI is most useful in controlled windows:
 
-## 10. Folder Structure (VN-Oriented)
+- check-in before focus
+- task understanding
+- memory extraction
+- post-session reflection
+- limited casual chat after work is completed
+- paraphrasing encouragement in Yua's tone
+
+AI should not:
+
+- replace authored story milestones
+- unlock progression directly without validation
+- become unlimited pre-focus chat
+- invent major Yua lore
+- store memory only in model history
+
+Prompt context should include:
+
+- Yua persona
+- current mode: check-in, focus start, break, reflection, casual chat
+- current task if known
+- session stats summary
+- short memory summary
+- strict reply length and tone rules
+
+## 11. Memory System
+
+Memory should support focus and familiarity.
+
+Store durable but lightweight facts:
+
+- school/class
+- exam/test
+- work/job/project
+- sleep/tiredness
+- stress
+- preferred focus duration
+- recurring task or subject
+- last unfinished goal
+
+Use memory naturally:
+
+- "You mentioned that class before. Same one today?"
+- "Another late session? Let's keep it smaller."
+- "You usually do better with shorter blocks. Want to start there?"
+
+Memory is a feature, not the whole structure. Progress still comes from focus sessions.
+
+## 12. Core Systems
+
+### Focus Session System
+
+Tracks:
+
+- selected duration
+- task/intention text
+- start time
+- time left
+- pause/abandon state
+- completion
+- short/normal/long category
+
+### Progression System
+
+Tracks:
+
+- completed session count
+- total focus seconds/minutes
+- current milestone
+- unlocked story episodes
+- Yua writing progress
+- hidden familiarity tags
+
+### Dialogue System
+
+Routes:
+
+- scripted story nodes
+- reactive line pools
+- AI check-in/reflection
+- fallback lines
+
+### Memory System
+
+Extracts and stores game-side memory tags from check-ins and Type Mode.
+
+### Real-Time Atmosphere System
+
+Applies time-of-day lighting, greeting pools, and ambience.
+
+### Save/Profile System
+
+Persists:
+
+- focus totals
+- session history summary
+- current milestone
+- unlocked story
+- memory tags
+- task preferences
+- last seen/return timestamps
+
+## 13. Recommended Folder Structure
 
 ```text
 project_root/
@@ -192,31 +292,38 @@ project_root/
     audio/
       bgm/
       sfx/
-      voice_cache/
+      voice_cache/       # deferred
   scenes/
     main/
       main_scene.tscn
     ui/
       dialogue_panel.tscn
-      choice_button.tscn
+      focus_panel.tscn
     character/
       companion_view.tscn
   scripts/
     core/
+      main_scene.gd
+      session_progression.gd
       dialogue_router.gd
-      session_manager.gd
     dialogue/
       scripted_dialogue_manager.gd
       ai_dialogue_service.gd
       memory_manager.gd
+      reactive_line_manager.gd
     audio/
-      voice_manager.gd
+      bgm_manager.gd
+      voice_manager.gd      # optional/deferred
     ui/
       ui_dialogue_panel.gd
   data/
     dialogue/
       scripted_nodes.json
-      persona_profile.json
+      reactive_lines.json
+      yua_system_prompt.txt
+      yua_runtime_rules.txt
+    progression/
+      focus_milestones.json
     saves/
       player_profile.json
   docs/
@@ -225,61 +332,74 @@ project_root/
     AI_Dialogue_Infrastructure.md
 ```
 
-## 11. Development Phases
+## 14. Development Phases
 
-### Phase 1: Visual Novel Foundation
+### Phase 1: Concept Refactor
 
-- fixed main scene
-- character sprite/view and idle presentation
-- dialogue panel and choice buttons
-- click-to-talk interaction
+- update docs from room/day VN to online focus companion
+- rename design language around sessions, calls, and milestones
+- define focus-first acceptance path
 
-### Phase 2: Scripted Dialogue Backbone
+### Phase 2: Focus-First Loop
 
-- branch nodes
-- choice consequences
-- save/load dialogue progress
+- launch call
+- time-aware greeting
+- task/check-in input
+- start focus session
+- restrict chat during focus
+- finish or abandon session
+- unlock break chat after completion
 
-### Phase 3: AI Mode + Memory
+### Phase 3: Session Progression
 
-- free-text input mode
-- model call abstraction
-- memory extraction and storage
-- follow-up trigger on next login
+- total focus time
+- completed sessions
+- milestone unlocks
+- Yua writing progress
+- save/load progression
 
-### Phase 4: Voice
+### Phase 4: Reactive Lines
 
-- voice manager
-- pre-generated voice for scripted lines
-- runtime TTS + cache for AI lines
+- line pools for start/work/break/finish/click/end/time-of-day
+- deterministic line selection with enough variety
+- context-aware "back to work" reactions during focus
 
-### Phase 5: Polish
+### Phase 5: AI Check-In And Reflection
 
-- transitions
-- button feedback and animation
-- typing effect and audio timing
-- mood consistency pass
+- AI understands current task and mode
+- AI extracts memory tags
+- AI stays short, warm, and bounded
+- AI cannot bypass focus gates
 
-## 12. Immediate Next Build Steps
+### Phase 6: Scripted Story Milestones
 
-1. Create VN-oriented folders and scene stubs.
-2. Build `main_scene.tscn` with fixed character composition.
-3. Build `dialogue_panel.tscn` with:
-   - dialogue text
-   - choice container
-   - text input
-   - `AI Mode` toggle
-4. Implement scripted dialogue only (no API yet).
-5. Add local memory save/load.
-6. Add AI mode using stub responses first.
-7. Integrate real model API and voice after flow is stable.
+- write focus-gated Yua story episodes
+- connect story progress to completed sessions and total focus time
+- keep story emotional and low-drama
 
-## 13. Definition Of Success (First Demo)
+### Phase 7: UI And Atmosphere
 
-The demo is successful when:
+- online call framing
+- readable focus controls
+- real-time lighting
+- polished break/chat flow
 
-- user can immediately enter a cozy character scene
-- user can converse using choices or AI chat input
-- character voice plays with responses
-- at least one remembered fact is used correctly in a later session
-- experience feels calm, intimate, and stable
+### Phase 8: Voice And Advanced Polish
+
+- optional TTS/pregenerated voice
+- refined animation
+- deeper ambience
+- Steam demo polish
+
+## 15. Current Definition Of Success
+
+The next successful vertical slice should prove:
+
+- player opens the call and gets a time-aware greeting
+- player enters a task
+- player starts a focus session
+- Yua discourages distraction during focus
+- finishing the session increments progress
+- break chat or a story beat unlocks only after focus
+- memory can personalize a future check-in
+- all state persists across relaunch
