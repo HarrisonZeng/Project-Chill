@@ -40,6 +40,14 @@ class MockAiProvider extends AiProvider:
 		var lowered := user_text.to_lower()
 		if user_text.is_empty():
 			return _calm_opening(mode_id)
+		if mode_id == "AI_MODE_TASK_CLARIFY":
+			return "这个可以切小一点。先选最容易开始的那一块，做完再看下一步。"
+		if mode_id == "AI_MODE_POST_SESSION":
+			return "刚才那段推进到哪里了？不用总结得很漂亮，说实话就行。"
+		if mode_id == "AI_MODE_BREAK_CHAT":
+			return "那就先歇一下。不是逃跑，是给下一段留一点电。"
+		if mode_id == "AI_MODE_CHECKIN":
+			return "听起来可以。把它缩成一个小目标，我们就能开计时了。"
 		if user_text.length() > 80:
 			return "Mm. That sounds like a lot. Want to keep it small?"
 		if _looks_like_sensitive_request(user_text):
@@ -56,8 +64,14 @@ class MockAiProvider extends AiProvider:
 
 	func _calm_opening(mode_id: String) -> String:
 		if mode_id == "AI_MODE_MEMORY_FOLLOWUP":
-			return "Welcome back. I was wondering how that went."
-		return "Hi. I'm here."
+			return "回来了。上次那件事，后来怎么样？"
+		if mode_id == "AI_MODE_TASK_CLARIFY":
+			return "你先随便说大概，我帮你切小一点。"
+		if mode_id == "AI_MODE_POST_SESSION":
+			return "刚才那段，感觉怎么样？"
+		if mode_id == "AI_MODE_BREAK_CHAT":
+			return "嗯，先休息一下。我在。"
+		return "我在。"
 
 	func _goodbye_seed_reply(lowered: String) -> String:
 		if lowered.contains("school") or lowered.contains("class"):

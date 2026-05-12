@@ -8,28 +8,40 @@
 [ext_resource type="Script" uid="uid://c17x6dbr8c6k8" path="res://scripts/audio/voice_manager.gd" id="6_2l5v1"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
-bg_color = Color(0.0823529, 0.0588235, 0.0823529, 0.78)
+bg_color = Color(0.2, 0.14, 0.16, 0.56)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(1, 0.823529, 0.658824, 0.24)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
+border_color = Color(1, 0.823529, 0.658824, 0.3)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rail"]
-bg_color = Color(0.0862745, 0.0627451, 0.0862745, 0.84)
+bg_color = Color(0.18, 0.12, 0.15, 0.58)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(1, 0.784314, 0.611765, 0.28)
-corner_radius_top_left = 24
-corner_radius_top_right = 24
-corner_radius_bottom_right = 24
-corner_radius_bottom_left = 24
+border_color = Color(1, 0.82, 0.66, 0.3)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_timer_circle"]
+bg_color = Color(0.18, 0.12, 0.15, 0.62)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.82, 0.66, 0.36)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_placeholder"]
 bg_color = Color(1, 0.870588, 0.74902, 0.1)
@@ -61,16 +73,49 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("4_24sno")
 
-[node name="BackdropTint" type="ColorRect" parent="." unique_id=1513824190]
+[node name="VideoStage" type="Control" parent="." unique_id=1175039923]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.258824, 0.133333, 0.211765, 0.32)
+
+[node name="VideoPlayer" type="VideoStreamPlayer" parent="VideoStage" unique_id=126613825]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand = true
+loop = true
+autoplay = true
+
+[node name="VideoClickArea" type="Button" parent="VideoStage" unique_id=831594146]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+tooltip_text = "Click to talk"
+flat = true
+
+[node name="BackdropTint" type="ColorRect" parent="." unique_id=1513824190]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.258824, 0.133333, 0.211765, 0)
 
 [node name="RoomLight" type="ColorRect" parent="." unique_id=609472986]
+visible = false
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.26
@@ -90,20 +135,20 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 84.0
+offset_left = 76.0
 offset_top = 56.0
 offset_right = -330.0
-offset_bottom = -336.0
+offset_bottom = -260.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="CompanionView" parent="CompanionStage" unique_id=1098388039 instance=ExtResource("2_mw3ov")]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.58
-anchor_top = 0.54
-anchor_right = 0.58
-anchor_bottom = 0.54
+anchor_left = 0.68
+anchor_top = 0.56
+anchor_right = 0.68
+anchor_bottom = 0.56
 offset_left = -250.0
 offset_top = -330.0
 offset_right = 250.0
@@ -114,7 +159,7 @@ layout_mode = 1
 offset_left = 28.0
 offset_top = 22.0
 offset_right = 248.0
-offset_bottom = 126.0
+offset_bottom = 142.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
 
 [node name="Margin" type="MarginContainer" parent="TopLeftHUD" unique_id=1983580296]
@@ -130,24 +175,31 @@ theme_override_constants/separation = 4
 
 [node name="DateLabel" type="Label" parent="TopLeftHUD/Margin/VBox" unique_id=966931863]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 text = "2026/03/12"
 
 [node name="TimeLabel" type="Label" parent="TopLeftHUD/Margin/VBox" unique_id=595684944]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 text = "20:22"
+
+[node name="WeatherLabel" type="Label" parent="TopLeftHUD/Margin/VBox" unique_id=688614200]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Evening"
 
 [node name="RightTimerPanel" type="PanelContainer" parent="." unique_id=53215121]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -284.0
+offset_left = -250.0
 offset_top = 28.0
-offset_right = -24.0
-offset_bottom = 242.0
+offset_right = -50.0
+offset_bottom = 228.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_rail")
+theme_override_styles/panel = SubResource("StyleBoxFlat_timer_circle")
 
 [node name="TimerMargin" type="MarginContainer" parent="RightTimerPanel" unique_id=280606862]
 layout_mode = 2
@@ -158,37 +210,41 @@ theme_override_constants/margin_bottom = 14
 
 [node name="TimerVBox" type="VBoxContainer" parent="RightTimerPanel/TimerMargin" unique_id=1028384497]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 7
+alignment = 1
 
 [node name="TimerTitle" type="Label" parent="RightTimerPanel/TimerMargin/TimerVBox" unique_id=929199616]
 layout_mode = 2
 text = "Focus Timer"
+horizontal_alignment = 1
 
 [node name="TimerLabel" type="Label" parent="RightTimerPanel/TimerMargin/TimerVBox" unique_id=1094668163]
 layout_mode = 2
 text = "Focus 25:00"
+horizontal_alignment = 1
 
 [node name="TimerInputRow" type="HBoxContainer" parent="RightTimerPanel/TimerMargin/TimerVBox" unique_id=1112712414]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
+alignment = 1
 
 [node name="TimerMinutesInput" type="LineEdit" parent="RightTimerPanel/TimerMargin/TimerVBox/TimerInputRow" unique_id=816600591]
-custom_minimum_size = Vector2(112, 36)
+custom_minimum_size = Vector2(72, 30)
 layout_mode = 2
 placeholder_text = "Minutes"
 
 [node name="SetTimerButton" type="Button" parent="RightTimerPanel/TimerMargin/TimerVBox/TimerInputRow" unique_id=1079786154]
-custom_minimum_size = Vector2(0, 36)
+custom_minimum_size = Vector2(42, 30)
 layout_mode = 2
 text = "Set"
 
 [node name="StartFocusButton" type="Button" parent="RightTimerPanel/TimerMargin/TimerVBox" unique_id=516134104]
-custom_minimum_size = Vector2(0, 38)
+custom_minimum_size = Vector2(132, 32)
 layout_mode = 2
 text = "Start Focus"
 
 [node name="StopFocusButton" type="Button" parent="RightTimerPanel/TimerMargin/TimerVBox" unique_id=1382223618]
-custom_minimum_size = Vector2(0, 38)
+custom_minimum_size = Vector2(132, 32)
 layout_mode = 2
 text = "Reset Focus"
 
@@ -220,7 +276,8 @@ theme_override_constants/separation = 12
 
 [node name="TodoTitle" type="Label" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=614165287]
 layout_mode = 2
-text = "Todo"
+text = "Tasks"
+horizontal_alignment = 1
 
 [node name="TodoList" type="ItemList" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=2079788506]
 custom_minimum_size = Vector2(0, 240)
@@ -263,8 +320,8 @@ anchors_preset = -1
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 28.0
-offset_top = -150.0
-offset_right = 388.0
+offset_top = -146.0
+offset_right = 416.0
 offset_bottom = -28.0
 grow_horizontal = 0
 grow_vertical = 0
@@ -279,40 +336,55 @@ theme_override_constants/margin_bottom = 10
 
 [node name="MusicVBox" type="VBoxContainer" parent="BottomLeftMusicBar/MusicMargin" unique_id=1360712778]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 7
 
-[node name="TopRow" type="HBoxContainer" parent="BottomLeftMusicBar/MusicMargin/MusicVBox" unique_id=2097457183]
+[node name="SongLabel" type="Label" parent="BottomLeftMusicBar/MusicMargin/MusicVBox" unique_id=1202556902]
+custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="SongLabel" type="Label" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/TopRow" unique_id=1202556902]
-custom_minimum_size = Vector2(150, 0)
-layout_mode = 2
-size_flags_horizontal = 3
 text = "No track loaded"
+horizontal_alignment = 1
+clip_text = true
 
-[node name="Controls" type="HBoxContainer" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/TopRow" unique_id=128112317]
+[node name="ProgressBar" type="ProgressBar" parent="BottomLeftMusicBar/MusicMargin/MusicVBox" unique_id=766962508]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
-theme_override_constants/separation = 6
-alignment = 2
 
-[node name="PrevButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/TopRow/Controls" unique_id=112952394]
-custom_minimum_size = Vector2(34, 0)
+[node name="Controls" type="HBoxContainer" parent="BottomLeftMusicBar/MusicMargin/MusicVBox" unique_id=128112317]
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="PrevButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=112952394]
+custom_minimum_size = Vector2(34, 30)
 layout_mode = 2
 text = "<<"
 
-[node name="PlayPauseButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/TopRow/Controls" unique_id=801793230]
-custom_minimum_size = Vector2(92, 0)
+[node name="PlayPauseButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=801793230]
+custom_minimum_size = Vector2(58, 30)
 layout_mode = 2
 text = "Play"
 
-[node name="NextButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/TopRow/Controls" unique_id=179663867]
-custom_minimum_size = Vector2(34, 0)
+[node name="NextButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=179663867]
+custom_minimum_size = Vector2(34, 30)
 layout_mode = 2
 text = ">>"
 
-[node name="ProgressBar" type="ProgressBar" parent="BottomLeftMusicBar/MusicMargin/MusicVBox" unique_id=766962508]
+[node name="VoiceButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=437113254]
+custom_minimum_size = Vector2(74, 30)
 layout_mode = 2
+text = "Voice"
+
+[node name="PlaybackModeButton" type="OptionButton" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=1741200937]
+custom_minimum_size = Vector2(108, 30)
+layout_mode = 2
+item_count = 3
+selected = 0
+popup/item_0/text = "Loop"
+popup/item_0/id = 0
+popup/item_1/text = "Seq"
+popup/item_1/id = 1
+popup/item_2/text = "Random"
+popup/item_2/id = 2
 
 [node name="BottomPanel" type="MarginContainer" parent="." unique_id=802356741]
 layout_mode = 1
@@ -321,9 +393,9 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -390.0
-offset_top = -354.0
-offset_right = 390.0
+offset_left = -320.0
+offset_top = -194.0
+offset_right = 320.0
 offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0

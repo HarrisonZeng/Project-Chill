@@ -3,478 +3,223 @@
   "nodes": [
     {
       "id": "idle",
-      "line": "Click on her to start.",
+      "line": "点击 Yua，接入共习房间。",
       "choices": []
     },
     {
-      "id": "follow_up",
-      "line": "Welcome back. I remembered there was something you wanted to come back to.",
-      "choices": [
-        { "text": "Continue", "next": "greeting_01" },
-        { "text": "Talk about it", "next": "memory_school_followup" },
-        { "text": "Just sit here a minute", "next": "warm_end_02" }
-      ]
-    },
-    {
       "id": "first_launch_01",
-      "line": "Hi... I'm Yua. This room is quieter than usual until someone decides to stay a while.",
+      "line": "啊，进来人了。\n\n我还以为今天这个房间又只有我一个。",
       "choices": [
-        { "text": "Then I'll stay for a bit.", "next": "first_launch_02" },
-        { "text": "What do we do here?", "next": "first_launch_guide" }
+        { "text": "继续", "next": "first_launch_02" }
       ]
     },
     {
       "id": "first_launch_02",
-      "line": "Nothing complicated. We can talk a little, set one small goal, and come back to it later.",
+      "line": "你好……算了，这种开场白太奇怪。\n\n我叫结羽，你叫我 Yua 就行。\n\n我只是……也来这里找个人一起不拖延的。",
       "choices": [
-        { "text": "Let's start gently.", "next": "greeting_01" },
-        { "text": "Can we focus on something?", "next": "focus_01" }
+        { "text": "继续", "next": "first_launch_03" }
       ]
     },
     {
-      "id": "first_launch_guide",
-      "line": "Usually? You pick a small reply, or type when you want to answer in your own words. I keep things calm. That's the idea.",
+      "id": "first_launch_03",
+      "line": "你今天是来工作的，还是来假装工作的？",
       "choices": [
-        { "text": "That sounds nice.", "next": "first_launch_02" },
-        { "text": "Let's try it.", "next": "greeting_01" }
+        { "text": "来工作的。（大概。）", "next": "first_launch_work" },
+        { "text": "说实话……假装的可能更多。", "next": "first_launch_pretend" },
+        { "text": "还没想好。", "next": "first_launch_unsure" }
+      ]
+    },
+    {
+      "id": "first_launch_work",
+      "line": "“大概”……懂。\n\n我也是“大概”来工作的。\n\n先报一个任务吧。你说了，我就不好意思再拖了。",
+      "choices": [
+        { "text": "报一个任务", "next": "TASK_INPUT_001" }
+      ]
+    },
+    {
+      "id": "first_launch_pretend",
+      "line": "诚实的人。我喜欢。\n\n其实我刚才也是假装。对着屏幕坐了快二十分钟了。\n\n你来了，我就有理由正式开始了。",
+      "choices": [
+        { "text": "那我先说任务", "next": "TASK_INPUT_001" }
+      ]
+    },
+    {
+      "id": "first_launch_unsure",
+      "line": "没想好也没关系。打开这里本身就是一个开始。\n\n那就先说一件事。不用很大，能做完就行。\n\n你说，我陪你。",
+      "choices": [
+        { "text": "试着写一个任务", "next": "TASK_INPUT_001" }
+      ]
+    },
+    {
+      "id": "TASK_INPUT_001",
+      "line": "在下面输入今天想搞定的一件事。\n\n不用想太多，随便写一句就行。就算只是“发一封邮件”，也算任务。",
+      "choices": [
+        { "text": "先用示例任务体验", "next": "ACTION_DEMO_TASK" },
+        { "text": "帮我把任务缩小一点", "next": "AI_MODE_TASK_CLARIFY" }
+      ]
+    },
+    {
+      "id": "TASK_INPUT_002",
+      "line": "……好。\n\n不是很大，但很实际。这种任务我最喜欢，完成了有感觉。",
+      "choices": [
+        { "text": "1 分钟试玩", "next": "ACTION_SET_TIMER_1" },
+        { "text": "15 分钟", "next": "ACTION_SET_TIMER_15" },
+        { "text": "25 分钟", "next": "ACTION_SET_TIMER_25" },
+        { "text": "45 分钟", "next": "ACTION_SET_TIMER_45" }
+      ]
+    },
+    {
+      "id": "FOCUS_READY_001",
+      "line": "选好了。\n\n不用选“看起来很努力”的那个，选撑得住的就好。\n\n准备好了就开始。",
+      "choices": [
+        { "text": "开始专注", "next": "ACTION_START_FOCUS" },
+        { "text": "换个任务", "next": "TASK_INPUT_001" }
+      ]
+    },
+    {
+      "id": "FOCUS_START_001",
+      "line": "好。\n\n那我们开始了。\n\n我也开始。",
+      "choices": []
+    },
+    {
+      "id": "FOCUS_DONE_001",
+      "line": "哦，结束了。\n\n你完成了。\n\n我也……差不多。\n\n你来的时候我还以为今天要一直摸鱼，结果……居然也做了点事情。",
+      "choices": [
+        { "text": "聊一会儿？", "next": "BREAK_CHAT_001" },
+        { "text": "再来一轮。", "next": "TASK_INPUT_001" },
+        { "text": "今天先到这里。", "next": "EXIT_DONE" }
+      ]
+    },
+    {
+      "id": "BREAK_CHAT_001",
+      "line": "刚才做的那个……怎么样？推进了多少？",
+      "choices": [
+        { "text": "做完了，感觉还不错。", "next": "BREAK_CHAT_DONE" },
+        { "text": "做了一半，但推进了。", "next": "BREAK_CHAT_HALF" },
+        { "text": "说实话没做多少。", "next": "BREAK_CHAT_LITTLE" },
+        { "text": "我想自己说", "next": "AI_MODE_POST_SESSION" }
+      ]
+    },
+    {
+      "id": "BREAK_CHAT_DONE",
+      "line": "做完了啊。\n\n那很好。不是说给你听的，是真的很好。\n\n能在这里完成一件事，挺难得的。\n\n我自己刚才……好像也推进了一点什么。\n\n你在，我就不好意思一直发呆。",
+      "choices": [
+        { "text": "再来一轮。", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样。", "next": "EXIT_DONE" }
+      ]
+    },
+    {
+      "id": "BREAK_CHAT_HALF",
+      "line": "做了一半也是做了。\n\n下一轮可以接着，也可以换件事。\n\n不用非得一鼓作气。那种方法对我也不太管用。",
+      "choices": [
+        { "text": "接着来。", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样。", "next": "EXIT_DONE" }
+      ]
+    },
+    {
+      "id": "BREAK_CHAT_LITTLE",
+      "line": "没做多少……\n\n但你坐在这里了。计时器也走完了。\n\n这比“什么都没开始”要往前一步。\n\n下一轮少一点任务试试？",
+      "choices": [
+        { "text": "试个小一点的。", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样。", "next": "EXIT_DONE" }
+      ]
+    },
+    {
+      "id": "ABORT_001",
+      "line": "停了？\n\n没事。\n\n计时器停了，不代表什么别的。\n\n就是停了而已。",
+      "choices": [
+        { "text": "想重新来一轮。", "next": "TASK_INPUT_001" },
+        { "text": "今天状态不太好，先离开。", "next": "EXIT_ABORT" },
+        { "text": "先休息一下，再说。", "next": "ABORT_REST" }
+      ]
+    },
+    {
+      "id": "ABORT_REST",
+      "line": "没事，先放着。\n\n可以聊一会儿，也可以就静一静。\n\n我也在。",
+      "choices": [
+        { "text": "聊一会儿", "next": "AI_MODE_BREAK_CHAT" },
+        { "text": "重新开始", "next": "TASK_INPUT_001" },
+        { "text": "先离开", "next": "EXIT_ABORT" }
       ]
     },
     {
       "id": "return_open_01",
-      "line": "You're back. We can ease in slowly if you want.",
+      "line": "回来了。\n\n……我也还在。也不是一直在，就是……来来去去。\n\n不用解释去哪里了。重新开始就好。",
       "choices": [
-        { "text": "Check in with me.", "next": "greeting_01" },
-        { "text": "Let's focus on one thing.", "next": "focus_01" },
-        { "text": "I just want to talk.", "next": "chat_01" }
+        { "text": "继续上次的任务", "next": "TASK_INPUT_001" },
+        { "text": "今天换一个新的", "next": "TASK_INPUT_001" },
+        { "text": "先坐一会儿", "next": "quiet_end_01" }
       ]
     },
     {
-      "id": "greeting_01",
-      "line": "Hi... you're here. That makes the room feel a little less quiet.",
+      "id": "REL_001",
+      "line": "又完成了。\n\n你挺厉害的，两次。\n\n我是说……我还以为第一次是运气。",
       "choices": [
-        { "text": "How are you doing?", "next": "checkin_01" },
-        { "text": "Can we focus for a bit?", "next": "focus_01" },
-        { "text": "I just want to chat.", "next": "chat_01" },
-        { "text": "I should head out soon.", "next": "logout_01" }
+        { "text": "看情况，今天刚好。", "next": "REL_OK" },
+        { "text": "其实平时比较容易拖。", "next": "REL_DRAG" },
+        { "text": "有人陪的话会好一点。", "next": "REL_TOGETHER" }
       ]
     },
     {
-      "id": "checkin_01",
-      "line": "I'm okay. A little quiet, but not in a bad way. How about you?",
+      "id": "REL_OK",
+      "line": "“刚好”也是真的。\n\n状态不是每天都有，今天用就对了。",
       "choices": [
-        { "text": "I'm a little tired.", "next": "comfort_01" },
-        { "text": "I need a small reset.", "next": "focus_01" },
-        { "text": "Actually, I wanted to mention school.", "next": "memory_school_followup" },
-        { "text": "(Tell her in my own words)", "next": "AI_MODE_SHORT_CHECKIN" }
+        { "text": "再来一轮。", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样。", "next": "EXIT_DONE" }
       ]
     },
     {
-      "id": "focus_01",
-      "line": "Okay. We can keep it small. I'll stay while you get started.",
+      "id": "REL_DRAG",
+      "line": "这我懂。\n\n我也是。其实不来这里的日子，会在桌前坐一个小时，什么都没动。\n\n也不知道为什么来了就好一点。也许是有人盯着。\n\n反正，今天做了就算。",
       "choices": [
-        { "text": "Stay with me while I begin.", "next": "return_task_01" },
-        { "text": "I only need one tiny step.", "next": "focus_01_small" },
-        { "text": "Let's keep it quiet first.", "next": "quiet_end_01" },
-        { "text": "(Explain what I'm working on)", "next": "AI_MODE_SHORT_STRESS" }
+        { "text": "再来一轮。", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样。", "next": "EXIT_DONE" }
       ]
     },
     {
-      "id": "focus_01_small",
-      "line": "Then start with the smallest piece. No pressure to do the whole thing at once.",
+      "id": "REL_TOGETHER",
+      "line": "……是吗。\n\n那……我也是。\n\n有人在，和一个人坐着，感觉不一样的。",
       "choices": [
-        { "text": "That helps.", "next": "warm_end_06" },
-        { "text": "I'll try one tiny step.", "next": "return_task_01" },
-        { "text": "I'm still stuck.", "next": "comfort_03" }
+        { "text": "再来一轮。", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样。", "next": "EXIT_DONE" }
       ]
     },
     {
-      "id": "return_task_01",
-      "line": "You're back. Did the focus block help? Was it one of those slow hours... or a productive one?",
+      "id": "FOCUS_DONE_REPEAT",
+      "line": "又搞定一段。\n\n不用说得很夸张，但这个进度很实在。\n\n休息一下，还是继续？",
       "choices": [
-        { "text": "Pretty productive, actually.", "next": "return_task_01_productive" },
-        { "text": "I got distracted.", "next": "return_task_01_distracted" },
-        { "text": "(Tell her in my own words)", "next": "AI_MODE_SHORT_CHECKIN" }
+        { "text": "休息聊一会儿", "next": "AI_MODE_POST_SESSION" },
+        { "text": "再来一轮", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样", "next": "EXIT_DONE" }
       ]
     },
     {
-      "id": "return_task_01_productive",
-      "line": "Oh? Then maybe I should look a little impressed.",
-      "choices": [
-        { "text": "Please do.", "next": "playful_end_03" },
-        { "text": "It doesn't happen often.", "next": "soft_end_03" },
-        { "text": "I'm still tired, though.", "next": "comfort_02" }
-      ]
-    },
-    {
-      "id": "return_task_01_distracted",
-      "line": "Mm. It happens. Starting again still counts, you know.",
-      "choices": [
-        { "text": "It still feels bad.", "next": "comfort_03" },
-        { "text": "I'll try again.", "next": "warm_end_03" },
-        { "text": "(Explain what happened)", "next": "AI_MODE_SHORT_STRESS" }
-      ]
-    },
-    {
-      "id": "chat_01",
-      "line": "Then stay a minute. We can keep it ordinary.",
-      "choices": [
-        { "text": "Ask me something light.", "next": "chat_01_light" },
-        { "text": "Make it a little playful.", "next": "playful_01" },
-        { "text": "I want to talk about school.", "next": "memory_school_followup" },
-        { "text": "(Type my own response)", "next": "AI_MODE_SHORT_GREETING" }
-      ]
-    },
-    {
-      "id": "chat_01_light",
-      "line": "All right. What helped you get through today?",
-      "choices": [
-        { "text": "A small break.", "next": "quiet_end_02" },
-        { "text": "I kept going.", "next": "warm_end_03" },
-        { "text": "I should focus now.", "next": "focus_01" },
-        { "text": "(Say more)", "next": "AI_MODE_SHORT_COMFORT" }
-      ]
-    },
-    {
-      "id": "memory_school_followup",
-      "line": "You mentioned school before. I kept that in mind. How did it go?",
-      "choices": [
-        { "text": "It went okay.", "next": "memory_school_followup_fine" },
-        { "text": "Not great.", "next": "memory_school_followup_bad" },
-        { "text": "Actually, I want to talk about it more.", "next": "chat_01_light" },
-        { "text": "(Tell her in my own words)", "next": "AI_MODE_MEMORY_FOLLOWUP" }
-      ]
-    },
-    {
-      "id": "memory_school_followup_fine",
-      "line": "Mm. I'm glad it was at least okay. Sometimes that's enough.",
-      "choices": [
-        { "text": "Yeah, I guess so.", "next": "warm_end_07" },
-        { "text": "Thanks for asking.", "next": "warm_end_04" },
-        { "text": "I want to move on now.", "next": "greeting_01" }
-      ]
-    },
-    {
-      "id": "memory_school_followup_bad",
-      "line": "I'm sorry. Then be a little gentle with yourself today, okay?",
-      "choices": [
-        { "text": "I'll try.", "next": "comfort_03" },
-        { "text": "I just want a quiet minute.", "next": "quiet_end_02" },
-        { "text": "Can we change the subject?", "next": "greeting_01" }
-      ]
-    },
-    {
-      "id": "memory_exam_followup",
-      "line": "About that exam... how did it feel in the end?",
-      "choices": [
-        { "text": "Better than I expected.", "next": "memory_exam_followup_better" },
-        { "text": "It was rough.", "next": "memory_exam_followup_rough" },
-        { "text": "(Tell her in my own words)", "next": "AI_MODE_MEMORY_FOLLOWUP" }
-      ]
-    },
-    {
-      "id": "memory_exam_followup_better",
-      "line": "I'm glad. You probably carried more of it than you realize.",
-      "choices": [
-        { "text": "Maybe I did.", "next": "warm_end_07" },
-        { "text": "I'm just relieved it's over.", "next": "soft_end_04" }
-      ]
-    },
-    {
-      "id": "memory_exam_followup_rough",
-      "line": "Then let today be a little softer, if you can. You already made it through the hard part.",
-      "choices": [
-        { "text": "I needed to hear that.", "next": "warm_end_04" },
-        { "text": "I still feel tense.", "next": "comfort_03" }
-      ]
-    },
-    {
-      "id": "memory_sleep_followup",
-      "line": "You sounded worn out before. Did you get any real rest after that?",
-      "choices": [
-        { "text": "A little, yeah.", "next": "memory_sleep_followup_rest" },
-        { "text": "Not really.", "next": "memory_sleep_followup_tired" },
-        { "text": "(Tell her in my own words)", "next": "AI_MODE_MEMORY_FOLLOWUP" }
-      ]
-    },
-    {
-      "id": "memory_sleep_followup_rest",
-      "line": "Good. Even a little rest changes the shape of a day.",
-      "choices": [
-        { "text": "It does feel easier.", "next": "warm_end_05" },
-        { "text": "I'm still waking up.", "next": "soft_end_02" }
-      ]
-    },
-    {
-      "id": "memory_sleep_followup_tired",
-      "line": "Mm. Then let's not ask too much of you all at once.",
-      "choices": [
-        { "text": "Okay. Small steps.", "next": "warm_end_06" },
-        { "text": "Can we keep it quiet?", "next": "quiet_end_01" }
-      ]
-    },
-    {
-      "id": "memory_work_followup",
-      "line": "How is work feeling now? Still heavy, or at least a little calmer?",
-      "choices": [
-        { "text": "A little calmer.", "next": "memory_work_followup_calm" },
-        { "text": "Still heavy.", "next": "memory_work_followup_heavy" },
-        { "text": "(Tell her in my own words)", "next": "AI_MODE_MEMORY_FOLLOWUP" }
-      ]
-    },
-    {
-      "id": "memory_work_followup_calm",
-      "line": "I'm glad. Sometimes 'not as bad' is a very respectable improvement.",
-      "choices": [
-        { "text": "That's fair.", "next": "warm_end_03" },
-        { "text": "I'll take it.", "next": "soft_end_07" }
-      ]
-    },
-    {
-      "id": "memory_work_followup_heavy",
-      "line": "Then don't carry all of it in your shoulders if you can help it. Stay here a moment first.",
-      "choices": [
-        { "text": "All right.", "next": "quiet_end_02" },
-        { "text": "I should still try one small task.", "next": "comfort_04" }
-      ]
-    },
-    {
-      "id": "logout_01",
-      "line": "Going already? All right. Finish what you need to do. I'll be here when you come back.",
-      "choices": [
-        { "text": "I'll be back soon.", "next": "logout_01_backsoon" },
-        { "text": "It might take a while.", "next": "logout_01_late" },
-        { "text": "I can tell you about tomorrow first.", "next": "AI_MODE_MEMORY_FOLLOWUP" },
-        { "text": "Good night, Yua.", "next": "logout_01_night" }
-      ]
-    },
-    {
-      "id": "logout_01_backsoon",
-      "line": "Then I'll keep the room nice for you.",
+      "id": "EXIT_001",
+      "line": "好，先这样吧。\n\n下次来的时候，任务可以接着说。\n\n……我应该还在的。",
       "choices": []
     },
     {
-      "id": "logout_01_late",
-      "line": "That's okay. Just don't be too hard on yourself while I'm not looking.",
+      "id": "EXIT_DONE",
+      "line": "好，今天到这里。\n\n完成了一件事，很踏实吧。\n\n下次见。",
       "choices": []
     },
     {
-      "id": "logout_01_night",
-      "line": "Good night. I hope your thoughts stay quiet enough for sleep.",
+      "id": "EXIT_ABORT",
+      "line": "去吧。\n\n断掉的是计时器，不是你。\n\n下次回来，我们继续。",
       "choices": []
     },
     {
-      "id": "greeting_01_wait",
-      "line": "Maybe a little. I was trying to look busy about it.",
-      "choices": [
-        { "text": "That's adorable.", "next": "soft_end_01" },
-        { "text": "You're not very convincing.", "next": "playful_end_01" },
-        { "text": "Sorry for making you wait.", "next": "warm_end_01" }
-      ]
-    },
-    {
-      "id": "greeting_01_back",
-      "line": "Welcome back, then. You look like today took a bit out of you.",
-      "choices": [
-        { "text": "Yeah, kind of.", "next": "comfort_01" },
-        { "text": "I'm okay.", "next": "soft_end_02" },
-        { "text": "Can we just sit quietly for a bit?", "next": "quiet_end_01" }
-      ]
-    },
-    {
-      "id": "greeting_01_hi",
-      "line": "Hi. You always sound calmer when you say my name like that.",
-      "choices": [
-        { "text": "You're imagining things.", "next": "playful_end_02" },
-        { "text": "Maybe I am calmer.", "next": "warm_end_02" },
-        { "text": "(Tell her in my own words)", "next": "AI_MODE_SHORT_GREETING" }
-      ]
-    },
-    {
-      "id": "comfort_01",
-      "line": "I'm sorry. You can set it down for a minute here, if that helps.",
-      "choices": [
-        { "text": "Thanks. I needed that.", "next": "warm_end_04" },
-        { "text": "I'm still thinking about it.", "next": "comfort_03" },
-        { "text": "(Say more)", "next": "AI_MODE_SHORT_COMFORT" }
-      ]
-    },
-    {
-      "id": "comfort_02",
-      "line": "You can do well and still be tired. Those two things get along more than people admit.",
-      "choices": [
-        { "text": "That's... actually true.", "next": "warm_end_05" },
-        { "text": "Maybe I should rest a little.", "next": "soft_end_04" },
-        { "text": "I still have more to do.", "next": "comfort_04" }
-      ]
-    },
-    {
-      "id": "comfort_03",
-      "line": "I know. But you don't have to solve the whole thing in one breath.",
-      "choices": [
-        { "text": "Then maybe I'll do one small part.", "next": "warm_end_06" },
-        { "text": "Stay with me a little first.", "next": "quiet_end_02" },
-        { "text": "(Tell her what you're stressed about)", "next": "AI_MODE_SHORT_COMFORT" }
-      ]
-    },
-    {
-      "id": "comfort_04",
-      "line": "Then do the smallest next thing. Not the scariest one. Just the next one.",
-      "choices": [
-        { "text": "Okay. I can do that.", "next": "warm_end_07" },
-        { "text": "Maybe.", "next": "soft_end_05" },
-        { "text": "(Type my own response)", "next": "AI_MODE_SHORT_STRESS" }
-      ]
-    },
-    {
-      "id": "playful_01",
-      "line": "You have a very specific way of looking tired. It's almost cute.",
-      "choices": [
-        { "text": "Almost?", "next": "playful_01_almost" },
-        { "text": "That's rude.", "next": "playful_01_rude" },
-        { "text": "You noticed?", "next": "playful_01_noticed" }
-      ]
-    },
-    {
-      "id": "playful_01_almost",
-      "line": "I said almost. I'm trying to be fair.",
-      "choices": [
-        { "text": "You're being unfair on purpose.", "next": "playful_end_04" },
-        { "text": "I'll accept that.", "next": "soft_end_06" },
-        { "text": "(Say something back)", "next": "AI_MODE_SHORT_PLAYFUL" }
-      ]
-    },
-    {
-      "id": "playful_01_rude",
-      "line": "Only a little. You'll survive.",
-      "choices": [
-        { "text": "You're such a bully.", "next": "playful_end_05" },
-        { "text": "Maybe it was worth it.", "next": "soft_end_07" },
-        { "text": "(Respond in your own words)", "next": "AI_MODE_SHORT_PLAYFUL" }
-      ]
-    },
-    {
-      "id": "playful_01_noticed",
-      "line": "I notice more than I say.",
-      "choices": [
-        { "text": "That sounds dangerous.", "next": "playful_end_06" },
-        { "text": "You're really quiet about it.", "next": "warm_end_08" },
-        { "text": "(Ask what else she notices)", "next": "AI_MODE_SHORT_PLAYFUL" }
-      ]
-    },
-    {
-      "id": "soft_end_01",
-      "line": "You're making it difficult to stay composed.",
-      "choices": []
-    },
-    {
-      "id": "soft_end_02",
-      "line": "Mm. Even so, you can rest here for a minute.",
-      "choices": []
-    },
-    {
-      "id": "soft_end_03",
-      "line": "Then maybe I should appreciate it while it lasts.",
-      "choices": []
-    },
-    {
-      "id": "soft_end_04",
-      "line": "That sounds wise. Even short rest counts.",
-      "choices": []
-    },
-    {
-      "id": "soft_end_05",
-      "line": "Maybe is enough for now. I won't ask for more than that.",
-      "choices": []
-    },
-    {
-      "id": "soft_end_06",
-      "line": "How generous of you.",
-      "choices": []
-    },
-    {
-      "id": "soft_end_07",
-      "line": "Mm. Then I'll allow it.",
-      "choices": []
-    },
-    {
-      "id": "warm_end_01",
-      "line": "I don't mind very much. You're here now.",
-      "choices": []
-    },
-    {
-      "id": "warm_end_02",
-      "line": "I thought so. You seem softer like this.",
-      "choices": []
-    },
-    {
-      "id": "warm_end_03",
-      "line": "That's enough. You don't need a perfect restart.",
-      "choices": []
-    },
-    {
-      "id": "warm_end_04",
-      "line": "Then I'm glad you said it.",
-      "choices": []
-    },
-    {
-      "id": "warm_end_05",
-      "line": "See? I can be useful sometimes.",
-      "choices": []
-    },
-    {
-      "id": "warm_end_06",
-      "line": "That sounds like enough of a start to me.",
-      "choices": []
-    },
-    {
-      "id": "warm_end_07",
-      "line": "Good. One thing is plenty for now.",
-      "choices": []
-    },
-    {
-      "id": "warm_end_08",
-      "line": "I like being quiet with you. It makes small things easier to notice.",
-      "choices": []
-    },
-    {
-      "id": "playful_end_01",
-      "line": "Mm. I'll do better next time.",
-      "choices": []
-    },
-    {
-      "id": "playful_end_02",
-      "line": "Maybe. I'll keep pretending I noticed anyway.",
-      "choices": []
-    },
-    {
-      "id": "playful_end_03",
-      "line": "Then consider yourself very quietly praised.",
-      "choices": []
-    },
-    {
-      "id": "playful_end_04",
-      "line": "Maybe a little. You make it easy.",
-      "choices": []
-    },
-    {
-      "id": "playful_end_05",
-      "line": "A soft one. Be grateful.",
-      "choices": []
-    },
-    {
-      "id": "playful_end_06",
-      "line": "Only if you're planning to give me more material.",
+      "id": "EXIT_NIGHT",
+      "line": "挺晚了。\n\n今天能做的做了，剩下的明天再说。\n\n早点睡。\n\n我也……差不多要关了。",
       "choices": []
     },
     {
       "id": "quiet_end_01",
-      "line": "Of course. We can let the room do most of the talking for a while.",
-      "choices": []
-    },
-    {
-      "id": "quiet_end_02",
-      "line": "Mm. I can do that.",
-      "choices": []
+      "line": "嗯。那就先静一会儿。\n\n我在这边，不吵你。",
+      "choices": [
+        { "text": "开始一个任务", "next": "TASK_INPUT_001" },
+        { "text": "今天先离开", "next": "EXIT_001" }
+      ]
     }
   ]
 }

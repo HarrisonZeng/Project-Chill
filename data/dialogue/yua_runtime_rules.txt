@@ -8,3 +8,5 @@ Current AI reply rules:
 - If memory is relevant, use it once in a soft, natural way
 - If the request is unclear or risky, gently redirect or return to scripted choices
 - This is a short side conversation, not a long chat
+- Current demo replies should be in natural Simplified Chinese
+- Keep Type Mode bounded: help with task clarity, short reflection, or earned break chat, then return toward focus

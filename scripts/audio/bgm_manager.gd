@@ -4,11 +4,22 @@ extends Node
 @export var playlist: Array[AudioStream] = []
 @export var autoplay: bool = false
 
+enum PlaybackMode {
+	LOOP,
+	SEQUENTIAL,
+	RANDOM
+}
+
 var bgm_player: AudioStreamPlayer
 var current_index: int = 0
+var playback_mode: int = PlaybackMode.LOOP
+var random := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	bgm_player = _resolve_bgm_player()
+	random.randomize()
+	if bgm_player != null and not bgm_player.finished.is_connected(_on_bgm_finished):
+		bgm_player.finished.connect(_on_bgm_finished)
 	if autoplay:
 		play_default()
 
@@ -24,7 +35,7 @@ func play_current() -> void:
 func play_next() -> void:
 	if playlist.is_empty():
 		return
-	current_index = (current_index + 1) % playlist.size()
+	current_index = _get_next_index()
 	_play_stream(playlist[current_index])
 
 func play_previous() -> void:
@@ -113,6 +124,12 @@ func set_current_index(track_index: int) -> void:
 		return
 	current_index = clampi(track_index, 0, playlist.size() - 1)
 
+func set_playback_mode(mode: int) -> void:
+	playback_mode = clampi(mode, PlaybackMode.LOOP, PlaybackMode.RANDOM)
+
+func get_playback_mode() -> int:
+	return playback_mode
+
 func get_now_playing_name() -> String:
 	if bgm_player == null:
 		return "No track loaded"
@@ -130,3 +147,38 @@ func get_transport_state_text() -> String:
 	if is_playing():
 		return "Ambience playing"
 	return "Ambience paused"
+
+func _on_bgm_finished() -> void:
+	if playlist.is_empty():
+		return
+
+	match playback_mode:
+		PlaybackMode.LOOP:
+			play_current()
+		PlaybackMode.SEQUENTIAL:
+			if current_index >= playlist.size() - 1:
+				return
+			current_index += 1
+			_play_stream(playlist[current_index])
+		PlaybackMode.RANDOM:
+			current_index = _get_random_index()
+			_play_stream(playlist[current_index])
+
+func _get_next_index() -> int:
+	if playlist.size() <= 1:
+		return 0
+
+	match playback_mode:
+		PlaybackMode.RANDOM:
+			return _get_random_index()
+		_:
+			return (current_index + 1) % playlist.size()
+
+func _get_random_index() -> int:
+	if playlist.size() <= 1:
+		return 0
+
+	var next_index := current_index
+	while next_index == current_index:
+		next_index = random.randi_range(0, playlist.size() - 1)
+	return next_index

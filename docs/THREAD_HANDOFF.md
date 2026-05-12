@@ -18,7 +18,7 @@ Non-negotiables:
 - most dialogue is scripted
 - player-facing free text exists as `Type Mode`
 - memory is game-side and persistent
-- voice is deferred for now
+- voice is optional and has a pre-generated playback path for demo lines
 
 ## Current Product Goal
 
@@ -76,6 +76,8 @@ Build a convincing short playable demo where:
 - `data/dialogue/scripted_nodes.json`
 - `data/dialogue/yua_system_prompt.txt`
 - `data/dialogue/yua_runtime_rules.txt`
+- `scripts/audio/voice_manager.gd`
+- `docs/YUA_VOICE_ARCHITECTURE.md`
 
 ## Current Demo Loop
 
@@ -90,7 +92,7 @@ Build a convincing short playable demo where:
 
 - UI still needs more visual polish and better hierarchy
 - the overall plot/game loop still needs tightening to feel fully demo-ready
-- voice playback is intentionally quiet/deferred
+- voice playback is optional and ready for pre-generated clips, but no runtime TTS provider is wired yet
 - some docs may still reflect earlier directions and should be treated carefully
 
 ## Best Next Priorities

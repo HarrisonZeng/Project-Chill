@@ -15,7 +15,7 @@ Important constraints:
 - click/tap and dialogue UI driven interaction
 - focus timer and task input are core gameplay
 - progression is based on completed focus sessions and total focus time
-- voice is deferred for now
+- voice is optional and uses a hybrid-ready path: pre-generated clips first, runtime TTS later
 
 ## Core Loop
 
@@ -75,7 +75,7 @@ Example:
 - Memory manager, AI service, and dialogue router exist.
 - Focus timer, todo UI, and music controls exist.
 - Existing content still reflects an earlier VN-room/check-in prototype and needs to be refactored toward focus-session progression.
-- Voice manager exists but voice is not an immediate requirement.
+- Voice manager exists and can play pre-generated Yua clips from `assets/audio/voice_cache/`; runtime TTS is not wired yet.
 
 ## What To Do Next
 

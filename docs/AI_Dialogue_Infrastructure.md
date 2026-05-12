@@ -181,9 +181,11 @@ Keep API keys out of scene files. Use local config/environment handling for prot
 
 ## 10. Voice Status
 
-Voice/TTS is deferred.
+Voice is optional and fail-safe.
 
-Existing voice manager scaffolding may remain, but current work should not block on voice generation or playback. If voice code is touched, keep it optional and fail-safe.
+The current practical path is hybrid: scripted lines can use pre-generated clips from `assets/audio/voice_cache/`, while Type Mode replies remain text-first with a runtime cache path prepared for future TTS. Voice generation must not block dialogue, focus flow, scripted progression, or Type Mode fallback behavior.
+
+See `docs/YUA_VOICE_ARCHITECTURE.md` for the current implementation and manual Godot setup steps.
 
 ## 11. Milestone Acceptance Test
 

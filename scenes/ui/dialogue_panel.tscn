@@ -1,52 +1,58 @@
 [gd_scene format=3 uid="uid://dlvbsxncwmeyp"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.0745098, 0.0588235, 0.0823529, 0.9)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 0.772549, 0.607843, 0.32)
-corner_radius_top_left = 28
-corner_radius_top_right = 28
-corner_radius_bottom_right = 22
-corner_radius_bottom_left = 22
-shadow_color = Color(0, 0, 0, 0.3)
-shadow_size = 18
+bg_color = Color(0, 0, 0, 0)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_choice"]
-bg_color = Color(1, 0.768627, 0.596078, 0.16)
+bg_color = Color(0.25, 0.18, 0.2, 0.82)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(1, 0.847059, 0.717647, 0.35)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
+border_color = Color(1, 0.82, 0.68, 0.32)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_text"]
-bg_color = Color(1, 0.929412, 0.839216, 0.08)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
+bg_color = Color(0.22, 0.15, 0.17, 0.86)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.82, 0.68, 0.36)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_response"]
+bg_color = Color(0.14, 0.09, 0.11, 0.74)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.82, 0.68, 0.3)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
-bg_color = Color(0.176471, 0.133333, 0.180392, 0.92)
+bg_color = Color(0.1, 0.075, 0.09, 0.86)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(1, 0.752941, 0.596078, 0.4)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
 
 [node name="DialoguePanel" type="PanelContainer" unique_id=1102142510]
-custom_minimum_size = Vector2(0, 300)
+custom_minimum_size = Vector2(0, 166)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -56,17 +62,17 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=45148882]
 layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
 
 [node name="VBox" type="VBoxContainer" parent="Margin" unique_id=804107933]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 6
 
 [node name="HeaderRow" type="HBoxContainer" parent="Margin/VBox" unique_id=1153295238]
-visible = true
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
@@ -99,58 +105,77 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_text")
 [node name="DialogueMargin" type="MarginContainer" parent="Margin/VBox/DialogueCard" unique_id=1273634983]
 layout_mode = 2
 theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 14
+theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 14
+theme_override_constants/margin_bottom = 10
 
 [node name="DialogueText" type="RichTextLabel" parent="Margin/VBox/DialogueCard/DialogueMargin" unique_id=1283719266]
-custom_minimum_size = Vector2(0, 92)
+custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 text = "Dialogue will appear here."
 fit_content = true
 scroll_active = false
-horizontal_alignment = 0
+horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="PromptLabel" type="Label" parent="Margin/VBox" unique_id=2009566140]
+visible = false
 layout_mode = 2
 text = "Tap a reply, or type below when you want your own words."
 horizontal_alignment = 1
 
-[node name="StatusLabel" type="Label" parent="Margin/VBox" unique_id=1488762001]
+[node name="ResponseCard" type="PanelContainer" parent="Margin/VBox" unique_id=1792622167]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_response")
+
+[node name="ResponseMargin" type="MarginContainer" parent="Margin/VBox/ResponseCard" unique_id=902684418]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="ResponseVBox" type="VBoxContainer" parent="Margin/VBox/ResponseCard/ResponseMargin" unique_id=1961499632]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="StatusLabel" type="Label" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox" unique_id=1488762001]
 visible = false
 layout_mode = 2
 text = "System status appears here."
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="ChoiceList" type="VBoxContainer" parent="Margin/VBox" unique_id=1605307871]
+[node name="ChoiceList" type="GridContainer" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox" unique_id=1605307871]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 10
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 5
+columns = 2
 
-[node name="InputRow" type="HBoxContainer" parent="Margin/VBox" unique_id=1912003737]
-custom_minimum_size = Vector2(0, 44)
+[node name="InputRow" type="HBoxContainer" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox" unique_id=1912003737]
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
-[node name="PlayerInput" type="LineEdit" parent="Margin/VBox/InputRow" unique_id=1400556828]
-custom_minimum_size = Vector2(0, 44)
+[node name="PlayerInput" type="LineEdit" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/InputRow" unique_id=1400556828]
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_input")
 theme_override_styles/focus = SubResource("StyleBoxFlat_input")
 placeholder_text = "Type here, or use this text to add a todo."
 
-[node name="SendButton" type="Button" parent="Margin/VBox/InputRow" unique_id=1286230115]
-custom_minimum_size = Vector2(92, 44)
+[node name="SendButton" type="Button" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/InputRow" unique_id=1286230115]
+custom_minimum_size = Vector2(64, 32)
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_choice")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_choice")
 theme_override_styles/hover = SubResource("StyleBoxFlat_choice")
 text = "Send"
 
-[node name="AIModeToggle" type="CheckButton" parent="Margin/VBox/InputRow" unique_id=501993508]
-custom_minimum_size = Vector2(102, 44)
+[node name="AIModeToggle" type="CheckButton" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/InputRow" unique_id=501993508]
+custom_minimum_size = Vector2(104, 32)
 layout_mode = 2
 text = "Type Mode"
