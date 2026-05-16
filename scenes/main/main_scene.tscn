@@ -55,6 +55,18 @@ corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_resize_handle"]
+bg_color = Color(1, 0.82, 0.66, 0.38)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.92, 0.78, 0.58)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
 [node name="MainScene" type="Control" unique_id=607716226]
 layout_mode = 3
 anchors_preset = 15
@@ -279,10 +291,21 @@ layout_mode = 2
 text = "Tasks"
 horizontal_alignment = 1
 
-[node name="TodoList" type="ItemList" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=2079788506]
+[node name="TodoScroll" type="ScrollContainer" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=2079788506]
 custom_minimum_size = Vector2(0, 240)
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="TodoRows" type="VBoxContainer" parent="RightTodoPanel/TodoMargin/TodoVBox/TodoScroll" unique_id=793440440]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="NewTaskInput" type="LineEdit" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=1504722205]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+placeholder_text = "New task"
+clear_button_enabled = true
 
 [node name="TodoButtons" type="HBoxContainer" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=587163638]
 layout_mode = 2
@@ -290,29 +313,104 @@ theme_override_constants/separation = 8
 
 [node name="AddTodoButton" type="Button" parent="RightTodoPanel/TodoMargin/TodoVBox/TodoButtons" unique_id=640357551]
 layout_mode = 2
-text = "Add"
+text = "Add Task"
 
 [node name="EditTodoButton" type="Button" parent="RightTodoPanel/TodoMargin/TodoVBox/TodoButtons" unique_id=725913316]
+visible = false
 layout_mode = 2
 text = "Edit Selected"
 
-[node name="SettingsButton" type="Button" parent="." unique_id=812930172]
+[node name="TodoStatusLabel" type="Label" parent="RightTodoPanel/TodoMargin/TodoVBox" unique_id=1847493132]
 visible = false
+layout_mode = 2
+text = "Task updated."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TodoResizeHandle" type="Button" parent="." unique_id=1126638511]
+custom_minimum_size = Vector2(18, 18)
 layout_mode = 1
 anchors_preset = -1
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = 20.0
-offset_top = -20.0
-offset_right = 130.0
+anchor_left = 1.0
+anchor_top = 0.33
+anchor_right = 1.0
+anchor_bottom = 0.33
+offset_left = -292.0
+offset_top = 2.0
+offset_right = -274.0
 offset_bottom = 20.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_default_cursor_shape = 13
+tooltip_text = "Drag to resize tasks"
+theme_override_styles/normal = SubResource("StyleBoxFlat_resize_handle")
+theme_override_styles/hover = SubResource("StyleBoxFlat_resize_handle")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_resize_handle")
+text = ""
+flat = true
+
+[node name="SettingsButton" type="Button" parent="." unique_id=812930172]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 28.0
+offset_top = 152.0
+offset_right = 148.0
+offset_bottom = 188.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_placeholder")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_placeholder")
 theme_override_styles/hover = SubResource("StyleBoxFlat_placeholder")
 text = "Settings"
-disabled = true
+
+[node name="SettingsPanel" type="PanelContainer" parent="." unique_id=581732771]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+offset_left = 28.0
+offset_top = 196.0
+offset_right = 310.0
+offset_bottom = 328.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+
+[node name="SettingsMargin" type="MarginContainer" parent="SettingsPanel" unique_id=730123884]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="SettingsVBox" type="VBoxContainer" parent="SettingsPanel/SettingsMargin" unique_id=2050443929]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SettingsTitle" type="Label" parent="SettingsPanel/SettingsMargin/SettingsVBox" unique_id=1759362663]
+layout_mode = 2
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="LanguageButton" type="Button" parent="SettingsPanel/SettingsMargin/SettingsVBox" unique_id=1036559619]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+text = "Language: EN"
+
+[node name="SpeedLabel" type="Label" parent="SettingsPanel/SettingsMargin/SettingsVBox" unique_id=1298011323]
+layout_mode = 2
+text = "Text Speed"
+
+[node name="TextSpeedSlider" type="HSlider" parent="SettingsPanel/SettingsMargin/SettingsVBox" unique_id=1336951104]
+layout_mode = 2
+min_value = 12.0
+max_value = 90.0
+step = 1.0
+value = 34.0
+
+[node name="SpeedValueLabel" type="Label" parent="SettingsPanel/SettingsMargin/SettingsVBox" unique_id=881967334]
+layout_mode = 2
+text = "34 chars/s"
+horizontal_alignment = 1
 
 [node name="BottomLeftMusicBar" type="PanelContainer" parent="." unique_id=1015502954]
 layout_mode = 1
