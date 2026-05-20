@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://dqbsps41uqagw" path="res://scripts/audio/bgm_manager.gd" id="5_l7pil"]
 [ext_resource type="Script" uid="uid://c17x6dbr8c6k8" path="res://scripts/audio/voice_manager.gd" id="6_2l5v1"]
 [ext_resource type="Theme" path="res://data/theme/project_chill.tres" id="7_theme"]
+[ext_resource type="Script" path="res://scripts/ui/call_status_controller.gd" id="8_callstat"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
 bg_color = Color(0.2, 0.14, 0.16, 0.56)
@@ -368,6 +369,7 @@ offset_top = 22.0
 offset_right = 348.0
 offset_bottom = 78.0
 theme_override_styles/panel = SubResource("StyleBox_pill")
+script = ExtResource("8_callstat")
 
 [node name="Col" type="VBoxContainer" parent="OverlayLayer/HUD/CallStatusPill"]
 layout_mode = 2

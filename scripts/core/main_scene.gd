@@ -47,9 +47,7 @@ const DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND := 34.0
 # Stage 2 UI redesign: focus timer + tasks panel + call status pill live in
 # OverlayLayer/HUD and OverlayLayer/Tools (see scenes/main/main_scene.tscn).
 # These @onready vars are the authoritative bindings.
-@onready var call_status_dot: Panel = $OverlayLayer/HUD/CallStatusPill/Col/Row1/StatusDot
-@onready var call_status_line: Label = $OverlayLayer/HUD/CallStatusPill/Col/Row1/StatusLine
-@onready var call_detail_line: Label = $OverlayLayer/HUD/CallStatusPill/Col/DetailLine
+@onready var call_status: Node = $OverlayLayer/HUD/CallStatusPill
 @onready var focus_card: PanelContainer = $OverlayLayer/HUD/FocusCard
 @onready var focus_title: Label = $OverlayLayer/HUD/FocusCard/Col/Title
 @onready var focus_timer_display: Label = $OverlayLayer/HUD/FocusCard/Col/TimerDisplay
@@ -149,7 +147,7 @@ func _ready() -> void:
 	_load_prompt_assets()
 	if todo_items.is_empty():
 		_seed_todo_items()
-	_update_datetime_labels()
+	call_status.refresh(ui_language, focus_running)
 	_update_timer_label()
 	add_child(scripted_dialogue_manager)
 	scripted_dialogue_manager.load_from_path("res://data/dialogue/scripted_nodes.json")
@@ -173,7 +171,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_update_dialogue_typewriter(delta)
 	_update_focus_timer()
-	_update_datetime_labels()
+	call_status.refresh(ui_language, focus_running)
 	_maybe_autosave()
 	_update_music_progress()
 
@@ -449,7 +447,7 @@ func _refresh_ui_language() -> void:
 	_refresh_voice_button()
 	_refresh_music_bar()
 	_update_timer_label()
-	_update_datetime_labels()
+	call_status.refresh(ui_language, focus_running)
 	_refresh_focus_controls()
 	_render_tasks()
 	_refresh_tasks_controls()
@@ -653,39 +651,6 @@ func _seed_todo_items() -> void:
 	_add_todo_item("Set one gentle focus block")
 	_add_todo_item("Write today's calm priority")
 	_add_todo_item("Try one scripted greeting branch")
-
-func _update_datetime_labels() -> void:
-	if call_status_line == null:
-		return
-	var now: Dictionary = Time.get_datetime_dict_from_system()
-	var time_str: String = "%02d:%02d" % [now.hour, now.minute]
-	var date_str: String = "%04d/%02d/%02d" % [now.year, now.month, now.day]
-	var weekday_str: String = UiStrings.t("weekday.%d" % int(now.weekday), ui_language)
-	var bucket_str: String = _get_time_bucket_label(now.hour)
-	var speaker: String = UiStrings.t("call.speaker", ui_language)
-	var status_key: String = "call.status.focusing" if focus_running else "call.status.connected"
-	var status_word: String = UiStrings.t(status_key, ui_language)
-	call_status_line.text = "%s · %s · %s" % [speaker, status_word, time_str]
-	if call_detail_line != null:
-		call_detail_line.text = "%s · %s · %s" % [date_str, weekday_str, bucket_str]
-	_refresh_call_status_dot()
-
-func _refresh_call_status_dot() -> void:
-	if call_status_dot == null:
-		return
-	var sb := call_status_dot.get_theme_stylebox("panel") as StyleBoxFlat
-	if sb == null:
-		return
-	sb.bg_color = get_theme_color("honey_amber", "Palette") if focus_running else get_theme_color("sage", "Palette")
-
-func _get_time_bucket_label(hour: int) -> String:
-	if hour >= 5 and hour < 12:
-		return _ui_text("morning")
-	if hour >= 12 and hour < 17:
-		return _ui_text("afternoon")
-	if hour >= 17 and hour < 22:
-		return _ui_text("evening")
-	return _ui_text("night")
 
 func _show_node(node_id: String) -> void:
 	_enter_scripted_mode()
