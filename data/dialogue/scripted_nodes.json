@@ -1,58 +1,84 @@
 {
   "fallback_id": "idle",
+  "intro_node": "ep00_01",
+  "demo_script_version": 5,
+  "episodes": [
+    { "id": "ep01", "label": "Ep 1", "start_node": "ep01_01", "session_gate": 1 },
+    { "id": "ep02", "label": "Ep 2", "start_node": "ep02_01", "session_gate": 2 },
+    { "id": "ep03", "label": "Ep 3", "start_node": "ep03_01", "session_gate": 3 },
+    { "id": "ep04", "label": "Ep 4", "start_node": "ep04_01", "session_gate": 4 },
+    { "id": "ep05", "label": "Ep 5", "start_node": "ep05_01", "session_gate": 5 },
+    { "id": "ep06", "label": "Ep 6", "start_node": "ep06_01", "session_gate": 6 }
+  ],
   "nodes": [
     {
       "id": "idle",
       "line": "点击 Yua，接入共习房间。",
       "choices": []
     },
+
     {
-      "id": "first_launch_01",
-      "line": "啊，进来人了。\n\n我还以为今天这个房间又只有我一个。",
+      "id": "ep00_01",
+      "line": "……不对。\n\n……再来。",
       "choices": [
-        { "text": "继续", "next": "first_launch_02" }
+        { "text": "……", "next": "ep00_02" }
       ]
     },
     {
-      "id": "first_launch_02",
-      "line": "你好……算了，这种开场白太奇怪。\n\n我叫结羽，你叫我 Yua 就行。\n\n我只是……也来这里找个人一起不拖延的。",
+      "id": "ep00_02",
+      "line": "诶？你来了。\n\n我没注意到画面。\n\n不好意思。",
       "choices": [
-        { "text": "继续", "next": "first_launch_03" }
+        { "text": "继续", "next": "ep00_03" }
       ]
     },
     {
-      "id": "first_launch_03",
-      "line": "你今天是来工作的，还是来假装工作的？",
+      "id": "ep00_03",
+      "line": "……你也是吧？\n\n来这种房间挂着的。\n\n我用一段时间了。\n\n一个人在家会拖的事，在这里反而能动起来。\n\n……啊对，我叫 Yua。",
       "choices": [
-        { "text": "来工作的。（大概。）", "next": "first_launch_work" },
-        { "text": "说实话……假装的可能更多。", "next": "first_launch_pretend" },
-        { "text": "还没想好。", "next": "first_launch_unsure" }
+        { "text": "继续", "next": "ep00_04" }
       ]
     },
     {
-      "id": "first_launch_work",
-      "line": "“大概”……懂。\n\n我也是“大概”来工作的。\n\n先报一个任务吧。你说了，我就不好意思再拖了。",
+      "id": "ep00_04",
+      "line": "嗯……先问你一下。\n\n你今天是真的想做点事，还是只是想找个地方坐着？",
       "choices": [
-        { "text": "报一个任务", "next": "TASK_INPUT_001" }
+        { "text": "想做点事。", "next": "ep00_04_serious" },
+        { "text": "想坐着，看情况。", "next": "ep00_04_hang" },
+        { "text": "我也不太确定。", "next": "ep00_04_unsure" }
       ]
     },
     {
-      "id": "first_launch_pretend",
-      "line": "诚实的人。我喜欢。\n\n其实我刚才也是假装。对着屏幕坐了快二十分钟了。\n\n你来了，我就有理由正式开始了。",
+      "id": "ep00_04_serious",
+      "line": "好。\n\n那我等会儿就不打扰你。\n\n……虽然我已经打扰过你了。",
       "choices": [
-        { "text": "那我先说任务", "next": "TASK_INPUT_001" }
+        { "text": "继续", "next": "ep00_05" }
       ]
     },
     {
-      "id": "first_launch_unsure",
-      "line": "没想好也没关系。打开这里本身就是一个开始。\n\n那就先说一件事。不用很大，能做完就行。\n\n你说，我陪你。",
+      "id": "ep00_04_hang",
+      "line": "也行。\n\n我有时候也是。\n\n坐着坐着，有时候反而就开始了。",
       "choices": [
-        { "text": "试着写一个任务", "next": "TASK_INPUT_001" }
+        { "text": "继续", "next": "ep00_05" }
       ]
     },
+    {
+      "id": "ep00_04_unsure",
+      "line": "那我们差不多。\n\n不确定的时候，先开着，看一会儿再说。",
+      "choices": [
+        { "text": "继续", "next": "ep00_05" }
+      ]
+    },
+    {
+      "id": "ep00_05",
+      "line": "这里的用法很简单。\n\n先报一件今天想搞定的事，选一个时长，然后各做各的。\n\n我先来，你看着就懂了。\n\n今天我：把那件拖了三天的事做掉。\n\n……是什么，先不告诉你。",
+      "choices": [
+        { "text": "到我了。", "next": "TASK_INPUT_001" }
+      ]
+    },
+
     {
       "id": "TASK_INPUT_001",
-      "line": "在下面输入今天想搞定的一件事。\n\n不用想太多，随便写一句就行。就算只是“发一封邮件”，也算任务。",
+      "line": "在下面输入你今天想做的一件事。\n\n随便写一句就行，就算只是“发一封邮件”，也算任务。",
       "choices": [
         { "text": "先用示例任务体验", "next": "ACTION_DEMO_TASK" },
         { "text": "帮我把任务缩小一点", "next": "AI_MODE_TASK_CLARIFY" }
@@ -60,7 +86,7 @@
     },
     {
       "id": "TASK_INPUT_002",
-      "line": "……好。\n\n不是很大，但很实际。这种任务我最喜欢，完成了有感觉。",
+      "line": "……好。\n\n收到了。\n\n计时多长你自己选，撑得住就行，不用挑最长的那个。",
       "choices": [
         { "text": "3 秒试玩", "next": "ACTION_SET_TIMER_1" },
         { "text": "15 分钟", "next": "ACTION_SET_TIMER_15" },
@@ -70,7 +96,7 @@
     },
     {
       "id": "FOCUS_READY_001",
-      "line": "选好了。\n\n不用选“看起来很努力”的那个，选撑得住的就好。\n\n准备好了就开始。",
+      "line": "选好了。\n\n准备好了就开始。",
       "choices": [
         { "text": "开始专注", "next": "ACTION_START_FOCUS" },
         { "text": "换个任务", "next": "TASK_INPUT_001" }
@@ -78,70 +104,403 @@
     },
     {
       "id": "FOCUS_START_001",
-      "line": "好。\n\n那我们开始了。\n\n我也开始。",
+      "line": "好。\n\n那我开始我的。\n\n……你也开始。\n\n中途看我也可以，不过我会一直对着自己屏幕。",
       "choices": []
     },
+
     {
-      "id": "FOCUS_DONE_001",
-      "line": "哦，结束了。\n\n你完成了。\n\n我也……差不多。\n\n你来的时候我还以为今天要一直摸鱼，结果……居然也做了点事情。",
+      "id": "ep01_01",
+      "line": "诶，结束了。\n\n你坐住了。\n\n比我以为的要顺。",
       "choices": [
-        { "text": "聊一会儿？", "next": "BREAK_CHAT_001" },
-        { "text": "再来一轮。", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "今天先到这里。", "next": "EXIT_DONE" }
+        { "text": "继续", "next": "ep01_02" }
       ]
     },
     {
-      "id": "BREAK_CHAT_001",
-      "line": "刚才做的那个……怎么样？推进了多少？",
+      "id": "ep01_02",
+      "line": "我这边……也搞定了。\n\n拖了三天的事，终于做掉了。\n\n我自己都有点意外。",
       "choices": [
-        { "text": "做完了，感觉还不错。", "next": "BREAK_CHAT_DONE" },
-        { "text": "做了一半，但推进了。", "next": "BREAK_CHAT_HALF" },
-        { "text": "说实话没做多少。", "next": "BREAK_CHAT_LITTLE" },
-        { "text": "我想自己说", "next": "AI_MODE_POST_SESSION" }
+        { "text": "继续", "next": "ep01_03" }
       ]
     },
     {
-      "id": "BREAK_CHAT_DONE",
-      "line": "做完了啊。\n\n那很好。不是说给你听的，是真的很好。\n\n能在这里完成一件事，挺难得的。\n\n我自己刚才……好像也推进了一点什么。\n\n你在，我就不好意思一直发呆。",
+      "id": "ep01_03",
+      "line": "我想说一件可能听起来有点夸张的事。\n\n刚才有人在画面另一边做事，我居然真的就坐住了。\n\n原来有人在，这件事真的会不一样。",
       "choices": [
-        { "text": "再来一轮。", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "今天先这样。", "next": "EXIT_DONE" }
+        { "text": "可能有人盯着比较难假装在忙。", "next": "ep01_03_supervised" },
+        { "text": "我也一样，所以才来这里。", "next": "ep01_03_same" },
+        { "text": "你不是已经拖了三天了。", "next": "ep01_03_tease" }
       ]
     },
     {
-      "id": "BREAK_CHAT_HALF",
-      "line": "做了一半也是做了。\n\n下一轮可以接着，也可以换件事。\n\n不用非得一鼓作气。那种方法对我也不太管用。",
+      "id": "ep01_03_supervised",
+      "line": "嗯。\n\n也不是真的盯着。\n\n但好像就因为你没在盯我，我才比较容易开始。\n\n……这句听起来有点绕，当我没说。",
       "choices": [
-        { "text": "接着来。", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "今天先这样。", "next": "EXIT_DONE" }
+        { "text": "继续", "next": "ep01_04" }
       ]
     },
     {
-      "id": "BREAK_CHAT_LITTLE",
-      "line": "没做多少……\n\n但你坐在这里了。计时器也走完了。\n\n这比“什么都没开始”要往前一步。\n\n下一轮少一点任务试试？",
+      "id": "ep01_03_same",
+      "line": "那我们都一样。\n\n一个人开始很难，两个人各做各的反而容易。\n\n我之前还以为只有我是这样。",
       "choices": [
-        { "text": "试个小一点的。", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "今天先这样。", "next": "EXIT_DONE" }
+        { "text": "继续", "next": "ep01_04" }
       ]
     },
     {
-      "id": "BREAK_CHAT_REL",
-      "line": "两次都走完了。\n\n这样看，好像这个房间真的有一点用。\n\n不是很华丽的那种有用。就是……会让人不好意思继续装忙。",
+      "id": "ep01_03_tease",
+      "line": "……诶。\n\n你怎么知道。\n\n好，你说得对。\n\n——那就从今天开始算。",
       "choices": [
-        { "text": "那就再来一次", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "今天先这样", "next": "EXIT_DONE" },
-        { "text": "我想自己说几句", "next": "AI_MODE_POST_SESSION" }
+        { "text": "继续", "next": "ep01_04" }
       ]
     },
     {
-      "id": "BREAK_CHAT_REPEAT",
-      "line": "休息一下吧。\n\n不用每一段都复盘。一直问“推进怎样”也很像老师，我不想当那个。\n\n坐一会儿就好。",
+      "id": "ep01_04",
+      "line": "好了。\n\n你这一段坐住了，我那件事也做掉了。\n\n今天的小账本就这么记。",
       "choices": [
-        { "text": "继续挂着，下一轮", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "自己说几句", "next": "AI_MODE_BREAK_CHAT" },
+        { "text": "休息聊一下", "next": "AI_MODE_BREAK_CHAT" },
+        { "text": "再开一段专注", "next": "TASK_INPUT_001" },
         { "text": "今天先这样", "next": "EXIT_DONE" }
       ]
     },
+
+    {
+      "id": "ep02_01",
+      "line": "诶，又一段做完了。\n\n你今天挺有节奏的。",
+      "choices": [
+        { "text": "继续", "next": "ep02_02" }
+      ]
+    },
+    {
+      "id": "ep02_02",
+      "line": "我这几天都在家。\n\n一周里有几天要出门打工，其他几天就这样 —— 一直在家。",
+      "choices": [
+        { "text": "继续", "next": "ep02_03" }
+      ]
+    },
+    {
+      "id": "ep02_03",
+      "line": "出门的日子其实不太用得到这种房间。\n\n反正人已经在外面，自然就动起来了。\n\n在家的那几天就有点危险。\n\n早上想着今天要做几件事，中午想着等会儿开始，晚上发现……\n\n啊，又一天。",
+      "choices": [
+        { "text": "继续", "next": "ep02_04" }
+      ]
+    },
+    {
+      "id": "ep02_04",
+      "line": "你呢？\n\n你也是在家的时候比较容易散吗？",
+      "choices": [
+        { "text": "对，在家会散。", "next": "ep02_04_same" },
+        { "text": "我反而是出门更难集中。", "next": "ep02_04_diff" },
+        { "text": "都一样，看心情。", "next": "ep02_04_either" }
+      ]
+    },
+    {
+      "id": "ep02_04_same",
+      "line": "嗯，我懂。\n\n那今天我们都把这一天抓住了一点。\n\n算小胜。",
+      "choices": [
+        { "text": "继续", "next": "ep02_05" }
+      ]
+    },
+    {
+      "id": "ep02_04_diff",
+      "line": "诶，这种我没想过。\n\n听起来挺厉害的。\n\n我出门的话，大概光走路就把今天用完了。",
+      "choices": [
+        { "text": "继续", "next": "ep02_05" }
+      ]
+    },
+    {
+      "id": "ep02_04_either",
+      "line": "也对。\n\n我有时候也是，只是我比较喜欢假装自己有规律。",
+      "choices": [
+        { "text": "继续", "next": "ep02_05" }
+      ]
+    },
+    {
+      "id": "ep02_05",
+      "line": "总之。\n\n今天又是一天没空过。\n\n做完一件事，这天就有形状了。",
+      "choices": [
+        { "text": "休息聊一下", "next": "AI_MODE_BREAK_CHAT" },
+        { "text": "再开一段专注", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样", "next": "EXIT_DONE" }
+      ]
+    },
+
+    {
+      "id": "ep03_01",
+      "line": "诶，做完了。\n\n谢谢你陪着。\n\n啊，我刚才想了一件事 —— 关于上次。",
+      "choices": [
+        { "text": "继续", "next": "ep03_02" }
+      ]
+    },
+    {
+      "id": "ep03_02",
+      "line": "上次我说“那件拖了三天的事”。\n\n一直没告诉你是什么。",
+      "choices": [
+        { "text": "继续", "next": "ep03_03" }
+      ]
+    },
+    {
+      "id": "ep03_03",
+      "line": "其实是周末讲解的稿子。\n\n我在一家小水族馆打工，有几天要出门就是去那边。\n\n礼品店站台为主，周末上午会带一个家庭团。",
+      "choices": [
+        { "text": "继续", "next": "ep03_04" }
+      ]
+    },
+    {
+      "id": "ep03_04",
+      "line": "卡的是稿子里的一段。\n\n小朋友只要一问到企鹅，我就会不小心讲二十分钟。\n\n上一次有个小孩问“企鹅的脚为什么是黑的”，我真的讲了二十分钟。\n\n他妈妈一直在看手表。",
+      "choices": [
+        { "text": "继续", "next": "ep03_05" }
+      ]
+    },
+    {
+      "id": "ep03_05",
+      "line": "……所以我在练怎么不要这样。\n\n你诚实说，这要紧吗？",
+      "choices": [
+        { "text": "讲得多说明是真喜欢，挺好的。", "next": "ep03_05_kind" },
+        { "text": "二十分钟……确实有点。", "next": "ep03_05_honest" },
+        { "text": "小孩可能其实喜欢听。", "next": "ep03_05_kid" }
+      ]
+    },
+    {
+      "id": "ep03_05_kind",
+      "line": "诶。\n\n你这样说，我会更难改了。\n\n……谢谢。",
+      "choices": [
+        { "text": "继续", "next": "ep03_06" }
+      ]
+    },
+    {
+      "id": "ep03_05_honest",
+      "line": "嗯。\n\n我知道。\n\n但被人这么直接说出来，我还是有点想钻到椅子下面。",
+      "choices": [
+        { "text": "继续", "next": "ep03_06" }
+      ]
+    },
+    {
+      "id": "ep03_05_kid",
+      "line": "……\n\n你这是在安慰我。\n\n也好。\n\n我先信一下。",
+      "choices": [
+        { "text": "继续", "next": "ep03_06" }
+      ]
+    },
+    {
+      "id": "ep03_06",
+      "line": "那边还有一只叫小七的鼠海豚。\n\n年纪比我还大，脾气不太好。\n\n我桌上这个杯子上印的就是它。\n\n……改天再讲。\n\n我一讲又要二十分钟了。",
+      "choices": [
+        { "text": "休息聊一下", "next": "AI_MODE_BREAK_CHAT" },
+        { "text": "再开一段专注", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样", "next": "EXIT_DONE" }
+      ]
+    },
+
+    {
+      "id": "ep04_01",
+      "line": "完成了。\n\n我这边也告一段落。",
+      "choices": [
+        { "text": "继续", "next": "ep04_02" }
+      ]
+    },
+    {
+      "id": "ep04_02",
+      "line": "……我可以说一件最近一直让我有点心虚的事吗？",
+      "choices": [
+        { "text": "说吧。", "next": "ep04_03_listen" },
+        { "text": "我猜是工作？", "next": "ep04_03_guess" },
+        { "text": "心虚？有点严重啊。", "next": "ep04_03_tease" }
+      ]
+    },
+    {
+      "id": "ep04_03_listen",
+      "line": "嗯。\n\n这周……我又买了三本不需要的便签本。",
+      "choices": [
+        { "text": "继续", "next": "ep04_04" }
+      ]
+    },
+    {
+      "id": "ep04_03_guess",
+      "line": "没那么大件事。\n\n……\n\n这周我又买了三本不需要的便签本。",
+      "choices": [
+        { "text": "继续", "next": "ep04_04" }
+      ]
+    },
+    {
+      "id": "ep04_03_tease",
+      "line": "你别先觉得严重。\n\n……\n\n我这周又买了三本不需要的便签本。",
+      "choices": [
+        { "text": "继续", "next": "ep04_04" }
+      ]
+    },
+    {
+      "id": "ep04_04",
+      "line": "家里那一堆已经写不完的，还没拆封的至少六本。\n\n但每次走进店里看到新出的，我都会想“这个封面我可能会用得到”。\n\n然后就用不到。",
+      "choices": [
+        { "text": "继续", "next": "ep04_05" }
+      ]
+    },
+    {
+      "id": "ep04_05",
+      "line": "我跟你讲这个，是为了让我自己听见一次。\n\n听见之后，大概率下周还会买。\n\n……这就是所谓的成年人吧。当我没说。",
+      "choices": [
+        { "text": "休息聊一下", "next": "AI_MODE_BREAK_CHAT" },
+        { "text": "再开一段专注", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样", "next": "EXIT_DONE" }
+      ]
+    },
+
+    {
+      "id": "ep05_01",
+      "line": "诶，这段过得挺快的。\n\n你那边怎么样？……算了，你不用答，我自己问自己玩。",
+      "choices": [
+        { "text": "继续", "next": "ep05_02" }
+      ]
+    },
+    {
+      "id": "ep05_02",
+      "line": "我刚才做着做着，脑子里冒出来一件事。\n\n不是没在做，只是同时也在想别的。",
+      "choices": [
+        { "text": "继续", "next": "ep05_03" }
+      ]
+    },
+    {
+      "id": "ep05_03",
+      "line": "你知道水母不睡觉吗？\n\n不是不能睡，是它没有那种睡眠周期。\n\n它就那样飘着。白天飘，晚上也飘。",
+      "choices": [
+        { "text": "听起来有点羡慕。", "next": "ep05_04_envy" },
+        { "text": "那它怎么休息？", "next": "ep05_04_rest" },
+        { "text": "你怎么突然讲这个。", "next": "ep05_04_why" }
+      ]
+    },
+    {
+      "id": "ep05_04_envy",
+      "line": "诶？\n\n我也是这么觉得的。\n\n又一个想躺平的灵魂。\n\n……开玩笑的。",
+      "choices": [
+        { "text": "继续", "next": "ep05_05" }
+      ]
+    },
+    {
+      "id": "ep05_04_rest",
+      "line": "算是一种半睡半醒的状态。\n\n一半在飘，一半不知道自己在飘。\n\n听起来很惨，但好像也挺自在。",
+      "choices": [
+        { "text": "继续", "next": "ep05_05" }
+      ]
+    },
+    {
+      "id": "ep05_04_why",
+      "line": "因为我刚才做事的时候，脑子里飘的就是水母。\n\n它们看起来什么都不做，但其实一直在动。\n\n我觉得这个意象有点合今天的我。",
+      "choices": [
+        { "text": "继续", "next": "ep05_05" }
+      ]
+    },
+    {
+      "id": "ep05_05",
+      "line": "啊。\n\n我又在你刚专注完的时候开始讲水母。\n\n这种事我通常会忍住，今天没忍住。\n\n……抱歉。",
+      "choices": [
+        { "text": "继续", "next": "ep05_06" }
+      ]
+    },
+    {
+      "id": "ep05_06",
+      "line": "回到正经一点的部分。\n\n你这一段坐下来了，我这边也做了一些。\n\n我下次会努力先问你怎么样，再开始讲水母。",
+      "choices": [
+        { "text": "休息聊一下", "next": "AI_MODE_BREAK_CHAT" },
+        { "text": "再开一段专注", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样", "next": "EXIT_DONE" }
+      ]
+    },
+
+    {
+      "id": "ep06_01",
+      "line": "结束了。\n\n你那边今天挺平稳的。",
+      "choices": [
+        { "text": "继续", "next": "ep06_02" }
+      ]
+    },
+    {
+      "id": "ep06_02",
+      "line": "我现在手上有一件事，卡在两个词之间。\n\n你愿意帮我决定一下吗？",
+      "choices": [
+        { "text": "我可以。", "next": "ep06_03_yes" },
+        { "text": "我对这个不擅长。", "next": "ep06_03_no" },
+        { "text": "看是什么。", "next": "ep06_03_depends" }
+      ]
+    },
+    {
+      "id": "ep06_03_yes",
+      "line": "太好了。",
+      "choices": [
+        { "text": "继续", "next": "ep06_04" }
+      ]
+    },
+    {
+      "id": "ep06_03_no",
+      "line": "没关系。\n\n我也不擅长，所以才在这里卡了二十分钟。\n\n你帮我猜一个，我就接受。",
+      "choices": [
+        { "text": "继续", "next": "ep06_04" }
+      ]
+    },
+    {
+      "id": "ep06_03_depends",
+      "line": "是一句很短的话，不会让你头疼。",
+      "choices": [
+        { "text": "继续", "next": "ep06_04" }
+      ]
+    },
+    {
+      "id": "ep06_04",
+      "line": "是店里要贴在员工公告板上的小条。\n\n一句话，写本周看到的有意思的事。\n\n我今天想写企鹅区那只一直慢半拍的小企鹅。",
+      "choices": [
+        { "text": "继续", "next": "ep06_05" }
+      ]
+    },
+    {
+      "id": "ep06_05",
+      "line": "我卡在描述它的那一句。\n\n“今天这只小企鹅，还是慢半拍。”\n\n还是：\n\n“今天这只小企鹅，还是没追上大家。”",
+      "choices": [
+        { "text": "选“慢半拍”。", "next": "ep06_06_a", "set_flag": { "obs_word_choice": "slowhalf" } },
+        { "text": "选“没追上大家”。", "next": "ep06_06_b", "set_flag": { "obs_word_choice": "notcatch" } },
+        { "text": "你自己挑，我都喜欢。", "next": "ep06_06_either", "set_flag": { "obs_word_choice": "yua" } }
+      ]
+    },
+    {
+      "id": "ep06_06_a",
+      "line": "嗯。\n\n我也偏这个。\n\n“慢半拍”听起来像是它自己的节奏，不是被别人落下的。\n\n好，就这个。\n\n谢谢你。",
+      "choices": [
+        { "text": "继续", "next": "ep06_07" }
+      ]
+    },
+    {
+      "id": "ep06_06_b",
+      "line": "嗯。\n\n这个更老实一点。\n\n也对，有时候诚实比好听更适合贴在公告板上。\n\n谢谢你。",
+      "choices": [
+        { "text": "继续", "next": "ep06_07" }
+      ]
+    },
+    {
+      "id": "ep06_06_either",
+      "line": "……你这是把球踢回来。\n\n好，我自己挑。\n\n我选“慢半拍”。它看起来不是真的在着急。",
+      "choices": [
+        { "text": "继续", "next": "ep06_07" }
+      ]
+    },
+    {
+      "id": "ep06_07",
+      "line": "这条今晚我就贴上去。\n\n你下次再来，如果我顺口说“那条贴出去了” —— 就是这条。",
+      "choices": [
+        { "text": "休息聊一下", "next": "AI_MODE_BREAK_CHAT" },
+        { "text": "再开一段专注", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样", "next": "EXIT_DONE" }
+      ]
+    },
+
+    {
+      "id": "FOCUS_DONE_REPEAT",
+      "line": "又搞定一段。\n\n不用说得很夸张，但这个进度很实在。\n\n休息一下，还是继续？",
+      "choices": [
+        { "text": "休息聊一下", "next": "AI_MODE_BREAK_CHAT" },
+        { "text": "自己说几句", "next": "AI_MODE_POST_SESSION" },
+        { "text": "再开一段专注", "next": "TASK_INPUT_001" },
+        { "text": "今天先这样", "next": "EXIT_DONE" }
+      ]
+    },
+
     {
       "id": "ABORT_001",
       "line": "停了？\n\n没事。\n\n计时器停了，不代表什么别的。\n\n就是停了而已。",
@@ -160,32 +519,31 @@
         { "text": "先离开", "next": "EXIT_ABORT" }
       ]
     },
+
     {
       "id": "return_open_short",
       "line": "哦，你回来了。\n\n那边有事处理完了？\n\n任务还没跑远。",
       "choices": [
         { "text": "继续刚才的", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "换个任务", "next": "TASK_INPUT_001" },
-        { "text": "重新体验开场", "next": "first_launch_01" }
+        { "text": "换个任务", "next": "TASK_INPUT_001" }
       ]
     },
     {
       "id": "return_open_01",
       "line": "回来了。\n\n……我也还在。也不是一直在，就是……来来去去。\n\n不用解释去哪里了。重新开始就好。",
       "choices": [
-        { "text": "重新体验开场", "next": "first_launch_01" },
         { "text": "继续上次的任务", "next": "ACTION_QUICK_FOCUS" },
         { "text": "今天换一个新的", "next": "TASK_INPUT_001" },
         { "text": "先坐一会儿", "next": "quiet_end_01" }
       ]
     },
+
     {
       "id": "greeting_morning_01",
       "line": "早。\n\n今天比昨天来得早一点。",
       "choices": [
         { "text": "报一个任务", "next": "TASK_INPUT_001" },
-        { "text": "先坐一会儿", "next": "quiet_end_01" },
-        { "text": "重新体验开场", "next": "first_launch_01" }
+        { "text": "先坐一会儿", "next": "quiet_end_01" }
       ]
     },
     {
@@ -210,37 +568,6 @@
       "choices": [
         { "text": "抓一小块任务", "next": "TASK_INPUT_001" },
         { "text": "先坐一会儿", "next": "quiet_end_01" }
-      ]
-    },
-    {
-      "id": "greeting_morning_05",
-      "line": "你来了，我刚泡好水。\n\n正好。",
-      "choices": [
-        { "text": "那开始吧", "next": "TASK_INPUT_001" },
-        { "text": "先不急", "next": "quiet_end_01" }
-      ]
-    },
-    {
-      "id": "greeting_morning_06",
-      "line": "早安。\n\n今天先从一件小事开始？",
-      "choices": [
-        { "text": "说一件小事", "next": "TASK_INPUT_001" },
-        { "text": "重新体验开场", "next": "first_launch_01" }
-      ]
-    },
-    {
-      "id": "greeting_morning_07",
-      "line": "这个时间点来，说明你是认真的。\n\n还是说只是睡不着。",
-      "choices": [
-        { "text": "认真一点点", "next": "TASK_INPUT_001" },
-        { "text": "可能是睡不着", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
-      "id": "greeting_morning_08",
-      "line": "好，早上。\n\n该开始了。你先说任务。",
-      "choices": [
-        { "text": "报任务", "next": "TASK_INPUT_001" }
       ]
     },
     {
@@ -276,37 +603,6 @@
       ]
     },
     {
-      "id": "greeting_noon_05",
-      "line": "你好你好。\n\n中午还在挣扎是吗。我也是。",
-      "choices": [
-        { "text": "挣扎一下", "next": "TASK_INPUT_001" },
-        { "text": "你也辛苦了", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
-      "id": "greeting_noon_06",
-      "line": "饭后困意高峰期。\n\n但来都来了。",
-      "choices": [
-        { "text": "来都来了", "next": "TASK_INPUT_001" },
-        { "text": "先坐一会儿", "next": "quiet_end_01" }
-      ]
-    },
-    {
-      "id": "greeting_noon_07",
-      "line": "午休没睡着就来工作。\n\n是个好选择。大概。",
-      "choices": [
-        { "text": "大概是", "next": "TASK_INPUT_001" },
-        { "text": "我也不确定", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
-      "id": "greeting_noon_08",
-      "line": "中午了，要做什么？\n\n简单说一下。",
-      "choices": [
-        { "text": "说一个任务", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
       "id": "greeting_evening_01",
       "line": "傍晚来的……\n\n是白天没搞完的收尾？",
       "choices": [
@@ -336,36 +632,6 @@
       "choices": [
         { "text": "确实", "next": "TASK_INPUT_001" },
         { "text": "先安静一下", "next": "quiet_end_01" }
-      ]
-    },
-    {
-      "id": "greeting_evening_05",
-      "line": "你来了。\n\n今天还有什么没搞定的？",
-      "choices": [
-        { "text": "说一个没搞定的", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
-      "id": "greeting_evening_06",
-      "line": "晚饭前能做完一件事，晚上就可以放心摸鱼。",
-      "choices": [
-        { "text": "为了摸鱼开始", "next": "TASK_INPUT_001" },
-        { "text": "很现实", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
-      "id": "greeting_evening_07",
-      "line": "傍晚了，时间不多，但够用。\n\n说一件事。",
-      "choices": [
-        { "text": "说一件事", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
-      "id": "greeting_evening_08",
-      "line": "嗯，来了。\n\n先把任务说出来，就会好一点。",
-      "choices": [
-        { "text": "报任务", "next": "TASK_INPUT_001" },
-        { "text": "重新体验开场", "next": "first_launch_01" }
       ]
     },
     {
@@ -400,83 +666,7 @@
         { "text": "可能只是熬夜", "next": "TASK_INPUT_001" }
       ]
     },
-    {
-      "id": "greeting_night_05",
-      "line": "挺晚了。\n\n不用订太大的目标，搞一件就好。",
-      "choices": [
-        { "text": "只搞一件", "next": "TASK_INPUT_001" },
-        { "text": "你说得对", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
-      "id": "greeting_night_06",
-      "line": "你来了，我也刚坐下来不久。",
-      "choices": [
-        { "text": "那正好", "next": "TASK_INPUT_001" },
-        { "text": "先坐一会儿", "next": "quiet_end_01" }
-      ]
-    },
-    {
-      "id": "greeting_night_07",
-      "line": "今晚打算做什么？\n\n说来听听。",
-      "choices": [
-        { "text": "说一个任务", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
-      "id": "greeting_night_08",
-      "line": "夜里挺安静的。\n\n我喜欢这种安静。你呢？",
-      "choices": [
-        { "text": "我也喜欢", "next": "TASK_INPUT_001" },
-        { "text": "有点太安静了", "next": "TASK_INPUT_001" }
-      ]
-    },
-    {
-      "id": "REL_001",
-      "line": "又完成了。\n\n你挺厉害的，两次。\n\n我是说……我还以为第一次是运气。",
-      "choices": [
-        { "text": "看情况，今天刚好。", "next": "REL_OK" },
-        { "text": "其实平时比较容易拖。", "next": "REL_DRAG" },
-        { "text": "有人陪的话会好一点。", "next": "REL_TOGETHER" }
-      ]
-    },
-    {
-      "id": "REL_OK",
-      "line": "“刚好”也是真的。\n\n状态不是每天都有，今天用就对了。",
-      "choices": [
-        { "text": "聊一会儿？", "next": "BREAK_CHAT_REL" },
-        { "text": "再来一轮。", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "今天先这样。", "next": "EXIT_DONE" }
-      ]
-    },
-    {
-      "id": "REL_DRAG",
-      "line": "这我懂。\n\n我也是。其实不来这里的日子，会在桌前坐一个小时，什么都没动。\n\n也不知道为什么来了就好一点。也许是有人盯着。\n\n反正，今天做了就算。",
-      "choices": [
-        { "text": "聊一会儿？", "next": "BREAK_CHAT_REL" },
-        { "text": "再来一轮。", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "今天先这样。", "next": "EXIT_DONE" }
-      ]
-    },
-    {
-      "id": "REL_TOGETHER",
-      "line": "……是吗。\n\n那……我也是。\n\n有人在，和一个人坐着，感觉不一样的。",
-      "choices": [
-        { "text": "聊一会儿？", "next": "BREAK_CHAT_REL" },
-        { "text": "再来一轮。", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "今天先这样。", "next": "EXIT_DONE" }
-      ]
-    },
-    {
-      "id": "FOCUS_DONE_REPEAT",
-      "line": "又搞定一段。\n\n不用说得很夸张，但这个进度很实在。\n\n休息一下，还是继续？",
-      "choices": [
-        { "text": "休息聊一会儿", "next": "BREAK_CHAT_REPEAT" },
-        { "text": "自己说几句", "next": "AI_MODE_POST_SESSION" },
-        { "text": "再来一轮", "next": "ACTION_QUICK_FOCUS" },
-        { "text": "今天先这样", "next": "EXIT_DONE" }
-      ]
-    },
+
     {
       "id": "EXIT_001",
       "line": "好，先这样吧。\n\n下次来的时候，任务可以接着说。\n\n……我应该还在的。",
@@ -484,7 +674,7 @@
     },
     {
       "id": "EXIT_DONE",
-      "line": "好，今天到这里。\n\n完成了一件事，很踏实吧。\n\n下次见。",
+      "line": "好，今天到这里。\n\n完成了一件事，挺踏实的。\n\n下次见。",
       "choices": []
     },
     {

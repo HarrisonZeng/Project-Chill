@@ -10,21 +10,26 @@ Project Chill is now a focus companion game with a strong character/story layer.
 
 All agents must read these docs before proposing or making changes:
 
-1. `docs/Game_Spec_and_Process_Guide.md`
-2. `docs/Development_Summary.md`
-3. `docs/AI_Dialogue_Infrastructure.md`
-4. `docs/CODEX_TAKEOVER_PLAYBOOK.md`
-5. `docs/CODEX_WORKFLOW.md`
-6. `docs/THREAD_HANDOFF.md`
+1. `docs/Vertical_Slice_01_Spec.md`
+2. `docs/Game_Spec_and_Process_Guide.md`
+3. `docs/Development_Summary.md`
+4. `docs/AI_Dialogue_Infrastructure.md`
+5. `docs/CODEX_TAKEOVER_PLAYBOOK.md`
+6. `docs/CODEX_WORKFLOW.md`
+7. `docs/THREAD_HANDOFF.md`
 
 If there is a conflict, priority order is:
 
-1. `Game_Spec_and_Process_Guide.md`
-2. `AI_Dialogue_Infrastructure.md`
-3. `CODEX_TAKEOVER_PLAYBOOK.md`
-4. `CODEX_WORKFLOW.md`
-5. `THREAD_HANDOFF.md`
-6. `Development_Summary.md`
+1. `AGENTS.md`
+2. `Vertical_Slice_01_Spec.md`
+3. `Game_Spec_and_Process_Guide.md`
+4. `AI_Dialogue_Infrastructure.md`
+5. `CODEX_TAKEOVER_PLAYBOOK.md`
+6. `CODEX_WORKFLOW.md`
+7. `THREAD_HANDOFF.md`
+8. `Development_Summary.md`
+
+Some older docs still contain focus-first wording. Until they are revised, co-presence-first direction in this file and `docs/Vertical_Slice_01_Spec.md` overrides any mandatory task, mandatory focus, or focus-gated story framing.
 
 ## Product Direction (Non-Negotiable)
 
@@ -33,27 +38,31 @@ If there is a conflict, priority order is:
 - The setting is a cozy video call / online chatroom, not the player physically entering Yua's room.
 - No player avatar, no WASD movement, and no open-world navigation.
 - Yua is always visible as the emotional anchor of the call.
-- Interaction is click/tap plus dialogue UI, focus timer, task input, and limited Type Mode.
-- The core loop is focus-first: check in, set a task/session, focus, then unlock break chat or story progress.
-- Progression is based on completed focus sessions, total focus time, milestones, and memory, not calendar-day chapters.
+- Interaction is click/tap plus dialogue UI, optional focus timer, optional task input, and limited Type Mode.
+- Yua is a peer user, never a supervisor. No mandatory tasks, no quizzing, no homework-checking. Focus is what drives progression, but it is never forced, nagged, or presented as a chore checklist or transactional unlock - it emerges naturally from time spent working together.
+- The core loop is co-presence-first: launch call, receive a time-aware greeting, share a cozy idle state while Yua does her own work, then the player may optionally start a focus session, enter a task, click Yua, or send a bounded Type Mode message.
+- Story and relationship progression is deterministic and driven by accumulated focus time and completed focus sessions. Focus stays optional and player-initiated, but it is the engine that opens Yua up. Pure AFK idling advances nothing.
+- Light interactions (clicking Yua, Type Mode messages, returning across days) are pleasant, remembered, and add small ambient warmth, but they do not by themselves unlock authored story milestones. Shared focused time does.
 - Scripted dialogue and authored story milestones are the backbone.
-- AI is optional augmentation for check-ins, task understanding, memory extraction, post-session reflection, and limited casual chat.
-- AI must not replace authored story progression or become an unlimited distraction before focus.
+- AI is optional augmentation for lightweight check-ins, task understanding when the player volunteers a task, memory extraction, post-session reflection, and limited casual chat.
+- AI must not replace authored story progression or become unlimited distraction. Its in-fiction boundary is that Yua is busy with her own work.
 - Memory continuity must be game-side and persistent.
 - Voice is deferred. Do not treat voice/TTS as required for the current implementation phase.
 
 ## Character And Story North Star
 
 - Yua is calm, warm, introverted, observant, gently teasing, and emotionally safe.
-- She is also working during the call, primarily on writing.
-- The long-term story spine is: the more the player works alongside Yua, the more she opens up and progresses on her own creative work.
-- Story should unfold through small disclosures, focus-session rewards, and session milestones.
+- She is also working during the call, primarily on writing. She is mostly diligent (roughly three-quarters effort), but carries a streak of avoidance toward her own creative project - something she half-pretends does not exist.
+- Having someone present and focusing alongside her is what tips her from avoidance back into motivation. The player is meant to feel that same lift: a bit reluctant alone, but driven again with company. Keep the overall tone warm and positive, not heavy.
+- The long-term story spine is: the more focused time the player shares with Yua, the more she opens up and pushes through her own avoidance to make real progress on her creative work.
+- Story should unfold through small disclosures and deterministic relationship milestones that are earned by shared focused time, not by light clicking.
 - The game should feel useful as a productivity tool and emotionally meaningful as a character game.
 
 ## Architecture Principles
 
-- Focus-session state is first-class: duration, task, completion, pauses/abandonment, total focus time, and milestone progress.
-- Prefer deterministic game logic for progression and continuity: session counts, focus hours, memory tags, story flags, unlock rules.
+- Focus-session state is first-class and is the primary driver of story/relationship progression: duration, optional task, completion, pauses/abandonment, total focus time, and focus-related progress.
+- Co-presence state is also tracked: meaningful interaction counts, accumulated engaged time, return rhythm, memory tags, story flags, and Yua openness/relationship progress. Light interactions feed memory and ambient warmth; story milestones come from focus time.
+- Prefer deterministic game logic for progression and continuity. Story milestones are gated on accumulated focus time and completed sessions, but the player is never forced to focus and never punished for not focusing. Do not rely on mandatory task entry or model conversation history as gates.
 - Do not rely on model conversation history as the only memory source.
 - Keep AI behind a service boundary (`ai_dialogue_service`) to allow provider swaps.
 - Keep scripted dialogue as the backbone for tone, progression, and narrative stability.
@@ -72,17 +81,17 @@ If there is a conflict, priority order is:
 
 Current target phase:
 
-- Refactor the existing demo direction into a focus-first online call loop:
+- Refactor the existing demo direction into a co-presence-first online call loop:
   1. launch call
   2. time-aware greeting
-  3. short check-in / task capture
-  4. start focus session
-  5. restrict distractions during focus
-  6. finish session
-  7. unlock break chat or scripted story progress
-  8. persist focus totals, session count, memory, and story flags
+  3. cozy idle co-presence with Yua visibly doing her own work
+  4. player may optionally click Yua, send a bounded Type Mode message, start a focus session, or enter a task
+  5. Yua acknowledges naturally as a peer, not as a teacher or coach
+  6. active focus, if started, keeps chat brief because both sides are working
+  7. shared focused time advances deterministic story/relationship progression; light interactions are remembered but do not unlock milestones; pure AFK idling advances nothing
+  8. persist engaged interaction count, engaged time, optional focus totals, memory, story flags, return timestamps, and Yua openness/relationship progress
 
-Do not jump into deep polish, full voice, or advanced AI autonomy before this focus-first loop is stable.
+Do not jump into deep polish, full voice, or advanced AI autonomy before this co-presence-first loop is stable.
 
 ## Agent Handoff Protocol
 
@@ -98,3 +107,10 @@ When handing off work, include:
 ## Human Collaboration Rule
 
 The user is non-technical and should receive concrete Godot editor steps, not only abstract architecture advice.
+
+## Collaboration Workflow
+
+- High-level design is discussed between the owner and Claude.
+- Claude produces design and implementation specs (see `docs/prompts/` and `docs/Vertical_Slice_01_Spec.md`).
+- The owner hands specs to Codex for discussion and implementation. Claude does not drive Codex via MCP for implementation.
+- Claude reviews finished code only when asked, preferably via diffs or specific files rather than full re-reads.

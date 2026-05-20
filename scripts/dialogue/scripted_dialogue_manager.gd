@@ -3,14 +3,21 @@ extends Node
 class_name ScriptedDialogueManager
 
 const DEFAULT_FALLBACK_ID := "idle"
+const METADATA_KEYS: PackedStringArray = [
+	"intro_node",
+	"demo_script_version",
+	"episodes"
+]
 
 var nodes_by_id: Dictionary = {}
+var metadata: Dictionary = {}
 var fallback_node_id: String = DEFAULT_FALLBACK_ID
 var source_path: String = ""
 
 func load_from_path(path: String) -> bool:
 	source_path = path
 	nodes_by_id.clear()
+	metadata.clear()
 
 	if not FileAccess.file_exists(path):
 		push_error("ScriptedDialogueManager: Missing dialogue file at %s" % path)
@@ -64,6 +71,14 @@ func validate_choice_transition(from_id: String, next_id: String) -> bool:
 
 	return true
 
+func has_metadata(key: String) -> bool:
+	return metadata.has(key)
+
+func get_metadata(key: String, default_value = null):
+	if not metadata.has(key):
+		return default_value
+	return metadata[key]
+
 func make_transition_error_node(from_id: String, next_id: String) -> Dictionary:
 	var fallback := _resolve_fallback_id()
 	var choices: Array = []
@@ -78,6 +93,10 @@ func make_transition_error_node(from_id: String, next_id: String) -> Dictionary:
 func _ingest_nodes(root: Dictionary) -> void:
 	if root.has("fallback_id"):
 		fallback_node_id = str(root.get("fallback_id"))
+
+	for key in METADATA_KEYS:
+		if root.has(key):
+			metadata[key] = root[key]
 
 	if root.has("nodes"):
 		var nodes_data: Variant = root.get("nodes")
@@ -120,7 +139,11 @@ func _sanitize_choices(raw_choices: Variant) -> Array:
 			continue
 		var text := str(choice.get("text", "Continue"))
 		var next := str(choice.get("next", ""))
-		cleaned.append({"text": text, "next": next})
+		var entry: Dictionary = {"text": text, "next": next}
+		var set_flag_value = choice.get("set_flag", null)
+		if typeof(set_flag_value) == TYPE_DICTIONARY:
+			entry["set_flag"] = set_flag_value.duplicate(true)
+		cleaned.append(entry)
 	return cleaned
 
 func _choice_exists(from_id: String, next_id: String) -> bool:

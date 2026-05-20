@@ -1,0 +1,28 @@
+{
+  "_doc": "Short reactive line pools. Add new categories by adding a new key with a string array. Categories used by main_scene.gd: focus_click. Future C deliverable will add: status_idle, status_morning, status_noon, status_evening, status_night, break_start, break_mid, break_end, action_water, action_glasses, action_window, action_typing_pause.",
+  "focus_click": [
+    "还差一会儿，再撑一下。",
+    "我也在。",
+    "别看我，去看你的屏幕。",
+    "……你是分心了还是确认我在？好，我在。",
+    "快了快了，时间真的在走的。",
+    "先别想别的事，那个等一会儿再说。",
+    "中间分心是正常的，回来就行。",
+    "不用做完，先往前推一点。",
+    "我假装没看见你点我。你继续。",
+    "来都来了，再做一小块。",
+    "比你想象中过得快的，我保证。",
+    "就算开始发呆了，也算在状态里。",
+    "手边那件事，先做一步。",
+    "好的，我知道你需要一点陪伴。行，但你还是要继续。",
+    "计时器没停，你也别停。",
+    "就快了，别现在放弃。",
+    "坐着不动也行，但眼睛看屏幕。",
+    "你刚才肯定想到别的事了。放一边，等计时器响。",
+    "很好，你还在。",
+    "这一段搞完，后面就轻松了。",
+    "不需要状态很好，动着就行。",
+    "时间还有，但也不多了。刚好。",
+    "……点我干嘛。算了，你继续吧。"
+  ]
+}

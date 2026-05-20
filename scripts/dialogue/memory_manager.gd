@@ -147,6 +147,7 @@ func _normalize_profile() -> void:
 	profile["pending_follow_ups"] = _normalize_string_array(profile.get("pending_follow_ups", []))
 	profile["follow_up_last_served_at"] = _normalize_follow_up_history(profile.get("follow_up_last_served_at", {}))
 	profile["memories"] = _normalize_memories(profile.get("memories", []))
+	profile["story_flags"] = _normalize_story_flags(profile.get("story_flags", {}))
 	_prune_memory_cache()
 	_refresh_recent_summary()
 
@@ -236,8 +237,37 @@ func _build_default_profile() -> Dictionary:
 		"pending_follow_ups": [],
 		"follow_up_last_served_at": {},
 		"recent_summary": "",
-		"memories": []
+		"memories": [],
+		"story_flags": {}
 	}
+
+func set_story_flag(key: String, value) -> void:
+	if key.is_empty():
+		return
+	_ensure_profile_loaded()
+	var flags: Dictionary = _normalize_story_flags(profile.get("story_flags", {}))
+	flags[key] = value
+	profile["story_flags"] = flags
+	save_profile()
+
+func get_story_flag(key: String, default_value = null):
+	_ensure_profile_loaded()
+	var flags: Dictionary = _normalize_story_flags(profile.get("story_flags", {}))
+	if not flags.has(key):
+		return default_value
+	return flags[key]
+
+func get_story_flags() -> Dictionary:
+	_ensure_profile_loaded()
+	return _normalize_story_flags(profile.get("story_flags", {})).duplicate(true)
+
+func _normalize_story_flags(raw_value) -> Dictionary:
+	if typeof(raw_value) != TYPE_DICTIONARY:
+		return {}
+	var flags: Dictionary = {}
+	for key in raw_value.keys():
+		flags[str(key)] = raw_value[key]
+	return flags
 
 func _ensure_save_dir() -> void:
 	var dir_path: String = ProjectSettings.globalize_path(SAVE_DIR)
