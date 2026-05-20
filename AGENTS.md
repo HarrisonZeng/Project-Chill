@@ -14,9 +14,7 @@ All agents must read these docs before proposing or making changes:
 2. `docs/Game_Spec_and_Process_Guide.md`
 3. `docs/Development_Summary.md`
 4. `docs/AI_Dialogue_Infrastructure.md`
-5. `docs/CODEX_TAKEOVER_PLAYBOOK.md`
-6. `docs/CODEX_WORKFLOW.md`
-7. `docs/THREAD_HANDOFF.md`
+5. `docs/THREAD_HANDOFF.md`
 
 If there is a conflict, priority order is:
 
@@ -24,12 +22,12 @@ If there is a conflict, priority order is:
 2. `Vertical_Slice_01_Spec.md`
 3. `Game_Spec_and_Process_Guide.md`
 4. `AI_Dialogue_Infrastructure.md`
-5. `CODEX_TAKEOVER_PLAYBOOK.md`
-6. `CODEX_WORKFLOW.md`
-7. `THREAD_HANDOFF.md`
-8. `Development_Summary.md`
+5. `THREAD_HANDOFF.md`
+6. `Development_Summary.md`
 
 Some older docs still contain focus-first wording. Until they are revised, co-presence-first direction in this file and `docs/Vertical_Slice_01_Spec.md` overrides any mandatory task, mandatory focus, or focus-gated story framing.
+
+The `docs/CODEX_*.md` files describe a retired two-AI workflow and are deprecated. The "Collaboration Workflow" section below is authoritative.
 
 ## Product Direction (Non-Negotiable)
 
@@ -110,7 +108,8 @@ The user is non-technical and should receive concrete Godot editor steps, not on
 
 ## Collaboration Workflow
 
-- High-level design is discussed between the owner and Claude.
-- Claude produces design and implementation specs (see `docs/prompts/` and `docs/Vertical_Slice_01_Spec.md`).
-- The owner hands specs to Codex for discussion and implementation. Claude does not drive Codex via MCP for implementation.
-- Claude reviews finished code only when asked, preferably via diffs or specific files rather than full re-reads.
+- Claude is the single agent on this project and does everything: design discussion, planning, and implementation. There is no Codex hand-off and no second AI.
+- The owner and Claude discuss high-level design together. Claude then plans and implements the work directly.
+- Claude edits directly in the main working tree. Do not use git worktrees: the owner runs the game in Godot from the main tree and cannot run a worktree copy, and being non-technical does not review cross-branch diffs.
+- `docs/prompts/` holds scoped task specs (narrative, UI, progression/save). Claude executes these itself; they are no longer pasted to an external implementer.
+- Claude verifies its own changes and gives the owner concrete Godot editor steps for anything visual or scene/UI related.

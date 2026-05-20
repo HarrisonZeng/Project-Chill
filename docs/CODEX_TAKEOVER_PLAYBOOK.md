@@ -1,5 +1,7 @@
 # Codex Takeover Playbook
 
+> **DEPRECATED (2026-05).** Codex no longer owns implementation. Claude is the single agent and does planning + implementation directly in the main tree (no worktrees). See `AGENTS.md` and `CLAUDE.md`. Kept for history only — do not follow it.
+
 ## Goal
 
 This document defines how Codex takes primary ownership of Project Chill development from this point onward.

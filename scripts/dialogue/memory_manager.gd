@@ -3,6 +3,10 @@ extends Node
 const SAVE_PATH := "user://data/saves/player_profile.json"
 const TEMPLATE_SAVE_PATH := "res://data/saves/player_profile.json"
 const SAVE_DIR := "user://data/saves"
+# Pre-unification, main_scene wrote session/UI state to this separate file.
+# We migrate it into the single profile once, then ignore it.
+const LEGACY_MAIN_SAVE_PATH := "user://player_profile.json"
+const PROFILE_VERSION := 2
 const MAX_MEMORIES := 20
 const MAX_MEMORY_CONTEXT_ITEMS := 5
 const FOLLOW_UP_COOLDOWN_SECONDS := 3 * 24 * 60 * 60
@@ -44,9 +48,50 @@ var last_consumed_follow_up_tag: String = ""
 func load_profile() -> void:
 	_ensure_save_dir()
 	profile = _load_profile_from_disk()
+	# Migrate BEFORE normalize: normalize fills profile_version from defaults,
+	# which would otherwise make the migration think it already ran.
+	_migrate_legacy_main_save()
 	_normalize_profile()
 	profile["last_login_at"] = _now_iso()
 	save_profile()
+
+# --- Unified profile accessors (used by main_scene for session/UI state) ---
+
+func get_profile() -> Dictionary:
+	_ensure_profile_loaded()
+	return profile.duplicate(true)
+
+func get_value(key: String, default_value = null):
+	_ensure_profile_loaded()
+	if not profile.has(key):
+		return default_value
+	return profile[key]
+
+func set_value(key: String, value) -> void:
+	_ensure_profile_loaded()
+	profile[key] = value
+
+func merge_values(values: Dictionary) -> void:
+	_ensure_profile_loaded()
+	for key in values.keys():
+		profile[str(key)] = values[key]
+
+# One-time pull of legacy main_scene save fields into the single profile.
+func _migrate_legacy_main_save() -> void:
+	if int(profile.get("profile_version", 1)) >= PROFILE_VERSION:
+		return
+	if FileAccess.file_exists(LEGACY_MAIN_SAVE_PATH):
+		var file: FileAccess = FileAccess.open(LEGACY_MAIN_SAVE_PATH, FileAccess.READ)
+		if file != null:
+			var parsed: Variant = JSON.parse_string(file.get_as_text())
+			file.close()
+			if typeof(parsed) == TYPE_DICTIONARY:
+				var legacy: Dictionary = parsed
+				# Legacy file only holds session/UI keys, so merging is safe;
+				# it never carries memories/story_flags that would clobber.
+				for key in legacy.keys():
+					profile[str(key)] = legacy[key]
+	profile["profile_version"] = PROFILE_VERSION
 
 func save_profile() -> void:
 	_ensure_save_dir()
@@ -141,6 +186,7 @@ func _normalize_profile() -> void:
 		if not profile.has(key):
 			profile[key] = defaults[key]
 
+	profile["profile_version"] = int(profile.get("profile_version", PROFILE_VERSION))
 	profile["last_login_at"] = str(profile.get("last_login_at", ""))
 	profile["last_node_id"] = str(profile.get("last_node_id", "idle"))
 	profile["recent_summary"] = str(profile.get("recent_summary", ""))
@@ -232,6 +278,7 @@ func _follow_up_line_for_tag(tag: String) -> String:
 
 func _build_default_profile() -> Dictionary:
 	return {
+		"profile_version": PROFILE_VERSION,
 		"last_login_at": "",
 		"last_node_id": "idle",
 		"pending_follow_ups": [],

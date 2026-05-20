@@ -1,7 +1,8 @@
 extends Control
 
 const FOCUS_DURATION_SECONDS: float = 25.0 * 60.0
-const SAVE_PATH := "user://player_profile.json"
+# Save now lives in one profile owned by memory_manager
+# (user://data/saves/player_profile.json). main_scene reads/writes via it.
 const LOOP_VIDEO_PATH := "res://assets/video/yua_idle_loop.ogv"
 const FOCUS_COMPLETE_LINE := "Focus block complete. Nice work."
 const PERSONA_PATH := "res://data/dialogue/yua_system_prompt.txt"
@@ -141,6 +142,7 @@ func _ready() -> void:
 	_wire_signals()
 	_configure_visual_mode()
 	_configure_companion_controls()
+	_setup_memory_profile()  # must exist before _load_persistent_state (single profile store)
 	_load_persistent_state()
 	_refresh_voice_button()
 	_refresh_music_mode_button()
@@ -206,11 +208,14 @@ func _load_text_file(path: String) -> String:
 	file.close()
 	return content
 
-func _setup_dialogue_services() -> void:
+func _setup_memory_profile() -> void:
+	# Single source of truth for save data. main_scene reads/writes its
+	# session/UI fields through this profile via get_value/merge_values.
 	memory_manager = preload("res://scripts/dialogue/memory_manager.gd").new()
 	add_child(memory_manager)
 	memory_manager.load_profile()
 
+func _setup_dialogue_services() -> void:
 	ai_dialogue_service = preload("res://scripts/dialogue/ai_dialogue_service.gd").new()
 	add_child(ai_dialogue_service)
 	var poe_api_key := OS.get_environment("POE_API_KEY")
@@ -1483,27 +1488,19 @@ func _save_persistent_state() -> void:
 		saved_music_playback_mode = int(payload["music_playback_mode"])
 	saved_music_paused = bgm_paused
 
-	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file == null:
+	# Write session/UI fields into the single shared profile, then persist it.
+	if memory_manager == null:
 		return
-	file.store_string(JSON.stringify(payload, "\t"))
-	file.close()
+	memory_manager.merge_values(payload)
+	memory_manager.save_profile()
 
 func _load_persistent_state() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if memory_manager == null:
+		return
+	var data: Dictionary = memory_manager.get_profile()
+	if data.is_empty():
 		return
 
-	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var content := file.get_as_text()
-	file.close()
-
-	var parse_result: Variant = JSON.parse_string(content)
-	if typeof(parse_result) != TYPE_DICTIONARY:
-		return
-
-	var data: Dictionary = parse_result
 	focus_duration_seconds = float(data.get("focus_duration_seconds", FOCUS_DURATION_SECONDS))
 	focus_time_left = float(data.get("focus_time_left", focus_duration_seconds))
 	focus_running = bool(data.get("focus_running", false))

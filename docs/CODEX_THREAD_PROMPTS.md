@@ -1,5 +1,7 @@
 # Codex Thread Prompts
 
+> **DEPRECATED (2026-05).** Project Chill no longer uses Codex or multiple agent threads. Claude is the single agent and does planning + implementation directly in the main tree. See `AGENTS.md` and `CLAUDE.md`. Kept for history only — do not follow it.
+
 Use these prompts directly when opening additional Codex threads.
 
 ## Manager / Integrator

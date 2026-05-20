@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Use this file to resume the project on another Codex thread or another machine.
-This is the portable replacement for live Codex thread history, which cannot be stored in Git directly.
+Use this file to resume the project in another Claude session or on another machine.
+This is the portable replacement for live session history, which cannot be stored in Git directly.
 
 ## Project Snapshot
 

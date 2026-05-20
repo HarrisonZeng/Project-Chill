@@ -1,5 +1,7 @@
 # Codex Workflow
 
+> **DEPRECATED (2026-05).** This document describes a retired two-AI workflow in which Codex implemented and Claude reviewed. Project Chill now uses a single agent: Claude does both planning and implementation directly in the main tree (no worktrees, no Codex). See `AGENTS.md` and `CLAUDE.md`. Kept for history only — do not follow it.
+
 ## Branch Rules
 
 - stable branch: `main`
