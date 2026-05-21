@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://c17x6dbr8c6k8" path="res://scripts/audio/voice_manager.gd" id="6_2l5v1"]
 [ext_resource type="Theme" path="res://data/theme/project_chill.tres" id="7_theme"]
 [ext_resource type="Script" path="res://scripts/ui/call_status_controller.gd" id="8_callstat"]
+[ext_resource type="Script" path="res://scripts/ui/music_bar_controller.gd" id="9_musicbar"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
 bg_color = Color(0.2, 0.14, 0.16, 0.56)
@@ -267,6 +268,7 @@ offset_bottom = -28.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+script = ExtResource("9_musicbar")
 
 [node name="MusicMargin" type="MarginContainer" parent="BottomLeftMusicBar" unique_id=1716632383]
 layout_mode = 2

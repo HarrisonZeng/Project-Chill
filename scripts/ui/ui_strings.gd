@@ -40,6 +40,15 @@ const STRINGS := {
 	"tasks.counter_empty": {"zh": "· 还没有任务 ·", "en": "· no tasks ·"},
 	"tasks.tab.label": {"zh": "任务", "en": "Tasks"},
 	"tasks.resize.tooltip": {"zh": "拖动调整任务面板大小", "en": "Drag to resize tasks panel"},
+	"music.no_track": {"zh": "未加载音乐", "en": "No track loaded"},
+	"music.song_prefix": {"zh": "歌曲：", "en": "Song: "},
+	"music.play": {"zh": "播放", "en": "Play"},
+	"music.pause": {"zh": "暂停", "en": "Pause"},
+	"music.mode.loop": {"zh": "循环", "en": "Loop"},
+	"music.mode.seq": {"zh": "顺序", "en": "Seq"},
+	"music.mode.random": {"zh": "随机", "en": "Random"},
+	"voice.on": {"zh": "语音开", "en": "Voice On"},
+	"voice.off": {"zh": "语音关", "en": "Voice Off"},
 }
 
 static func t(key: String, lang: String = "en") -> String:

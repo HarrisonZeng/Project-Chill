@@ -67,13 +67,7 @@ const DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND := 34.0
 @onready var new_task_input: LineEdit = $OverlayLayer/Tools/TasksPanel/Col/NewTaskInput
 @onready var tasks_counter: Label = $OverlayLayer/Tools/TasksPanel/Col/Counter
 @onready var tasks_resize_handle: Button = $OverlayLayer/Tools/TasksResizeHandle
-@onready var music_song_label: Label = $BottomLeftMusicBar/MusicMargin/MusicVBox/SongLabel
-@onready var music_progress_bar: ProgressBar = $BottomLeftMusicBar/MusicMargin/MusicVBox/ProgressBar
-@onready var music_prev_button: Button = $BottomLeftMusicBar/MusicMargin/MusicVBox/Controls/PrevButton
-@onready var music_play_pause_button: Button = $BottomLeftMusicBar/MusicMargin/MusicVBox/Controls/PlayPauseButton
-@onready var music_next_button: Button = $BottomLeftMusicBar/MusicMargin/MusicVBox/Controls/NextButton
-@onready var music_voice_button: Button = $BottomLeftMusicBar/MusicMargin/MusicVBox/Controls/VoiceButton
-@onready var music_mode_button: OptionButton = $BottomLeftMusicBar/MusicMargin/MusicVBox/Controls/PlaybackModeButton
+@onready var music_bar: Node = $BottomLeftMusicBar
 @onready var settings_button: Button = $SettingsButton
 @onready var settings_panel: PanelContainer = $SettingsPanel
 @onready var settings_title: Label = $SettingsPanel/SettingsMargin/SettingsVBox/SettingsTitle
@@ -93,10 +87,6 @@ var focus_running: bool = false
 var focus_last_tick_ms: int = 0
 var last_saved_second: int = -1
 var todo_items: Array[Dictionary] = []
-var bgm_paused: bool = true
-var saved_music_index: int = 0
-var saved_music_paused: bool = true
-var saved_music_playback_mode: int = 0
 var voice_enabled: bool = true
 
 var memory_manager: Node
@@ -137,13 +127,12 @@ var reactive_lines: Dictionary = {}
 var ai_modes: Dictionary = {}
 
 func _ready() -> void:
+	music_bar.setup(bgm_manager)
 	_wire_signals()
 	_configure_visual_mode()
 	_configure_companion_controls()
 	_setup_memory_profile()  # must exist before _load_persistent_state (single profile store)
 	_load_persistent_state()
-	_refresh_voice_button()
-	_refresh_music_mode_button()
 	_load_prompt_assets()
 	if todo_items.is_empty():
 		_seed_todo_items()
@@ -161,8 +150,6 @@ func _ready() -> void:
 	_setup_dialogue_services()
 	_show_node(current_node_id)
 	_maybe_show_follow_up()
-	_start_bgm_if_available()
-	_refresh_music_bar()
 	_refresh_focus_controls()
 	_highlight_duration_chip(int(round(focus_duration_seconds / 60.0)))
 	_refresh_tasks_controls()
@@ -173,7 +160,7 @@ func _process(delta: float) -> void:
 	_update_focus_timer()
 	call_status.refresh(ui_language, focus_running)
 	_maybe_autosave()
-	_update_music_progress()
+	music_bar.update_progress()
 
 func _input(event: InputEvent) -> void:
 	if not resizing_tasks_panel:
@@ -284,12 +271,9 @@ func _wire_signals() -> void:
 	settings_button.pressed.connect(_on_settings_button_pressed)
 	language_button.pressed.connect(_on_language_button_pressed)
 	text_speed_slider.value_changed.connect(_on_text_speed_changed)
-	music_prev_button.pressed.connect(_on_bgm_prev_pressed)
-	music_play_pause_button.pressed.connect(_on_bgm_play_pause_pressed)
-	music_next_button.pressed.connect(_on_bgm_next_pressed)
-	music_voice_button.pressed.connect(_on_voice_button_pressed)
-	music_mode_button.item_selected.connect(_on_music_mode_selected)
-	music_progress_bar.gui_input.connect(_on_music_progress_input)
+	music_bar.save_requested.connect(_save_persistent_state)
+	music_bar.voice_toggle_requested.connect(_on_voice_toggle_requested)
+	music_bar.status_message.connect(_show_system_status)
 
 func _configure_companion_controls() -> void:
 	if player_input != null:
@@ -305,8 +289,6 @@ func _configure_companion_controls() -> void:
 	if text_speed_slider != null:
 		text_speed_slider.value = dialogue_typewriter_chars_per_second
 	_refresh_ui_language()
-	_refresh_voice_button()
-	_refresh_music_mode_button()
 	_refresh_focus_controls()
 	_refresh_tasks_controls()
 
@@ -443,9 +425,7 @@ func _refresh_ui_language() -> void:
 	if send_button != null: send_button.text = _ui_text("send")
 	if ai_mode_toggle != null: ai_mode_toggle.text = _ui_text("type_mode")
 	_refresh_input_placeholder()
-	_refresh_music_mode_button()
-	_refresh_voice_button()
-	_refresh_music_bar()
+	music_bar.apply_language(ui_language)
 	_update_timer_label()
 	call_status.refresh(ui_language, focus_running)
 	_refresh_focus_controls()
@@ -632,20 +612,6 @@ func _update_tasks_resize_handle_position() -> void:
 	tasks_resize_handle.offset_top = tasks_panel.offset_top - 6.0
 	tasks_resize_handle.offset_right = tasks_panel.offset_left - 4.0
 	tasks_resize_handle.offset_bottom = tasks_panel.offset_top + 34.0
-
-func _refresh_voice_button() -> void:
-	if music_voice_button == null:
-		return
-	music_voice_button.text = _ui_text("voice_on") if voice_enabled else _ui_text("voice_off")
-
-func _refresh_music_mode_button() -> void:
-	if music_mode_button == null:
-		return
-	music_mode_button.set_item_text(0, _ui_text("loop"))
-	music_mode_button.set_item_text(1, _ui_text("seq"))
-	music_mode_button.set_item_text(2, _ui_text("random"))
-	var mode := clampi(saved_music_playback_mode, 0, 2)
-	music_mode_button.select(mode)
 
 func _seed_todo_items() -> void:
 	_add_todo_item("Set one gentle focus block")
@@ -1434,9 +1400,9 @@ func _save_persistent_state() -> void:
 		"completed_focus_sessions": completed_focus_sessions,
 		"current_focus_task": current_focus_task,
 		"last_seen_unix": int(Time.get_unix_time_from_system()),
-		"music_track_index": saved_music_index,
-		"music_paused": bgm_paused,
-		"music_playback_mode": saved_music_playback_mode,
+		"music_track_index": music_bar.get_track_index(),
+		"music_paused": music_bar.is_paused(),
+		"music_playback_mode": music_bar.get_playback_mode(),
 		"voice_enabled": voice_enabled,
 		"ui_language": ui_language,
 		"dialogue_typewriter_chars_per_second": dialogue_typewriter_chars_per_second,
@@ -1444,14 +1410,6 @@ func _save_persistent_state() -> void:
 		"todo_panel_top": tasks_panel.offset_top if tasks_panel != null else 0.0,
 		"tasks_panel_visible": tasks_panel_visible
 	}
-
-	if bgm_manager != null and bgm_manager.has_method("get_current_index"):
-		payload["music_track_index"] = int(bgm_manager.call("get_current_index"))
-		saved_music_index = int(payload["music_track_index"])
-	if bgm_manager != null and bgm_manager.has_method("get_playback_mode"):
-		payload["music_playback_mode"] = int(bgm_manager.call("get_playback_mode"))
-		saved_music_playback_mode = int(payload["music_playback_mode"])
-	saved_music_paused = bgm_paused
 
 	# Write session/UI fields into the single shared profile, then persist it.
 	if memory_manager == null:
@@ -1477,9 +1435,9 @@ func _load_persistent_state() -> void:
 	last_seen_unix = int(data.get("last_seen_unix", 0))
 	current_ai_mode_id = ""
 	ai_return_node_id = current_node_id
-	saved_music_index = int(data.get("music_track_index", 0))
-	saved_music_paused = bool(data.get("music_paused", true))
-	saved_music_playback_mode = int(data.get("music_playback_mode", 0))
+	var loaded_music_index := int(data.get("music_track_index", 0))
+	var loaded_music_paused := bool(data.get("music_paused", true))
+	var loaded_music_mode := int(data.get("music_playback_mode", 0))
 	voice_enabled = bool(data.get("voice_enabled", true))
 	ui_language = str(data.get("ui_language", "en"))
 	if ui_language != "zh":
@@ -1507,6 +1465,8 @@ func _load_persistent_state() -> void:
 		_add_todo_item(str(todo_data.get("text", "")), bool(todo_data.get("completed", false)))
 	_refresh_ui_language()
 	_refresh_tasks_controls()
+	music_bar.start_playback(loaded_music_index, loaded_music_paused, loaded_music_mode)
+	music_bar.set_voice_enabled(voice_enabled)
 
 func _play_voice_for_line(line_id: String, text: String) -> void:
 	if not voice_enabled:
@@ -1517,42 +1477,9 @@ func _play_voice_for_line(line_id: String, text: String) -> void:
 	if voice_manager.has_method("play_voice_for_line"):
 		voice_manager.call("play_voice_for_line", line_id, text)
 
-func _start_bgm_if_available() -> void:
-	if bgm_manager == null:
-		return
-	if bgm_manager.has_method("set_current_index"):
-		bgm_manager.call("set_current_index", saved_music_index)
-	if bgm_manager.has_method("set_playback_mode"):
-		bgm_manager.call("set_playback_mode", saved_music_playback_mode)
-	if saved_music_paused:
-		if bgm_manager.has_method("pause_bgm"):
-			bgm_manager.call("pause_bgm")
-		bgm_paused = true
-	else:
-		if bgm_manager.has_method("play_current"):
-			bgm_manager.call("play_current")
-		elif bgm_manager.has_method("play_default"):
-			bgm_manager.call("play_default")
-		bgm_paused = false
-	_refresh_music_bar()
-
-func _on_bgm_prev_pressed() -> void:
-	if bgm_manager != null and bgm_manager.has_method("play_previous"):
-		bgm_manager.call("play_previous")
-		bgm_paused = false
-		_refresh_music_bar()
-		_save_persistent_state()
-
-func _on_bgm_next_pressed() -> void:
-	if bgm_manager != null and bgm_manager.has_method("play_next"):
-		bgm_manager.call("play_next")
-		bgm_paused = false
-		_refresh_music_bar()
-		_save_persistent_state()
-
-func _on_voice_button_pressed() -> void:
+func _on_voice_toggle_requested() -> void:
 	voice_enabled = not voice_enabled
-	_refresh_voice_button()
+	music_bar.set_voice_enabled(voice_enabled)
 	_save_persistent_state()
 
 func _on_settings_button_pressed() -> void:
@@ -1570,119 +1497,6 @@ func _on_text_speed_changed(value: float) -> void:
 	if suppress_settings_save:
 		return
 	_save_persistent_state()
-
-func _on_music_mode_selected(index: int) -> void:
-	saved_music_playback_mode = clampi(index, 0, 2)
-	if bgm_manager != null and bgm_manager.has_method("set_playback_mode"):
-		bgm_manager.call("set_playback_mode", saved_music_playback_mode)
-	_refresh_music_mode_button()
-	_save_persistent_state()
-
-func _on_bgm_play_pause_pressed() -> void:
-	if bgm_manager == null:
-		return
-
-	var has_stream := false
-	if bgm_manager.has_method("has_stream"):
-		has_stream = bool(bgm_manager.call("has_stream"))
-	var has_playlist := true
-	if bgm_manager.has_method("has_playlist"):
-		has_playlist = bool(bgm_manager.call("has_playlist"))
-
-	if not has_playlist:
-		_refresh_music_bar()
-		_show_system_status("There is no ambience loaded yet, but the controls are ready.")
-		return
-
-	if not has_stream:
-		if bgm_manager.has_method("play_current"):
-			bgm_manager.call("play_current")
-		elif bgm_manager.has_method("play_default"):
-			bgm_manager.call("play_default")
-		bgm_paused = false
-		_refresh_music_bar()
-		_save_persistent_state()
-		return
-
-	if bgm_paused:
-		if bgm_manager.has_method("resume_bgm"):
-			bgm_manager.call("resume_bgm")
-		bgm_paused = false
-	else:
-		if bgm_manager.has_method("pause_bgm"):
-			bgm_manager.call("pause_bgm")
-		bgm_paused = true
-
-	_refresh_music_bar()
-	_save_persistent_state()
-
-func _refresh_music_bar() -> void:
-	if music_song_label == null or music_progress_bar == null:
-		return
-
-	var song_name := "No track loaded"
-	if bgm_manager != null and bgm_manager.has_method("get_now_playing_name"):
-		song_name = str(bgm_manager.call("get_now_playing_name"))
-	if song_name == "No track loaded":
-		song_name = _ui_text("no_track")
-
-	music_song_label.text = _ui_text("song") + song_name
-	var is_playing := false
-	if bgm_manager != null and bgm_manager.has_method("is_playing"):
-		is_playing = bool(bgm_manager.call("is_playing"))
-	bgm_paused = not is_playing
-	music_play_pause_button.text = _ui_text("play") if bgm_paused else _ui_text("pause")
-	_refresh_voice_button()
-	if bgm_manager != null and bgm_manager.has_method("get_playback_mode"):
-		saved_music_playback_mode = int(bgm_manager.call("get_playback_mode"))
-	_refresh_music_mode_button()
-	var has_playlist := false
-	if bgm_manager != null and bgm_manager.has_method("has_playlist"):
-		has_playlist = bool(bgm_manager.call("has_playlist"))
-	if music_prev_button != null:
-		var can_step_tracks := has_playlist
-		if bgm_manager != null and bgm_manager.has_method("can_step_tracks"):
-			can_step_tracks = bool(bgm_manager.call("can_step_tracks"))
-		music_prev_button.disabled = not can_step_tracks
-	if music_next_button != null:
-		var can_step_next := has_playlist
-		if bgm_manager != null and bgm_manager.has_method("can_step_tracks"):
-			can_step_next = bool(bgm_manager.call("can_step_tracks"))
-		music_next_button.disabled = not can_step_next
-	if music_play_pause_button != null:
-		music_play_pause_button.disabled = not has_playlist
-
-func _update_music_progress() -> void:
-	if bgm_manager == null or music_progress_bar == null:
-		return
-	if not bgm_manager.has_method("get_stream_length"):
-		return
-	var length := float(bgm_manager.call("get_stream_length"))
-	if length <= 0.0:
-		music_progress_bar.value = 0.0
-		return
-	var playback_position := float(bgm_manager.call("get_playback_position"))
-	music_progress_bar.value = clampf((playback_position / length) * 100.0, 0.0, 100.0)
-
-func _on_music_progress_input(event: InputEvent) -> void:
-	if bgm_manager == null:
-		return
-	if not (event is InputEventMouseButton):
-		return
-	var mouse_event := event as InputEventMouseButton
-	if not mouse_event.pressed:
-		return
-	if not bgm_manager.has_method("get_stream_length") or not bgm_manager.has_method("seek_to_position"):
-		return
-	var length := float(bgm_manager.call("get_stream_length"))
-	if length <= 0.0:
-		return
-	var bar_width := music_progress_bar.size.x
-	if bar_width <= 0.0:
-		return
-	var percent := clampf(mouse_event.position.x / bar_width, 0.0, 1.0)
-	bgm_manager.call("seek_to_position", length * percent)
-	_update_music_progress()
 
 ## ---------------------------------------------------------------------------
 ## Loaders for data/dialogue/* metadata. Keeping them in one block so future
