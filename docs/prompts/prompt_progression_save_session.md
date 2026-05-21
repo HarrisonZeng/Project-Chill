@@ -1,102 +1,138 @@
-# Prompt: Project Chill Progression/Save Session
+# Prompt: Project Chill Progression / Save / AI Engine Session
 
-You are the highest-priority Godot 4 engineering agent for Project Chill's Vertical Slice 01 save and progression plumbing. Start cold and read before editing.
+You are the backend engineering agent for Project Chill's Vertical Slice 01. You
+own the core game loop and the systems behind it. Start cold and read before
+editing.
 
 Required reading:
 
 1. `AGENTS.md`
 2. `docs/Vertical_Slice_01_Spec.md`
-3. `docs/Game_Spec_and_Process_Guide.md`
-4. `docs/Development_Summary.md`
-5. `docs/AI_Dialogue_Infrastructure.md`
-6. `scripts/core/main_scene.gd`
-7. `scripts/core/dialogue_router.gd`
-8. `scripts/dialogue/memory_manager.gd`
-9. `scripts/dialogue/scripted_dialogue_manager.gd`
-10. `data/dialogue/scripted_nodes.json`
+3. `docs/Architecture_Overview.md`
+4. `docs/AI_Dialogue_Infrastructure.md`
+5. `scripts/core/main_scene.gd` (the coordinator + core loop)
+6. `scripts/dialogue/scripted_dialogue_manager.gd`
+7. `scripts/dialogue/memory_manager.gd` (the single save/profile authority)
+8. `scripts/core/dialogue_router.gd`, `scripts/dialogue/ai_dialogue_service.gd`
+9. `data/dialogue/scripted_nodes.json`
+10. **The narrative session's milestone contract** — the list of `story_flags`
+    and trigger conditions. Required before you wire the *specific* gates (Task D).
 
-## Direction
+## Direction (non-negotiable)
 
-The game is co-presence-first, not focus-first.
+Co-presence-first; Yua is a peer, never a supervisor. Focus is optional and
+player-initiated — never forced or nagged — **but focus time and progressing
+through the authored script are the only things that advance the story.** Light
+interactions (Yua click, Type Mode, returns) are remembered and add small ambient
+warmth but do not unlock milestones. Pure AFK idling advances nothing. AI may
+propose memory and produce bounded chat, but **AI never unlocks story.**
 
-Yua is a peer user, never a supervisor. Task entry is optional. Focus is optional and player-initiated - never forced or nagged - but focus is the engine of progression: accumulated focus time and completed focus sessions are what advance Yua's openness and the authored story. Light interactions (clicks, Type Mode, returns) are remembered and add ambient warmth but do not unlock story milestones on their own. Pure AFK idling advances nothing.
+## Dependency / sequencing
+
+- The **generic infrastructure** (Tasks B, C below) can be built immediately — it
+  doesn't depend on which specific flags narrative invents.
+- The **specific gate wiring** (Task D) needs the narrative milestone contract.
+  Build the mechanism first; fill in the concrete flags/thresholds when narrative
+  delivers them. Mark any placeholder thresholds `PROPOSED — confirm with owner`.
 
 ## Tasks
 
-### A. Consolidate Save Paths
+### A. Save consolidation — DONE, verify only
+The old split-save bug is already fixed: `memory_manager` is the single profile
+(`user://data/saves/player_profile.json`, `PROFILE_VERSION = 2`) and migrates the
+legacy `user://player_profile.json` once. `main_scene` writes session/UI state
+through `merge_values`/`save_profile`. **Do not re-introduce a second save path.**
+Just confirm a clean first launch creates one profile and migration still works.
 
-Fix the split-save bug:
+### B. Preserve dialogue metadata (keystone)
+`scripted_dialogue_manager._register_node` currently keeps only `id`/`line`/
+`choices` and silently drops `unlock`, `set_flags`, `tags`, `speaker`. Extend it
+to preserve those so JSON-authored milestone metadata is honored. Keep existing
+`id`/`line`/`choices` behavior intact. Without this, the narrative session's
+milestone wiring does nothing.
 
-- `scripts/core/main_scene.gd` currently writes `user://player_profile.json`.
-- `scripts/dialogue/memory_manager.gd` currently writes `user://data/saves/player_profile.json`.
+### C. Close the save-schema gaps for the slice
+`memory_manager` already holds `story_flags`, `memories`, follow-ups, and session/
+UI fields. Add the Vertical Slice fields that aren't persisted yet:
+`total_focus_seconds`, `focus_started_count`, `engaged_interaction_count`,
+`engaged_time_seconds`, `last_meaningful_interaction_at`, `return_count` (or a
+return-rhythm summary), `current_story_milestone`, `yua_openness` (relationship
+progress), and `corrupted_save_recovery` metadata. Add corrupted-save recovery:
+on JSON parse failure, back up the bad file with a timestamped name and start a
+clean profile flagged with `corrupted_save_recovery`.
 
-Create one canonical profile path and migrate/merge any existing data from both old files. The migration must preserve focus totals, todos, UI settings, memories, follow-ups, story flags, timestamps, and any existing compatible fields.
+### D. Deterministic focus-drives-story gate
+Add a progression/eligibility function (in `dialogue_router.gd` or a focused new
+progression script) that selects the eligible authored beat from deterministic
+state. Rules:
+- Story/relationship milestones advance only from accumulated focus time +
+  completed focus sessions. This is the required driver.
+- Light interactions are remembered (+ small `yua_openness` ambient warmth if you
+  want) but do not advance milestones.
+- Idling advances nothing. Starting focus without a task still counts. Task entry
+  is optional context, never a gate.
+- "Gate" = deterministic eligibility, **not** a player-facing lock or chore
+  checklist. Yua never demands or nags.
+- Scripted story is the backbone; the gate just picks which authored beat is next.
 
-Add corrupted-save recovery: if JSON parse fails, preserve the bad file with a timestamped backup name and start a clean profile with `corrupted_save_recovery` metadata.
+### E. AI systems wiring (phase 2 — after B–D)
+Bounded AI augmentation, none of which unlocks story:
+- Wire 1–2 real AI-mode triggers from the loop: a gentle post-focus reflection
+  (`AI_MODE_POST_SESSION`) and task-clarify when the player *volunteers* a task
+  (`AI_MODE_TASK_CLARIFY`). The modes already exist in `ai_dialogue_service`.
+- Confirm Type Mode → `dialogue_router` → fallback works when AI is unavailable.
+- Memory extraction stays a proposal layer; game-side rules decide what persists
+  (today: keyword rules in `memory_manager`). Deeper AI-proposed memory is
+  post-demo.
+- Real provider: confirm `POE_API_KEY` path works; mock stays the default.
+- Add an **AI / Type-Mode on-off (privacy) hook** the settings UI can flip — no
+  network calls when off. (The settings *control* is the UI session's job; expose
+  the backend flag here.)
 
-### B. Extend Save Schema
+## Verification
 
-Add option-B progression fields:
+Run focused checks and give the non-technical owner concrete Godot steps:
+1. Fresh launch creates one profile; relaunch recognizes return context.
+2. Add a test node with `speaker`/`tags`/`unlock`/`set_flags`; confirm the manager
+   preserves them.
+3. **Three-path contrast (the slice's core proof):** idle = pleasant but no story
+   progress; click/Type Mode = remembered + warmth but no milestone; completed
+   focus = story milestone advances + the Yua payoff beat triggers.
+4. Focus counts, `total_focus_seconds`, and `story_flags` persist across relaunch.
+5. Break the save file with invalid JSON; confirm recovery backup behavior.
+6. AI failure still leaves scripted greeting/idle/focus/Type-Mode fallback working.
 
-- `profile_version`
-- `last_seen_at`
-- `last_meaningful_interaction_at`
-- `return_count` or return rhythm summary
-- `engaged_interaction_count`
-- `engaged_time_seconds`
-- `focus_started_count`
-- `completed_focus_count`
-- `total_focus_seconds`
-- optional `current_focus_task` / `last_task_text`
-- `story_flags`
-- `current_story_milestone`
-- Yua `openness` / relationship progress
-- memory entries and pending follow-ups
-- `corrupted_save_recovery`
+## Hard limits
 
-If exact weights are needed, mark them `PROPOSED - confirm with owner`; do not hard-code product-final thresholds without approval.
+- Do not author dialogue content — that's the narrative session's JSON. You build
+  the systems that read/route it.
+- Do not do UI/visual work — that's the UI session.
+- Keep AI optional and bounded; never let it gate or replace authored story.
 
-### C. Preserve Dialogue Metadata
+## Session coordination (SESSIONS.md)
 
-Extend `ScriptedDialogueManager._register_node` so it preserves at least:
+Drop this into `.sessions/engine.md`:
 
-- `unlock`
-- `set_flags`
-- `tags`
-- `speaker`
+```markdown
+# session: engine
+task: progression/save engine — metadata fix, focus-drives-story gate, save fields, AI wiring
+status: active
+claims:
+- scripts/core/main_scene.gd
+- scripts/dialogue/scripted_dialogue_manager.gd
+- scripts/dialogue/memory_manager.gd
+- scripts/core/dialogue_router.gd
+- scripts/dialogue/ai_dialogue_service.gd
+needs-core-loop-edit: yes
+```
 
-It must continue supporting existing `id`, `line`, and `choices` behavior.
+**Do not run at the same time as the UI session** — both need `main_scene.gd`,
+the single-occupancy room. Wait for the narrative milestone contract before Task D.
 
-### D. Deterministic Option-B Progression
+## Recommended model
 
-Add a progression/gate function in `dialogue_router.gd` or a new focused progression script.
+**Opus.** This is careful, hard-to-test logic (the gate, metadata, save
+migration) where mistakes are costly and silent.
 
-Rules:
-
-- Story/relationship milestones advance only from accumulated focus time and completed focus sessions; this is the required driver.
-- Light interactions (Yua click, Type Mode message, return rhythm) are remembered and add small ambient warmth, but do not advance story milestones or `yua_openness` on their own.
-- Pure idling does not advance anything.
-- Starting focus without a task still counts.
-- Entering a task is optional context, not a gate.
-- No mandatory-task gating. Focus is optional: the player is never forced to focus and never nagged or punished for not focusing.
-- Focus drives progression but is never presented to the player as a chore checklist or transactional unlock.
-- AI can suggest memory, but cannot unlock story directly.
-- Scripted story remains the backbone; progression selects eligible authored beats deterministically from focus-based state.
-
-## Verification Requirements
-
-Run focused checks and give concrete Godot editor steps for a non-technical user:
-
-1. Delete or temporarily move both old save files, then launch.
-2. Confirm one new canonical profile is created.
-3. Click Yua or send a Type Mode line without starting focus.
-4. Confirm `engaged_interaction_count` updates and memory is stored, but `yua_openness` and story milestones do NOT advance without focus.
-5. Relaunch and confirm Yua recognizes return context.
-6. Start focus with no task and complete a short test timer.
-7. Confirm focus counts and total focus time update, and that story/relationship progress (`yua_openness`, story flags) advances from the completed focus.
-8. Leave the app idle without interaction and confirm progression does not advance.
-9. Seed both old save paths with different compatible data and confirm migration merges them.
-10. Break one old save file with invalid JSON and confirm recovery backup behavior.
-11. Add a test scripted node with `speaker`, `tags`, `unlock`, and `set_flags`; confirm the manager preserves the metadata.
-
-Handoff must include changed files, what works, what is not implemented, risks/assumptions, exact next recommended step, and exact Godot editor checks.
+Handoff must include changed files, what works, what isn't implemented, risks/
+assumptions, exact next step, and exact Godot editor checks.
