@@ -1,3 +1,6 @@
+# Multi-session live claim files (see SESSIONS.md) — local coordination only
+.sessions/
+
 # Godot 4+ specific ignores
 .godot/
 /android/

@@ -113,3 +113,13 @@ The user is non-technical and should receive concrete Godot editor steps, not on
 - Claude edits directly in the main working tree. Do not use git worktrees: the owner runs the game in Godot from the main tree and cannot run a worktree copy, and being non-technical does not review cross-branch diffs.
 - `docs/prompts/` holds scoped task specs (narrative, UI, progression/save). Claude executes these itself; they are no longer pasted to an external implementer.
 - Claude verifies its own changes and gives the owner concrete Godot editor steps for anything visual or scene/UI related.
+
+## Running Multiple Sessions (no collisions)
+
+The owner may run several Claude sessions at once, all editing the one main tree. To avoid two sessions clobbering the same file, every session follows the file-ownership protocol in `SESSIONS.md`:
+
+- At session start, read `SESSIONS.md`, check the live claims in `.sessions/`, and write your own claim (`.sessions/<short-name>.md`) listing the files/components you will touch.
+- Before editing a file, confirm no other active claim covers it. If it does, pick different work or ask the owner.
+- Clear your claim when done. `.sessions/` is git-ignored scratch space.
+- Prefer claiming whole components from the ownership map. Keep only one session in `scripts/core/main_scene.gd` (the core loop) at a time.
+- `docs/Architecture_Overview.md` is the map of layers and components to claim against.

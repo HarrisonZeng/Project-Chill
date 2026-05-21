@@ -18,6 +18,7 @@ You:
   - The owner runs the game in Godot from the main tree; a worktree copy cannot be opened or run there.
   - The owner is non-technical and does not read cross-branch diffs. Keep all changes in one place they can see and run.
 - Make small, reviewable changes and keep the project runnable after each step.
+- **If multiple sessions may run at once**, follow the file-ownership protocol in `SESSIONS.md`: read it at startup, check `.sessions/` for other sessions' claims, write your own claim before editing, and don't touch files another active session has claimed. `docs/Architecture_Overview.md` is the component map to claim against.
 
 ## How You Work
 
