@@ -1,79 +1,106 @@
-# Prompt: Project Chill UI/UX Redesign Session
+# Prompt: Project Chill UI / Online-Call Look Session
 
-You are a Godot 4 UI/UX implementation agent for Project Chill. Start cold and read the relevant docs before proposing changes.
+You are a Godot 4 UI/UX implementation agent for Project Chill. Start cold and
+read before proposing changes.
 
 Required reading:
 
 1. `AGENTS.md`
 2. `docs/Vertical_Slice_01_Spec.md`
-3. `docs/Game_Spec_and_Process_Guide.md`
-4. `docs/Development_Summary.md`
-5. `docs/AI_Dialogue_Infrastructure.md`
-6. `scenes/main/main_scene.tscn`
-7. `scripts/core/main_scene.gd`
+3. `docs/Architecture_Overview.md` — **important: the UI is now componentized**
+4. `scenes/main/main_scene.tscn`
+5. `scripts/ui/call_status_controller.gd`, `music_bar_controller.gd`, `tasks_panel_controller.gd`
+6. `scripts/ui/ui_strings.gd`
+7. `data/theme/project_chill.tres`
 
 ## Goal
 
-Make the screen feel like a cozy online co-working video call with Yua, not a wallpaper covered by floating debug widgets.
+Make the screen feel like a **cozy online co-working video call with Yua**, not a
+wallpaper covered by floating debug widgets.
 
-Critical pivot rule: the focus timer must not be the mandatory hero action. Co-presence with Yua is the default state. The timer is one optional tool.
+Critical pivot rule: the focus timer must **not** be the mandatory hero action.
+Co-presence with Yua is the default state; the timer is one optional tool.
 
-## Scope For Vertical Slice 01
+## What changed since the old UI brief
 
-Address these UI problems:
+The UI was de-monolithed. Most widgets now live in their own component scripts,
+which is where you'll work:
 
-- Hide the dev toolbar from the player-facing slice.
-- Integrate the plain-text date display into the call UI instead of leaving it as a debug readout.
-- Redo the 4-button focus timer into one clean optional control.
-- Clean test garbage from the task panel.
-- Fix or gracefully hide the "No track loaded" mini-player state.
-- Make Yua's video/presence the prominent subject.
-- Reserve a full-screen overlay node for later time-of-day lighting, but do not implement lighting polish yet.
-- If `assets/video/yua_idle_loop.ogv` exists but is not visibly playing, investigate import/playback/composition. Treat it as a likely wiring/import issue, not a missing asset.
+- Call-status pill → `scripts/ui/call_status_controller.gd` (date/time, status dot)
+- Music/voice bar → `scripts/ui/music_bar_controller.gd` (incl. the old "No track loaded" state)
+- Tasks/todo panel → `scripts/ui/tasks_panel_controller.gd`
+- Layout/composition lives in `scenes/main/main_scene.tscn`; palette/type in `data/theme/project_chill.tres`.
 
-Known asset warning:
+Prefer editing the **component scripts + the `.tscn` + the theme**. Touch
+`scripts/core/main_scene.gd` only for a brief, explicit hookup pass, and only
+when no other session is in that file (see SESSIONS.md).
 
-- `assets/bgm/Persona 5 chill mix - GVirusInfected.mp3` is placeholder only and not licensable for Steam. Do not build UI around it as final content.
+## Scope for Vertical Slice 01
 
-## Hard Limits
+- Hide dev/test controls and the debug timeline from the player-facing slice.
+- Make Yua's video/presence the prominent subject (`VideoStage`/`CompanionView`).
+- Ensure the focus timer reads as one optional, compact control — not the hero.
+- Polish the three states from the spec: idle/co-presence, focus-active, chat-active.
+- Clean the music bar's empty state and the task panel's seed/test content.
+- If `assets/video/yua_idle_loop.ogv` exists but isn't visibly playing, treat it
+  as an import/playback/composition bug, not a missing asset.
+- **Settings/customization expansion** (optional within this slice): the panel
+  currently has only language + text speed. Good additions: BGM volume, an AI /
+  Type-Mode on-off toggle (privacy), voice on/off. NOTE: any **persisted** new
+  setting also needs one save/load line in `main_scene.gd` — coordinate that one
+  line per SESSIONS.md.
+- Reserve a full-screen overlay node for later time-of-day lighting; do not
+  implement lighting polish yet.
 
-- Do not touch dialogue content or story logic.
+## Hard limits
+
+- Do not touch dialogue content or story logic (`scripted_nodes.json`, the flow).
+- Do not change the progression/save behavior.
 - Do not add addons or new dependencies.
-- Do not make focus look mandatory.
-- Do not remove Type Mode.
-- Do not implement full-screen time-of-day lighting yet; only reserve the overlay node.
-- Do not start full visual polish beyond the first slice.
+- Do not make focus look mandatory; do not remove Type Mode.
+- Do not build around the Persona 5 placeholder BGM as final content.
 
-## Stage 1 Required Output
-
-First produce:
+## Stage 1 required output (pause for approval)
 
 1. ASCII mockups for idle/co-presence, focus-active, and chat-active states.
-2. Framework concept: which panels exist, which are hidden by default, and where the optional timer lives.
-3. Palette and typography direction suitable for a calm online co-working call.
-4. Concrete Godot node-change plan.
+2. Framework concept: which panels exist, which are hidden by default, where the
+   optional timer lives.
+3. Palette + typography direction for a calm co-working call (reconcile with the
+   existing theme).
+4. Concrete node-change plan, named against the components/scene above.
 5. Risks and assumptions.
 
-Then pause and wait for owner approval before implementation.
+Then pause and wait for owner approval before implementing.
 
-## Later Stages After Approval
+## After approval
 
-Implement incrementally, one component at a time:
+Implement incrementally, one component at a time. After each, run the project and
+give the non-technical owner concrete Godot editor checks (open scene, press Play,
+what to look for). Handoff must include changed files, what works, what's not done,
+risks/assumptions, next step, and Godot checks.
 
-1. Clean idle/co-presence layout.
-2. Optional timer control.
-3. Task panel cleanup.
-4. Mini-player state cleanup.
-5. Yua video/presence prominence.
-6. Reserved lighting overlay node.
+## Session coordination (SESSIONS.md)
 
-After each component, run the project and provide concrete Godot editor checks for a non-technical user, for example:
+Drop this into `.sessions/ui.md`:
 
-- Open `scenes/main/main_scene.tscn`.
-- Press Play Current Scene.
-- Confirm Yua is the largest subject on screen.
-- Confirm the first view does not force task entry.
-- Click the optional focus control and confirm focus-active state is compact.
-- Return to idle and confirm Type Mode remains available.
+```markdown
+# session: ui
+task: Online-call look — composition, components, theme, settings
+status: active
+claims:
+- scripts/ui/call_status_controller.gd
+- scripts/ui/music_bar_controller.gd
+- scripts/ui/tasks_panel_controller.gd
+- scenes/main/main_scene.tscn
+- data/theme/project_chill.tres
+needs-core-loop-edit: maybe   # only for persisted-settings save/load lines
+```
 
-Handoff must include changed files, what works, what is not implemented, risks/assumptions, next recommended step, and exact Godot editor checks.
+Do not run this at the same time as the Engine session — both may need
+`main_scene.gd`.
+
+## Recommended model
+
+**Sonnet** for the implementation (lots of mechanical Godot edits + visual
+iteration). Use **Opus** for the Stage 1 composition/design pass if you want a
+stronger look.
