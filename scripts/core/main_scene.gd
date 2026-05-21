@@ -23,11 +23,6 @@ const DEFAULT_INTRO_NODE_ID := "ep00_01"
 const REACTIVE_LINES_PATH := "res://data/dialogue/reactive_lines.json"
 const AI_MODES_PATH := "res://data/dialogue/ai_modes.json"
 const QUICK_TEST_SECONDS := 3.0
-const TODO_PANEL_MIN_WIDTH := 220.0
-const TODO_PANEL_MAX_WIDTH := 560.0
-const TODO_PANEL_MIN_HEIGHT := 250.0
-const TODO_PANEL_MAX_HEIGHT := 720.0
-const TODO_PANEL_MIN_TOP := 110.0
 const DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND := 34.0
 # Reactive line pools (focus_click etc) live in data/dialogue/reactive_lines.json
 # and are loaded at runtime into `reactive_lines`. Add a new pool by adding a
@@ -59,14 +54,7 @@ const DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND := 34.0
 @onready var focus_custom_input: LineEdit = $OverlayLayer/HUD/FocusCard/Col/CustomRow/MinutesInput
 @onready var focus_custom_apply: Button = $OverlayLayer/HUD/FocusCard/Col/CustomRow/ApplyButton
 @onready var focus_primary_button: Button = $OverlayLayer/HUD/FocusCard/Col/PrimaryRow/StartButton
-@onready var tasks_tab: Button = $OverlayLayer/Tools/TasksTab
-@onready var tasks_panel: PanelContainer = $OverlayLayer/Tools/TasksPanel
-@onready var tasks_title: Label = $OverlayLayer/Tools/TasksPanel/Col/Header/Title
-@onready var tasks_close_button: Button = $OverlayLayer/Tools/TasksPanel/Col/Header/CloseButton
-@onready var tasks_rows: VBoxContainer = $OverlayLayer/Tools/TasksPanel/Col/Scroll/Rows
-@onready var new_task_input: LineEdit = $OverlayLayer/Tools/TasksPanel/Col/NewTaskInput
-@onready var tasks_counter: Label = $OverlayLayer/Tools/TasksPanel/Col/Counter
-@onready var tasks_resize_handle: Button = $OverlayLayer/Tools/TasksResizeHandle
+@onready var tasks_ui: Node = $OverlayLayer/Tools
 @onready var music_bar: Node = $BottomLeftMusicBar
 @onready var settings_button: Button = $SettingsButton
 @onready var settings_panel: PanelContainer = $SettingsPanel
@@ -86,7 +74,6 @@ var focus_time_left: float = FOCUS_DURATION_SECONDS
 var focus_running: bool = false
 var focus_last_tick_ms: int = 0
 var last_saved_second: int = -1
-var todo_items: Array[Dictionary] = []
 var voice_enabled: bool = true
 
 var memory_manager: Node
@@ -105,12 +92,6 @@ var last_seen_unix: int = 0
 var ui_language: String = "en"
 var dialogue_typewriter_chars_per_second: float = DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND
 var suppress_settings_save: bool = false
-var resizing_tasks_panel: bool = false
-var resize_start_mouse_position: Vector2 = Vector2.ZERO
-var resize_start_tasks_left: float = 0.0
-var resize_start_tasks_top: float = 0.0
-var tasks_panel_visible: bool = false
-var hovered_task_index: int = -1
 var dialogue_typewriter_active: bool = false
 var dialogue_typewriter_timer: float = 0.0
 var dialogue_typewriter_total_chars: int = 0
@@ -134,8 +115,8 @@ func _ready() -> void:
 	_setup_memory_profile()  # must exist before _load_persistent_state (single profile store)
 	_load_persistent_state()
 	_load_prompt_assets()
-	if todo_items.is_empty():
-		_seed_todo_items()
+	if not tasks_ui.has_todos():
+		tasks_ui.seed_default_tasks()
 	call_status.refresh(ui_language, focus_running)
 	_update_timer_label()
 	add_child(scripted_dialogue_manager)
@@ -152,7 +133,7 @@ func _ready() -> void:
 	_maybe_show_follow_up()
 	_refresh_focus_controls()
 	_highlight_duration_chip(int(round(focus_duration_seconds / 60.0)))
-	_refresh_tasks_controls()
+	tasks_ui.refresh_controls()
 	_debug_timeline_setup()  # DEBUG_TIMELINE — remove this line for prod
 
 func _process(delta: float) -> void:
@@ -161,23 +142,6 @@ func _process(delta: float) -> void:
 	call_status.refresh(ui_language, focus_running)
 	_maybe_autosave()
 	music_bar.update_progress()
-
-func _input(event: InputEvent) -> void:
-	if not resizing_tasks_panel:
-		return
-
-	if event is InputEventMouseMotion:
-		var delta := get_global_mouse_position() - resize_start_mouse_position
-		_apply_tasks_panel_offsets(resize_start_tasks_left + delta.x, resize_start_tasks_top + delta.y)
-		get_viewport().set_input_as_handled()
-		return
-
-	if event is InputEventMouseButton:
-		var mouse_event := event as InputEventMouseButton
-		if mouse_event.button_index == MOUSE_BUTTON_LEFT and not mouse_event.pressed:
-			resizing_tasks_panel = false
-			_save_persistent_state()
-			get_viewport().set_input_as_handled()
 
 func _load_prompt_assets() -> void:
 	persona_text = _load_text_file(PERSONA_PATH)
@@ -260,14 +224,7 @@ func _wire_signals() -> void:
 			var btn := chip as Button
 			var minutes := int(btn.text)
 			btn.pressed.connect(_on_duration_chip_pressed.bind(minutes))
-	if tasks_tab != null:
-		tasks_tab.pressed.connect(_on_tasks_tab_pressed)
-	if tasks_close_button != null:
-		tasks_close_button.pressed.connect(_on_tasks_close_pressed)
-	if new_task_input != null:
-		new_task_input.text_submitted.connect(_on_new_task_submitted)
-	if tasks_resize_handle != null:
-		tasks_resize_handle.gui_input.connect(_on_tasks_resize_handle_input)
+	tasks_ui.save_requested.connect(_save_persistent_state)
 	settings_button.pressed.connect(_on_settings_button_pressed)
 	language_button.pressed.connect(_on_language_button_pressed)
 	text_speed_slider.value_changed.connect(_on_text_speed_changed)
@@ -278,8 +235,6 @@ func _wire_signals() -> void:
 func _configure_companion_controls() -> void:
 	if player_input != null:
 		player_input.clear_button_enabled = true
-	if new_task_input != null:
-		new_task_input.clear_button_enabled = true
 	if focus_custom_input != null:
 		focus_custom_input.clear_button_enabled = true
 	if dialogue_text != null:
@@ -290,7 +245,7 @@ func _configure_companion_controls() -> void:
 		text_speed_slider.value = dialogue_typewriter_chars_per_second
 	_refresh_ui_language()
 	_refresh_focus_controls()
-	_refresh_tasks_controls()
+	tasks_ui.refresh_controls()
 
 func _configure_visual_mode() -> void:
 	if video_stage == null or video_player == null:
@@ -418,10 +373,6 @@ func _refresh_ui_language() -> void:
 	if focus_custom_input != null: focus_custom_input.placeholder_text = UiStrings.t("focus.custom.placeholder", ui_language)
 	if focus_custom_apply != null: focus_custom_apply.text = UiStrings.t("focus.custom.apply", ui_language)
 	if focus_chip_custom != null: focus_chip_custom.text = UiStrings.t("focus.custom", ui_language)
-	if tasks_title != null: tasks_title.text = UiStrings.t("tasks.title", ui_language)
-	if new_task_input != null: new_task_input.placeholder_text = UiStrings.t("tasks.new_placeholder", ui_language)
-	if tasks_close_button != null: tasks_close_button.tooltip_text = UiStrings.t("tasks.close", ui_language)
-	if tasks_resize_handle != null: tasks_resize_handle.tooltip_text = UiStrings.t("tasks.resize.tooltip", ui_language)
 	if send_button != null: send_button.text = _ui_text("send")
 	if ai_mode_toggle != null: ai_mode_toggle.text = _ui_text("type_mode")
 	_refresh_input_placeholder()
@@ -429,8 +380,7 @@ func _refresh_ui_language() -> void:
 	_update_timer_label()
 	call_status.refresh(ui_language, focus_running)
 	_refresh_focus_controls()
-	_render_tasks()
-	_refresh_tasks_controls()
+	tasks_ui.apply_language(ui_language)
 
 func _refresh_focus_controls() -> void:
 	if focus_card != null:
@@ -454,35 +404,6 @@ func _refresh_focus_controls() -> void:
 		focus_task_line.visible = focus_running and not task_text.is_empty()
 		if focus_task_line.visible:
 			focus_task_line.text = "%s: %s" % [UiStrings.t("focus.task", ui_language), task_text]
-
-func _refresh_tasks_controls() -> void:
-	if tasks_tab != null:
-		var pending := 0
-		for item in todo_items:
-			if not bool(item.get("completed", false)):
-				pending += 1
-		tasks_tab.text = "📋 %d" % pending
-		tasks_tab.tooltip_text = UiStrings.t("tasks.tab.label", ui_language)
-	if tasks_panel != null:
-		tasks_panel.visible = tasks_panel_visible
-	if tasks_resize_handle != null:
-		tasks_resize_handle.visible = tasks_panel_visible
-		if tasks_panel_visible:
-			_update_tasks_resize_handle_position()
-	_update_tasks_counter()
-
-func _update_tasks_counter() -> void:
-	if tasks_counter == null:
-		return
-	var total := todo_items.size()
-	if total == 0:
-		tasks_counter.text = UiStrings.t("tasks.counter_empty", ui_language)
-		return
-	var done := 0
-	for item in todo_items:
-		if bool(item.get("completed", false)):
-			done += 1
-	tasks_counter.text = UiStrings.t("tasks.counter", ui_language) % [total, done]
 
 func _on_focus_primary_pressed() -> void:
 	if focus_running:
@@ -540,83 +461,6 @@ func _highlight_duration_chip(minutes: int) -> void:
 			matched = true
 	if focus_chip_custom != null:
 		focus_chip_custom.set_pressed_no_signal(not matched)
-
-func _on_tasks_tab_pressed() -> void:
-	tasks_panel_visible = not tasks_panel_visible
-	_refresh_tasks_controls()
-	if tasks_panel_visible and new_task_input != null:
-		new_task_input.grab_focus()
-	_save_persistent_state()
-
-func _on_tasks_close_pressed() -> void:
-	tasks_panel_visible = false
-	_refresh_tasks_controls()
-	_save_persistent_state()
-
-func _on_tasks_resize_handle_input(event: InputEvent) -> void:
-	if tasks_panel == null or tasks_resize_handle == null:
-		return
-	if event is InputEventMouseButton:
-		var mouse_event := event as InputEventMouseButton
-		if mouse_event.button_index != MOUSE_BUTTON_LEFT:
-			return
-		if mouse_event.pressed:
-			resizing_tasks_panel = true
-			resize_start_mouse_position = get_global_mouse_position()
-			resize_start_tasks_left = tasks_panel.offset_left
-			resize_start_tasks_top = tasks_panel.offset_top
-			tasks_resize_handle.grab_focus()
-		else:
-			if resizing_tasks_panel:
-				resizing_tasks_panel = false
-				_save_persistent_state()
-		accept_event()
-		return
-
-	if event is InputEventMouseMotion and resizing_tasks_panel:
-		var delta := get_global_mouse_position() - resize_start_mouse_position
-		_apply_tasks_panel_offsets(resize_start_tasks_left + delta.x, resize_start_tasks_top + delta.y)
-		accept_event()
-
-func _apply_tasks_panel_offsets(left_offset: float, top_offset: float) -> void:
-	if tasks_panel == null:
-		return
-	var viewport_size := get_viewport_rect().size
-	var fixed_right := tasks_panel.offset_right
-	var clamped_left := clampf(
-		left_offset,
-		fixed_right - TODO_PANEL_MAX_WIDTH,
-		fixed_right - TODO_PANEL_MIN_WIDTH
-	)
-
-	var bottom_px := (tasks_panel.anchor_bottom * viewport_size.y) + tasks_panel.offset_bottom
-	var anchor_top_px := tasks_panel.anchor_top * viewport_size.y
-	var max_height := minf(TODO_PANEL_MAX_HEIGHT, bottom_px - TODO_PANEL_MIN_TOP)
-	var min_top_px := maxf(TODO_PANEL_MIN_TOP, bottom_px - max_height)
-	var max_top_px := bottom_px - TODO_PANEL_MIN_HEIGHT
-	var requested_top_px := anchor_top_px + top_offset
-	var clamped_top_px := clampf(requested_top_px, min_top_px, max_top_px)
-
-	tasks_panel.offset_left = clamped_left
-	tasks_panel.offset_top = clamped_top_px - anchor_top_px
-	_update_tasks_resize_handle_position()
-
-func _update_tasks_resize_handle_position() -> void:
-	if tasks_resize_handle == null or tasks_panel == null:
-		return
-	tasks_resize_handle.anchor_left = tasks_panel.anchor_left
-	tasks_resize_handle.anchor_right = tasks_panel.anchor_left
-	tasks_resize_handle.anchor_top = tasks_panel.anchor_top
-	tasks_resize_handle.anchor_bottom = tasks_panel.anchor_top
-	tasks_resize_handle.offset_left = tasks_panel.offset_left - 12.0
-	tasks_resize_handle.offset_top = tasks_panel.offset_top - 6.0
-	tasks_resize_handle.offset_right = tasks_panel.offset_left - 4.0
-	tasks_resize_handle.offset_bottom = tasks_panel.offset_top + 34.0
-
-func _seed_todo_items() -> void:
-	_add_todo_item("Set one gentle focus block")
-	_add_todo_item("Write today's calm priority")
-	_add_todo_item("Try one scripted greeting branch")
 
 func _show_node(node_id: String) -> void:
 	_enter_scripted_mode()
@@ -1054,8 +898,8 @@ func _capture_focus_task(task_text: String) -> void:
 	if current_focus_task.is_empty():
 		return
 	memory_manager.process_player_message(current_focus_task)
-	_add_todo_item(current_focus_task)
-	_refresh_tasks_controls()
+	tasks_ui.add_todo_item(current_focus_task)
+	tasks_ui.refresh_controls()
 	current_node_id = "TASK_INPUT_002"
 	_set_dialogue_text("……好。\n\n“%s”。\n\n不是很大，但很实际。这种任务我最喜欢，完成了有感觉。\n\n选个时长吧。" % current_focus_task)
 	_set_status_message("Task captured.")
@@ -1139,141 +983,6 @@ func _parse_minutes_input() -> int:
 		return -1
 	return int(text)
 
-func _on_new_task_submitted(_submitted_text: String) -> void:
-	_add_task_from_input()
-
-func _add_task_from_input() -> void:
-	if new_task_input == null:
-		return
-	var task_text := new_task_input.text.strip_edges()
-	if task_text.is_empty():
-		return
-	_add_todo_item(task_text)
-	new_task_input.clear()
-	_refresh_tasks_controls()
-	_save_persistent_state()
-
-func _add_todo_item(text: String, completed: bool = false) -> void:
-	var clean_text := text.strip_edges()
-	if clean_text.is_empty():
-		return
-	todo_items.append({"text": clean_text, "completed": completed})
-	_render_tasks()
-
-func _render_tasks() -> void:
-	if tasks_rows == null:
-		return
-	for child in tasks_rows.get_children():
-		child.queue_free()
-	hovered_task_index = -1
-
-	if todo_items.is_empty():
-		var ghost := Label.new()
-		ghost.text = UiStrings.t("tasks.empty", ui_language)
-		ghost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		ghost.add_theme_color_override("font_color", Color(0.901961, 0.811765, 0.682353, 0.5))
-		ghost.add_theme_font_size_override("font_size", 13)
-		tasks_rows.add_child(ghost)
-		_update_tasks_counter()
-		return
-
-	for index in range(todo_items.size()):
-		var data := todo_items[index]
-		var completed := bool(data.get("completed", false))
-		var row := HBoxContainer.new()
-		row.custom_minimum_size = Vector2(0, 32)
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_theme_constant_override("separation", 8)
-		row.mouse_filter = Control.MOUSE_FILTER_PASS
-		row.mouse_entered.connect(_on_task_row_mouse_entered.bind(index))
-		row.mouse_exited.connect(_on_task_row_mouse_exited.bind(index))
-
-		var done_toggle := Button.new()
-		done_toggle.toggle_mode = true
-		done_toggle.flat = true
-		done_toggle.custom_minimum_size = Vector2(24, 24)
-		done_toggle.text = "●" if completed else "◯"
-		done_toggle.button_pressed = completed
-		done_toggle.tooltip_text = UiStrings.t("tasks.mark_done", ui_language)
-		done_toggle.add_theme_font_size_override("font_size", 18)
-		var done_color := get_theme_color("sage", "Palette") if completed else get_theme_color("sand", "Palette")
-		done_toggle.add_theme_color_override("font_color", done_color)
-		done_toggle.add_theme_color_override("font_hover_color", get_theme_color("honey_amber", "Palette"))
-		done_toggle.toggled.connect(_on_todo_completed_toggled.bind(index))
-		row.add_child(done_toggle)
-
-		var text_field := LineEdit.new()
-		text_field.text = str(data.get("text", ""))
-		text_field.custom_minimum_size = Vector2(0, 28)
-		text_field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		text_field.placeholder_text = UiStrings.t("tasks.task_placeholder", ui_language)
-		text_field.flat = true
-		text_field.text_changed.connect(_on_todo_text_changed.bind(index))
-		if completed:
-			text_field.add_theme_color_override("font_color", Color(0.901961, 0.811765, 0.682353, 0.55))
-		else:
-			text_field.add_theme_color_override("font_color", get_theme_color("cream", "Palette"))
-		row.add_child(text_field)
-
-		var delete_button := Button.new()
-		delete_button.text = "✕"
-		delete_button.custom_minimum_size = Vector2(24, 24)
-		delete_button.flat = true
-		delete_button.visible = false
-		delete_button.tooltip_text = UiStrings.t("tasks.delete", ui_language)
-		delete_button.add_theme_font_size_override("font_size", 14)
-		delete_button.add_theme_color_override("font_color", get_theme_color("brick_warm", "Palette"))
-		delete_button.add_theme_color_override("font_hover_color", get_theme_color("cream", "Palette"))
-		delete_button.pressed.connect(_on_todo_delete_pressed.bind(index))
-		row.add_child(delete_button)
-		row.set_meta("delete_button", delete_button)
-
-		tasks_rows.add_child(row)
-
-	_update_tasks_counter()
-
-func _on_task_row_mouse_entered(index: int) -> void:
-	hovered_task_index = index
-	_update_task_row_delete_visibility(index, true)
-
-func _on_task_row_mouse_exited(index: int) -> void:
-	if hovered_task_index == index:
-		hovered_task_index = -1
-	_update_task_row_delete_visibility(index, false)
-
-func _update_task_row_delete_visibility(index: int, visible: bool) -> void:
-	if tasks_rows == null:
-		return
-	if index < 0 or index >= tasks_rows.get_child_count():
-		return
-	var row := tasks_rows.get_child(index)
-	if not row.has_meta("delete_button"):
-		return
-	var btn: Button = row.get_meta("delete_button")
-	if btn != null:
-		btn.visible = visible
-
-func _on_todo_text_changed(new_text: String, index: int) -> void:
-	if index < 0 or index >= todo_items.size():
-		return
-	todo_items[index]["text"] = new_text
-	_save_persistent_state()
-
-func _on_todo_completed_toggled(completed: bool, index: int) -> void:
-	if index < 0 or index >= todo_items.size():
-		return
-	todo_items[index]["completed"] = completed
-	_render_tasks()
-	_refresh_tasks_controls()
-	_save_persistent_state()
-
-func _on_todo_delete_pressed(index: int) -> void:
-	if index < 0 or index >= todo_items.size():
-		return
-	todo_items.remove_at(index)
-	_render_tasks()
-	_refresh_tasks_controls()
-	_save_persistent_state()
 
 func _update_focus_timer() -> void:
 	if not focus_running:
@@ -1379,21 +1088,11 @@ func _maybe_autosave() -> void:
 		_save_persistent_state()
 
 func _save_persistent_state() -> void:
-	var todo_payload: Array = []
-	for item_data in todo_items:
-		var clean_text := str(item_data.get("text", "")).strip_edges()
-		if clean_text.is_empty():
-			continue
-		todo_payload.append({
-			"text": clean_text,
-			"completed": bool(item_data.get("completed", false))
-		})
-
 	var payload := {
 		"focus_time_left": focus_time_left,
 		"focus_duration_seconds": focus_duration_seconds,
 		"focus_running": focus_running,
-		"todos": todo_payload,
+		"todos": tasks_ui.get_todos_payload(),
 		"last_node_id": _safe_node_id(),
 		"has_seen_intro": has_seen_intro,
 		"demo_script_version_seen": demo_script_version_seen,
@@ -1406,9 +1105,9 @@ func _save_persistent_state() -> void:
 		"voice_enabled": voice_enabled,
 		"ui_language": ui_language,
 		"dialogue_typewriter_chars_per_second": dialogue_typewriter_chars_per_second,
-		"todo_panel_left": tasks_panel.offset_left if tasks_panel != null else 0.0,
-		"todo_panel_top": tasks_panel.offset_top if tasks_panel != null else 0.0,
-		"tasks_panel_visible": tasks_panel_visible
+		"todo_panel_left": tasks_ui.get_panel_left(),
+		"todo_panel_top": tasks_ui.get_panel_top(),
+		"tasks_panel_visible": tasks_ui.is_panel_visible()
 	}
 
 	# Write session/UI fields into the single shared profile, then persist it.
@@ -1450,21 +1149,18 @@ func _load_persistent_state() -> void:
 	suppress_settings_save = true
 	text_speed_slider.value = dialogue_typewriter_chars_per_second
 	suppress_settings_save = false
-	if tasks_panel != null and (data.has("todo_panel_left") or data.has("todo_panel_top")):
-		_apply_tasks_panel_offsets(
-			float(data.get("todo_panel_left", tasks_panel.offset_left)),
-			float(data.get("todo_panel_top", tasks_panel.offset_top))
+	if data.has("todo_panel_left") or data.has("todo_panel_top"):
+		tasks_ui.apply_panel_offsets(
+			float(data.get("todo_panel_left", tasks_ui.get_panel_left())),
+			float(data.get("todo_panel_top", tasks_ui.get_panel_top()))
 		)
-	tasks_panel_visible = bool(data.get("tasks_panel_visible", false))
+	tasks_ui.set_panel_visible(bool(data.get("tasks_panel_visible", false)))
 	focus_last_tick_ms = Time.get_ticks_msec()
 	last_saved_second = int(focus_time_left)
 
-	todo_items.clear()
-	for todo in data.get("todos", []):
-		var todo_data: Dictionary = todo
-		_add_todo_item(str(todo_data.get("text", "")), bool(todo_data.get("completed", false)))
+	tasks_ui.load_todos(data.get("todos", []))
 	_refresh_ui_language()
-	_refresh_tasks_controls()
+	tasks_ui.refresh_controls()
 	music_bar.start_playback(loaded_music_index, loaded_music_paused, loaded_music_mode)
 	music_bar.set_voice_enabled(voice_enabled)
 
