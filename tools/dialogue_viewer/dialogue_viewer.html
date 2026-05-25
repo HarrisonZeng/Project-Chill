@@ -1,0 +1,1789 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project Chill Dialogue Viewer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f2ec;
+      --panel: #fffaf2;
+      --panel-strong: #fff5e4;
+      --ink: #28231f;
+      --muted: #72675e;
+      --line: #d9cec0;
+      --accent: #2d6c72;
+      --accent-2: #9b5739;
+      --good: #2c7b57;
+      --warn: #aa6b00;
+      --bad: #a63d40;
+      --shadow: 0 10px 24px rgba(42, 34, 28, 0.12);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      color: var(--ink);
+      border-radius: 7px;
+      padding: 8px 11px;
+      cursor: pointer;
+    }
+
+    button:hover,
+    button:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    button.danger {
+      border-color: #d7aaa9;
+      color: var(--bad);
+    }
+
+    input[type="search"],
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fffdf8;
+      color: var(--ink);
+      padding: 9px 10px;
+    }
+
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: #efe6d8;
+      border-bottom: 1px solid var(--line);
+      padding: 14px 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .title-row,
+    .tools-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 260px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .file-status {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .file-controls,
+    .export-controls,
+    .mode-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fffdf8;
+      padding: 7px 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .switch input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 330px minmax(440px, 1fr) minmax(360px, 520px);
+      min-height: 0;
+    }
+
+    .sidebar,
+    .details,
+    .canvas-wrap {
+      min-height: 0;
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .sidebar,
+    .details {
+      background: var(--panel);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+    }
+
+    .details {
+      border-left: 1px solid var(--line);
+    }
+
+    .canvas-wrap {
+      background: #fbf7ef;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .filters {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .node-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .node-row {
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 5px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .node-row:hover,
+    .node-row.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(45, 108, 114, 0.12);
+    }
+
+    .node-id {
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .node-line-preview {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      max-height: 3.8em;
+      overflow: hidden;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background: #eee5d8;
+      color: #584a40;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      min-height: 20px;
+    }
+
+    .tag.unlock {
+      background: #dfefe9;
+      color: #1f6148;
+    }
+
+    .tag.flag {
+      background: #f4e0d6;
+      color: #8a4127;
+    }
+
+    .tag.warn {
+      background: #f6e7bd;
+      color: #815400;
+    }
+
+    .tag.bad {
+      background: #f6dada;
+      color: #923034;
+    }
+
+    .graph-toolbar,
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .graph-toolbar h2,
+    .section-head h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .graph-controls {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .flow-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .flow-tabs button,
+    .flow-tabs select {
+      min-height: 38px;
+    }
+
+    .flow-tabs button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .ep-flow-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ep-flow-control select {
+      width: auto;
+      min-width: 92px;
+      padding: 8px 28px 8px 10px;
+    }
+
+    .graph-frame {
+      overflow: auto;
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-height: 480px;
+    }
+
+    svg {
+      display: block;
+    }
+
+    .graph-card {
+      width: 100%;
+      height: 100%;
+      border: 1px solid #cfc0af;
+      border-radius: 8px;
+      background: #fffaf2;
+      padding: 10px;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 5px;
+      pointer-events: none;
+    }
+
+    .graph-node.active .graph-card {
+      border-color: var(--accent);
+      border-width: 3px;
+      padding: 8px;
+    }
+
+    .graph-node.missing .graph-card {
+      background: #fceaea;
+      border-color: var(--bad);
+    }
+
+    .graph-node.outside .graph-card {
+      background: #edf4f4;
+      border-color: var(--accent);
+      border-style: dashed;
+    }
+
+    .graph-card-title,
+    .graph-card-preview {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow-wrap: anywhere;
+    }
+
+    .graph-card-title {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.2;
+      -webkit-line-clamp: 1;
+    }
+
+    .graph-card-preview {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1.3;
+      -webkit-line-clamp: 3;
+    }
+
+    .edge {
+      stroke: #9e8e7f;
+      stroke-width: 1.5;
+      fill: none;
+      marker-end: url(#arrow);
+    }
+
+    .edge.special {
+      stroke: var(--accent-2);
+      stroke-dasharray: 5 4;
+    }
+
+    .detail-card {
+      display: grid;
+      gap: 12px;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      color: var(--muted);
+      background: #fffdf8;
+      line-height: 1.5;
+    }
+
+    .readonly-line {
+      white-space: pre-wrap;
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      line-height: 1.55;
+      min-height: 92px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .choice-table {
+      display: grid;
+      gap: 8px;
+    }
+
+    .choice-row {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px;
+      background: #fffdf8;
+      display: grid;
+      gap: 7px;
+    }
+
+    .choice-row.changed {
+      border-color: var(--accent-2);
+      background: #fff4ec;
+    }
+
+    .inline-fields {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .mini-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .review-panel {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      margin-top: 4px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .changes {
+      display: grid;
+      gap: 8px;
+      max-height: 240px;
+      overflow: auto;
+    }
+
+    .change {
+      border: 1px solid #e0c3ac;
+      background: #fff3e8;
+      border-radius: 8px;
+      padding: 9px;
+      font-size: 13px;
+      display: grid;
+      gap: 3px;
+    }
+
+    .change strong {
+      overflow-wrap: anywhere;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .compare pre {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px;
+      background: #fffdf8;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .warning-list {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .warning-item {
+      border: 1px solid #ead59c;
+      border-radius: 8px;
+      background: #fff8dd;
+      color: #6f4a00;
+      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1200px) {
+      .main {
+        grid-template-columns: 300px 1fr;
+      }
+
+      .details {
+        grid-column: 1 / -1;
+        border-left: none;
+        border-top: 1px solid var(--line);
+      }
+    }
+
+    @media (max-width: 760px) {
+      .main {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar,
+      .details {
+        border: none;
+        border-top: 1px solid var(--line);
+      }
+
+      .field-grid,
+      .inline-fields,
+      .compare {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      .topbar,
+      .sidebar,
+      .graph-toolbar,
+      button,
+      input,
+      select,
+      textarea {
+        display: none !important;
+      }
+
+      .main {
+        display: block;
+      }
+
+      .canvas-wrap,
+      .details {
+        overflow: visible;
+        border: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="title-row">
+        <div class="title">
+          <h1>Dialogue Viewer</h1>
+          <span id="fileStatus" class="file-status">No script loaded</span>
+        </div>
+        <div class="file-controls">
+          <input id="scriptFileInput" class="file-input" type="file" accept=".json,application/json">
+          <input id="reactiveFileInput" class="file-input" type="file" accept=".json,application/json">
+          <button id="loadScriptButton" class="primary">Load scripted_nodes.json</button>
+          <button id="loadReactiveButton">Load reactive_lines.json</button>
+          <button id="tryRepoButton">Try repo auto-load</button>
+        </div>
+      </div>
+      <div class="tools-row">
+        <div class="mode-controls">
+          <label class="switch" title="Enable editable fields and change tracking">
+            <input id="reviewModeToggle" type="checkbox">
+            Review mode
+          </label>
+          <label class="switch" title="Show original and edited text side by side">
+            <input id="compareToggle" type="checkbox" checked>
+            Compare changes
+          </label>
+        </div>
+        <div class="export-controls">
+          <button id="exportJsonButton">Export revised JSON</button>
+          <button id="exportNotesButton">Export review notes</button>
+          <button id="exportSnapshotButton">Export shareable HTML</button>
+          <button id="clearChangesButton" class="danger">Clear review changes</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <aside class="sidebar">
+        <section class="stats" aria-label="Script stats">
+          <div class="stat"><strong id="statNodes">0</strong><span>nodes</span></div>
+          <div class="stat"><strong id="statLinks">0</strong><span>links</span></div>
+          <div class="stat"><strong id="statUnlocks">0</strong><span>unlocks</span></div>
+          <div class="stat"><strong id="statIssues">0</strong><span>issues</span></div>
+        </section>
+
+        <section id="warningList" class="warning-list"></section>
+
+        <section class="filters">
+          <div>
+            <label for="searchInput">Search</label>
+            <input id="searchInput" type="search" placeholder="Node id, text, tag, choice">
+          </div>
+          <div>
+            <label for="filterSelect">Filter</label>
+            <select id="filterSelect">
+              <option value="all">All nodes</option>
+              <option value="unlock">Has unlock gate</option>
+              <option value="flags">Sets flags</option>
+              <option value="missing">Links to missing node</option>
+              <option value="orphan">Not reached by another node</option>
+              <option value="ai">AI or action target</option>
+              <option value="changed">Changed in review</option>
+            </select>
+          </div>
+        </section>
+
+        <section id="nodeList" class="node-list" aria-label="Dialogue nodes"></section>
+      </aside>
+
+      <section class="canvas-wrap">
+        <div class="graph-toolbar">
+          <h2>Conversation Flow</h2>
+          <div class="mini-actions">
+            <button id="fitGraphButton">Fit view</button>
+            <button id="copyMermaidButton">Copy Mermaid</button>
+          </div>
+        </div>
+        <div class="graph-controls">
+          <div id="flowTabs" class="flow-tabs" aria-label="Flow type">
+            <button type="button" data-flow-type="all">All</button>
+            <span class="ep-flow-control">
+              <button id="epFlowButton" type="button" data-flow-type="episode">EP</button>
+              <select id="episodeSelect" aria-label="Episode"></select>
+            </span>
+            <button type="button" data-flow-type="idle">Idle</button>
+            <button type="button" data-flow-type="greeting">Greeting</button>
+            <button type="button" data-flow-type="focus">Focus</button>
+            <button type="button" data-flow-type="return">Return</button>
+            <button type="button" data-flow-type="exit">Exit</button>
+            <button type="button" data-flow-type="action">Action / AI</button>
+          </div>
+        </div>
+        <div id="graphFrame" class="graph-frame">
+          <div class="empty">Load `data/dialogue/scripted_nodes.json` to see the conversation map.</div>
+        </div>
+      </section>
+
+      <aside class="details">
+        <div class="section-head">
+          <h2>Node Details</h2>
+          <div class="mini-actions">
+            <button id="revertNodeButton">Revert node</button>
+          </div>
+        </div>
+        <section id="detailPane" class="detail-card">
+          <div class="empty">Select a node to inspect line text, choices, unlock gates, flags, and review changes.</div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script id="embedded-scripted" type="application/json"></script>
+  <script id="embedded-reactive" type="application/json"></script>
+
+  <script>
+    const state = {
+      sourceName: "",
+      reactiveSourceName: "",
+      originalScript: null,
+      workingScript: null,
+      originalNodes: new Map(),
+      workingNodes: new Map(),
+      reactiveLines: null,
+      selectedId: "",
+      graphType: "all",
+      reviewMode: false,
+      compareMode: true,
+      issues: [],
+      inbound: new Map(),
+      outgoing: new Map(),
+      changes: new Map(),
+      comments: new Map()
+    };
+
+    const els = {
+      fileStatus: document.getElementById("fileStatus"),
+      scriptFileInput: document.getElementById("scriptFileInput"),
+      reactiveFileInput: document.getElementById("reactiveFileInput"),
+      loadScriptButton: document.getElementById("loadScriptButton"),
+      loadReactiveButton: document.getElementById("loadReactiveButton"),
+      tryRepoButton: document.getElementById("tryRepoButton"),
+      reviewModeToggle: document.getElementById("reviewModeToggle"),
+      compareToggle: document.getElementById("compareToggle"),
+      exportJsonButton: document.getElementById("exportJsonButton"),
+      exportNotesButton: document.getElementById("exportNotesButton"),
+      exportSnapshotButton: document.getElementById("exportSnapshotButton"),
+      clearChangesButton: document.getElementById("clearChangesButton"),
+      statNodes: document.getElementById("statNodes"),
+      statLinks: document.getElementById("statLinks"),
+      statUnlocks: document.getElementById("statUnlocks"),
+      statIssues: document.getElementById("statIssues"),
+      warningList: document.getElementById("warningList"),
+      searchInput: document.getElementById("searchInput"),
+      filterSelect: document.getElementById("filterSelect"),
+      flowTabs: document.getElementById("flowTabs"),
+      epFlowButton: document.getElementById("epFlowButton"),
+      episodeSelect: document.getElementById("episodeSelect"),
+      nodeList: document.getElementById("nodeList"),
+      graphFrame: document.getElementById("graphFrame"),
+      fitGraphButton: document.getElementById("fitGraphButton"),
+      copyMermaidButton: document.getElementById("copyMermaidButton"),
+      detailPane: document.getElementById("detailPane"),
+      revertNodeButton: document.getElementById("revertNodeButton")
+    };
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function cleanText(value) {
+      return String(value || "").replace(/\\n/g, "\n");
+    }
+
+    function oneLine(value) {
+      return cleanText(value).replace(/\s+/g, " ").trim();
+    }
+
+    function isSpecialTarget(id) {
+      return /^(AI_MODE_|ACTION_|EXIT)/.test(String(id || ""));
+    }
+
+    function nodeLabel(node) {
+      return node && node.id ? node.id : "(missing id)";
+    }
+
+    function describeUnlock(unlock) {
+      if (!unlock) return "";
+      if (typeof unlock === "string") return unlock;
+      if (Array.isArray(unlock)) return unlock.join(", ");
+      if (typeof unlock === "object") {
+        return Object.entries(unlock).map(([key, value]) => key + ": " + JSON.stringify(value)).join(", ");
+      }
+      return String(unlock);
+    }
+
+    function describeFlags(node) {
+      const pieces = [];
+      if (Array.isArray(node.set_flags)) pieces.push(node.set_flags.join(", "));
+      if (node.set_flag) pieces.push(JSON.stringify(node.set_flag));
+      return pieces.filter(Boolean).join(", ");
+    }
+
+    function getNodes(script) {
+      return Array.isArray(script && script.nodes) ? script.nodes : [];
+    }
+
+    function nodeSearchHaystack(node) {
+      const choices = Array.isArray(node.choices) ? node.choices : [];
+      return [
+        node.id,
+        node.speaker,
+        node.line,
+        Array.isArray(node.tags) ? node.tags.join(" ") : "",
+        describeUnlock(node.unlock),
+        describeFlags(node),
+        choices.map(choice => [choice.text, choice.next].join(" ")).join(" ")
+      ].join(" ").toLowerCase();
+    }
+
+    function getEpisodeKey(id) {
+      const match = String(id || "").match(/^ep(\d{2})_/);
+      return match ? "episode:" + match[1] : "";
+    }
+
+    function getGraphTypeLabel(type) {
+      if (type === "all") return "All flow";
+      if (type.startsWith("episode:")) return "EP" + type.split(":")[1];
+      const labels = {
+        idle: "Idle",
+        greeting: "Greeting",
+        focus: "Focus / task",
+        return: "Return",
+        exit: "Exit",
+        action: "Action / AI"
+      };
+      return labels[type] || type;
+    }
+
+    function getNodeGraphTypes(node) {
+      const id = String(node && node.id || "");
+      const types = new Set();
+      const episode = getEpisodeKey(id);
+      if (episode) types.add(episode);
+      if (id === "idle" || id.includes("quiet") || id.includes("idle")) types.add("idle");
+      if (id.startsWith("greeting_")) types.add("greeting");
+      if (id.startsWith("return_")) types.add("return");
+      if (id.startsWith("EXIT")) types.add("exit");
+      if (id.includes("TASK") || id.includes("FOCUS") || id.includes("ABORT")) types.add("focus");
+      if ((state.outgoing.get(id) || []).some(isSpecialTarget)) types.add("action");
+      if (isSpecialTarget(id)) types.add("action");
+      return types;
+    }
+
+    function passesGraphType(node) {
+      if (state.graphType === "all") return true;
+      return getNodeGraphTypes(node).has(state.graphType);
+    }
+
+    function renderGraphTypeOptions() {
+      const current = state.graphType;
+      const types = new Set(["all"]);
+      for (const node of getNodes(state.workingScript)) {
+        for (const type of getNodeGraphTypes(node)) types.add(type);
+      }
+
+      const episodes = Array.from(types).filter(type => type.startsWith("episode:")).sort();
+      els.episodeSelect.innerHTML = "";
+      for (const type of episodes) {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = getGraphTypeLabel(type);
+        els.episodeSelect.appendChild(option);
+      }
+
+      const hasEpisodes = episodes.length > 0;
+      els.epFlowButton.disabled = !hasEpisodes;
+      els.episodeSelect.disabled = !hasEpisodes;
+
+      state.graphType = types.has(current) ? current : "all";
+      if (state.graphType.startsWith("episode:")) {
+        els.episodeSelect.value = state.graphType;
+      } else if (hasEpisodes) {
+        els.episodeSelect.value = episodes[0];
+      }
+      updateFlowButtons();
+    }
+
+    function updateFlowButtons() {
+      for (const button of els.flowTabs.querySelectorAll("button[data-flow-type]")) {
+        const type = button.dataset.flowType;
+        const active = type === "episode" ? state.graphType.startsWith("episode:") : state.graphType === type;
+        button.classList.toggle("active", active);
+      }
+    }
+
+    function setGraphType(type) {
+      if (type === "episode") {
+        state.graphType = els.episodeSelect.value || "all";
+      } else {
+        state.graphType = type;
+      }
+      updateFlowButtons();
+      renderGraph();
+    }
+
+    function rebuildIndexes() {
+      state.originalNodes = new Map();
+      state.workingNodes = new Map();
+      state.inbound = new Map();
+      state.outgoing = new Map();
+      state.issues = [];
+
+      for (const node of getNodes(state.originalScript)) {
+        if (node && node.id) state.originalNodes.set(node.id, node);
+      }
+      for (const node of getNodes(state.workingScript)) {
+        if (node && node.id) state.workingNodes.set(node.id, node);
+      }
+
+      for (const node of getNodes(state.workingScript)) {
+        const out = [];
+        const choices = Array.isArray(node.choices) ? node.choices : [];
+        for (const choice of choices) {
+          if (!choice.next) continue;
+          out.push(choice.next);
+          if (!state.inbound.has(choice.next)) state.inbound.set(choice.next, []);
+          state.inbound.get(choice.next).push(node.id);
+          if (!state.workingNodes.has(choice.next) && !isSpecialTarget(choice.next)) {
+            state.issues.push({
+              type: "missing",
+              node: node.id,
+              text: node.id + " links to missing node " + choice.next
+            });
+          }
+        }
+        state.outgoing.set(node.id, out);
+      }
+
+      const starts = new Set([
+        state.workingScript && state.workingScript.intro_node,
+        state.workingScript && state.workingScript.fallback_id
+      ].filter(Boolean));
+      if (Array.isArray(state.workingScript && state.workingScript.episodes)) {
+        for (const ep of state.workingScript.episodes) {
+          if (ep.start_node) starts.add(ep.start_node);
+        }
+      }
+      for (const node of getNodes(state.workingScript)) {
+        const inbound = state.inbound.get(node.id) || [];
+        if (inbound.length === 0 && !starts.has(node.id)) {
+          state.issues.push({
+            type: "orphan",
+            node: node.id,
+            text: node.id + " is not reached by another node"
+          });
+        }
+      }
+
+      syncChanges();
+    }
+
+    function syncChanges() {
+      state.changes.clear();
+      for (const node of getNodes(state.workingScript)) {
+        const original = state.originalNodes.get(node.id);
+        if (!original) {
+          state.changes.set(node.id, ["new node"]);
+          continue;
+        }
+        const fields = [];
+        if (JSON.stringify(original.line || "") !== JSON.stringify(node.line || "")) fields.push("line");
+        if (JSON.stringify(original.choices || []) !== JSON.stringify(node.choices || [])) fields.push("choices");
+        if (JSON.stringify(original.unlock || null) !== JSON.stringify(node.unlock || null)) fields.push("unlock");
+        if (JSON.stringify(original.tags || []) !== JSON.stringify(node.tags || [])) fields.push("tags");
+        if (JSON.stringify(original.speaker || "") !== JSON.stringify(node.speaker || "")) fields.push("speaker");
+        if (JSON.stringify(original.set_flags || null) !== JSON.stringify(node.set_flags || null)) fields.push("set_flags");
+        if (JSON.stringify(original.set_flag || null) !== JSON.stringify(node.set_flag || null)) fields.push("set_flag");
+        if (fields.length > 0) state.changes.set(node.id, fields);
+      }
+      for (const [nodeId, comment] of state.comments.entries()) {
+        if (comment.trim() && !state.changes.has(nodeId)) state.changes.set(nodeId, ["comment"]);
+      }
+    }
+
+    function setScriptData(script, sourceName) {
+      if (!script || !Array.isArray(script.nodes)) {
+        alert("This file does not look like scripted_nodes.json. It needs a top-level nodes array.");
+        return;
+      }
+      state.sourceName = sourceName || "scripted_nodes.json";
+      state.originalScript = clone(script);
+      state.workingScript = clone(script);
+      state.selectedId = script.intro_node || (script.nodes[0] && script.nodes[0].id) || "";
+      state.comments.clear();
+      rebuildIndexes();
+      renderAll();
+    }
+
+    function setReactiveData(data, sourceName) {
+      state.reactiveLines = data;
+      state.reactiveSourceName = sourceName || "reactive_lines.json";
+      renderStatus();
+    }
+
+    async function loadJsonFile(file, callback) {
+      if (!file) return;
+      try {
+        const text = await file.text();
+        callback(JSON.parse(text), file.name);
+      } catch (error) {
+        alert("Could not read JSON: " + error.message);
+      }
+    }
+
+    async function tryRepoAutoLoad() {
+      const candidates = [
+        "../../data/dialogue/scripted_nodes.json",
+        "data/dialogue/scripted_nodes.json",
+        "../data/dialogue/scripted_nodes.json"
+      ];
+      for (const url of candidates) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) continue;
+          const data = await response.json();
+          setScriptData(data, url);
+          tryRepoReactiveLoad();
+          return;
+        } catch (error) {
+          continue;
+        }
+      }
+      alert("Auto-load did not work from this browser. Use the Load scripted_nodes.json button instead.");
+    }
+
+    async function tryRepoReactiveLoad() {
+      const candidates = [
+        "../../data/dialogue/reactive_lines.json",
+        "data/dialogue/reactive_lines.json",
+        "../data/dialogue/reactive_lines.json"
+      ];
+      for (const url of candidates) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) continue;
+          setReactiveData(await response.json(), url);
+          return;
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+
+    function renderAll() {
+      renderStatus();
+      renderGraphTypeOptions();
+      renderWarnings();
+      renderNodeList();
+      renderGraph();
+      renderDetails();
+    }
+
+    function renderStatus() {
+      const nodeCount = getNodes(state.workingScript).length;
+      let linkCount = 0;
+      let unlockCount = 0;
+      for (const node of getNodes(state.workingScript)) {
+        linkCount += Array.isArray(node.choices) ? node.choices.filter(choice => choice.next).length : 0;
+        if (node.unlock) unlockCount += 1;
+      }
+      els.statNodes.textContent = String(nodeCount);
+      els.statLinks.textContent = String(linkCount);
+      els.statUnlocks.textContent = String(unlockCount);
+      els.statIssues.textContent = String(state.issues.length);
+
+      const pieces = [];
+      if (state.sourceName) pieces.push(state.sourceName);
+      if (state.reactiveSourceName) pieces.push("reactive: " + state.reactiveSourceName);
+      if (state.changes.size > 0) pieces.push(state.changes.size + " changed");
+      els.fileStatus.textContent = pieces.length > 0 ? pieces.join(" | ") : "No script loaded";
+    }
+
+    function renderWarnings() {
+      els.warningList.innerHTML = "";
+      for (const issue of state.issues.slice(0, 8)) {
+        const div = document.createElement("div");
+        div.className = "warning-item";
+        div.textContent = issue.text;
+        div.addEventListener("click", () => selectNode(issue.node));
+        els.warningList.appendChild(div);
+      }
+    }
+
+    function passesFilter(node) {
+      const filter = els.filterSelect.value;
+      const issuesForNode = state.issues.filter(issue => issue.node === node.id);
+      if (filter === "unlock") return Boolean(node.unlock);
+      if (filter === "flags") return Boolean(node.set_flag || node.set_flags);
+      if (filter === "missing") return issuesForNode.some(issue => issue.type === "missing");
+      if (filter === "orphan") return issuesForNode.some(issue => issue.type === "orphan");
+      if (filter === "ai") return (state.outgoing.get(node.id) || []).some(isSpecialTarget);
+      if (filter === "changed") return state.changes.has(node.id);
+      return true;
+    }
+
+    function renderNodeList() {
+      els.nodeList.innerHTML = "";
+      if (!state.workingScript) return;
+      const q = els.searchInput.value.trim().toLowerCase();
+      const nodes = getNodes(state.workingScript).filter(node => {
+        if (!passesFilter(node)) return false;
+        if (!q) return true;
+        return nodeSearchHaystack(node).includes(q);
+      });
+
+      for (const node of nodes) {
+        const row = document.createElement("button");
+        row.type = "button";
+        row.className = "node-row" + (node.id === state.selectedId ? " active" : "");
+        row.addEventListener("click", () => selectNode(node.id));
+
+        const id = document.createElement("div");
+        id.className = "node-id";
+        id.textContent = nodeLabel(node);
+        row.appendChild(id);
+
+        const preview = document.createElement("div");
+        preview.className = "node-line-preview";
+        preview.textContent = oneLine(node.line).slice(0, 180);
+        row.appendChild(preview);
+
+        const tags = document.createElement("div");
+        tags.className = "tags";
+        if (node.unlock) tags.appendChild(tag("unlock", "unlock"));
+        if (describeFlags(node)) tags.appendChild(tag("flags", "flag"));
+        if (state.changes.has(node.id)) tags.appendChild(tag("changed", "flag"));
+        const issue = state.issues.find(item => item.node === node.id);
+        if (issue) tags.appendChild(tag(issue.type, issue.type === "missing" ? "bad" : "warn"));
+        if (Array.isArray(node.tags)) {
+          for (const item of node.tags.slice(0, 3)) tags.appendChild(tag(item));
+        }
+        row.appendChild(tags);
+        els.nodeList.appendChild(row);
+      }
+    }
+
+    function tag(text, kind) {
+      const span = document.createElement("span");
+      span.className = "tag" + (kind ? " " + kind : "");
+      span.textContent = text;
+      return span;
+    }
+
+    function selectNode(id) {
+      state.selectedId = id;
+      renderNodeList();
+      renderGraph();
+      renderDetails();
+    }
+
+    function renderGraph() {
+      if (!state.workingScript) {
+        els.graphFrame.innerHTML = '<div class="empty">Load `data/dialogue/scripted_nodes.json` to see the conversation map.</div>';
+        return;
+      }
+
+      const nodes = getNodes(state.workingScript).filter(passesGraphType);
+      const visibleIds = new Set(nodes.map(node => node.id));
+      const specialTargets = new Set();
+      for (const node of nodes) {
+        for (const next of state.outgoing.get(node.id) || []) {
+          if (!visibleIds.has(next)) specialTargets.add(next);
+        }
+      }
+
+      const graphNodes = nodes.map(node => ({ id: node.id, node, special: false }));
+      for (const id of specialTargets) {
+        graphNodes.push({
+          id,
+          node: { id, line: state.workingNodes.has(id) ? "outside this flow type" : "special target" },
+          special: isSpecialTarget(id),
+          outside: state.workingNodes.has(id),
+          missing: !state.workingNodes.has(id) && !isSpecialTarget(id)
+        });
+      }
+
+      if (graphNodes.length === 0) {
+        els.graphFrame.innerHTML = '<div class="empty">No nodes match this flow type.</div>';
+        return;
+      }
+
+      const boxWidth = 260;
+      const boxHeight = 92;
+      const rowHeight = 134;
+      const graphOrder = getVerticalGraphOrder(nodes, graphNodes);
+      const width = Math.max(860, boxWidth + 160);
+      const height = Math.max(480, graphOrder.length * rowHeight + 80);
+      const positions = new Map();
+      graphOrder.forEach((item, index) => {
+        positions.set(item.id, { x: 60, y: 40 + index * rowHeight });
+      });
+
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", String(width));
+      svg.setAttribute("height", String(height));
+      svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+
+      const defs = document.createElementNS(svg.namespaceURI, "defs");
+      defs.innerHTML = '<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9e8e7f"></path></marker>';
+      svg.appendChild(defs);
+
+      for (const node of nodes) {
+        const from = positions.get(node.id);
+        for (const next of state.outgoing.get(node.id) || []) {
+          const to = positions.get(next);
+          if (!from || !to) continue;
+          const path = document.createElementNS(svg.namespaceURI, "path");
+          const x1 = from.x + boxWidth / 2;
+          const y1 = from.y + boxHeight;
+          const x2 = to.x + boxWidth / 2;
+          const y2 = to.y;
+          const mid = (y1 + y2) / 2;
+          path.setAttribute("d", "M " + x1 + " " + y1 + " C " + x1 + " " + mid + ", " + x2 + " " + mid + ", " + x2 + " " + y2);
+          path.setAttribute("class", "edge" + (isSpecialTarget(next) ? " special" : ""));
+          svg.appendChild(path);
+        }
+      }
+
+      for (const item of graphOrder) {
+        const pos = positions.get(item.id);
+        const group = document.createElementNS(svg.namespaceURI, "g");
+        group.setAttribute("class", "graph-node" + (item.id === state.selectedId ? " active" : "") + (item.missing ? " missing" : "") + (item.outside ? " outside" : ""));
+        group.setAttribute("transform", "translate(" + pos.x + " " + pos.y + ")");
+        group.setAttribute("tabindex", "0");
+        group.style.cursor = "pointer";
+        group.addEventListener("click", () => {
+          if (state.workingNodes.has(item.id)) selectNode(item.id);
+        });
+
+        const flags = [];
+        if (item.node.unlock) flags.push("unlock");
+        if (state.changes.has(item.id)) flags.push("changed");
+        if (item.special) flags.push("action/AI");
+        if (item.outside) flags.push("outside filter");
+        appendGraphCard(group, item.id, flags.length ? flags.join(" | ") : oneLine(item.node.line), boxWidth, boxHeight);
+        svg.appendChild(group);
+      }
+
+      els.graphFrame.innerHTML = "";
+      els.graphFrame.appendChild(svg);
+    }
+
+    function getVerticalGraphOrder(nodes, graphNodes) {
+      const graphItems = new Map(graphNodes.map(item => [item.id, item]));
+      const visibleIds = new Set(nodes.map(node => node.id));
+      const visited = new Set();
+      const ordered = [];
+      const starts = new Set([
+        state.workingScript && state.workingScript.intro_node,
+        state.workingScript && state.workingScript.fallback_id
+      ].filter(Boolean));
+      if (Array.isArray(state.workingScript && state.workingScript.episodes)) {
+        for (const ep of state.workingScript.episodes) {
+          if (ep.start_node) starts.add(ep.start_node);
+        }
+      }
+
+      const rootNodes = nodes.filter(node => {
+        const inbound = (state.inbound.get(node.id) || []).filter(id => visibleIds.has(id));
+        return inbound.length === 0;
+      });
+      rootNodes.sort((a, b) => {
+        const aStart = starts.has(a.id) ? 0 : 1;
+        const bStart = starts.has(b.id) ? 0 : 1;
+        return aStart - bStart;
+      });
+
+      function visit(id) {
+        if (visited.has(id) || !graphItems.has(id)) return;
+        visited.add(id);
+        ordered.push(graphItems.get(id));
+        for (const next of state.outgoing.get(id) || []) {
+          if (graphItems.has(next)) visit(next);
+        }
+      }
+
+      for (const node of rootNodes) visit(node.id);
+      for (const item of graphNodes) visit(item.id);
+      return ordered;
+    }
+
+    function appendGraphCard(group, title, preview, width, height) {
+      const foreign = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+      foreign.setAttribute("width", String(width));
+      foreign.setAttribute("height", String(height));
+
+      const card = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+      card.setAttribute("class", "graph-card");
+
+      const titleEl = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+      titleEl.setAttribute("class", "graph-card-title");
+      titleEl.textContent = title;
+      card.appendChild(titleEl);
+
+      const previewEl = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+      previewEl.setAttribute("class", "graph-card-preview");
+      previewEl.textContent = preview;
+      card.appendChild(previewEl);
+
+      foreign.appendChild(card);
+      group.appendChild(foreign);
+    }
+
+    function truncateText(text, maxChars) {
+      const value = String(text || "");
+      return value.length > maxChars ? value.slice(0, Math.max(0, maxChars - 1)) + "…" : value;
+    }
+
+    function splitFixedLines(text, maxChars, maxLines) {
+      const cleaned = oneLine(text);
+      const lines = [];
+      let cursor = 0;
+      while (cursor < cleaned.length && lines.length < maxLines) {
+        lines.push(cleaned.slice(cursor, cursor + maxChars));
+        cursor += maxChars;
+      }
+      if (cursor < cleaned.length && lines.length > 0) {
+        lines[lines.length - 1] = truncateText(lines[lines.length - 1], maxChars);
+      }
+      return lines.length > 0 ? lines : [""];
+    }
+
+    function appendSvgTextLines(group, text, x, y, maxChars, lineHeight, className, maxLines) {
+      const lines = splitFixedLines(text, maxChars, maxLines);
+      const node = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      if (className) node.setAttribute("class", className);
+      node.setAttribute("x", String(x));
+      node.setAttribute("y", String(y));
+      lines.forEach((line, index) => {
+        const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+        tspan.setAttribute("x", String(x));
+        tspan.setAttribute("dy", index === 0 ? "0" : String(lineHeight));
+        tspan.textContent = truncateText(line, maxChars);
+        node.appendChild(tspan);
+      });
+      group.appendChild(node);
+    }
+
+    function renderDetails() {
+      els.detailPane.innerHTML = "";
+      if (!state.workingScript) {
+        els.detailPane.innerHTML = '<div class="empty">Select a node to inspect line text, choices, unlock gates, flags, and review changes.</div>';
+        return;
+      }
+      const node = state.workingNodes.get(state.selectedId);
+      if (!node) {
+        els.detailPane.innerHTML = '<div class="empty">This target is an action, AI mode, exit, or missing node.</div>';
+        return;
+      }
+      const original = state.originalNodes.get(node.id) || {};
+
+      const header = document.createElement("div");
+      header.className = "field-grid";
+      header.appendChild(readonlyField("Node ID", node.id));
+      header.appendChild(editableText("Speaker", node.speaker || "", value => {
+        node.speaker = value.trim();
+        afterNodeEdit();
+      }));
+      els.detailPane.appendChild(header);
+
+      if (state.reviewMode) {
+        els.detailPane.appendChild(editableArea("Line", cleanText(node.line), value => {
+          node.line = value;
+          afterNodeEdit();
+        }));
+      } else {
+        const wrap = document.createElement("div");
+        wrap.appendChild(label("Line"));
+        const line = document.createElement("div");
+        line.className = "readonly-line";
+        line.textContent = cleanText(node.line);
+        wrap.appendChild(line);
+        els.detailPane.appendChild(wrap);
+      }
+
+      if (state.compareMode && state.changes.has(node.id)) {
+        const compare = document.createElement("div");
+        compare.className = "compare";
+        compare.appendChild(compareBox("Original", original.line || ""));
+        compare.appendChild(compareBox("Edited", node.line || ""));
+        els.detailPane.appendChild(compare);
+      }
+
+      const meta = document.createElement("div");
+      meta.className = "field-grid";
+      meta.appendChild(jsonField("Unlock", node.unlock, value => {
+        node.unlock = value;
+        afterNodeEdit();
+      }));
+      meta.appendChild(jsonField("Tags", node.tags || [], value => {
+        node.tags = Array.isArray(value) ? value : [];
+        afterNodeEdit();
+      }));
+      meta.appendChild(jsonField("Set flags", node.set_flags || node.set_flag || null, value => {
+        delete node.set_flags;
+        delete node.set_flag;
+        if (Array.isArray(value)) node.set_flags = value;
+        else if (value && typeof value === "object") node.set_flag = value;
+        afterNodeEdit();
+      }));
+      meta.appendChild(readonlyField("Inbound from", (state.inbound.get(node.id) || []).join(", ") || "intro/fallback/none"));
+      els.detailPane.appendChild(meta);
+
+      els.detailPane.appendChild(choiceEditor(node));
+      els.detailPane.appendChild(reviewEditor(node));
+    }
+
+    function label(text) {
+      const el = document.createElement("label");
+      el.textContent = text;
+      return el;
+    }
+
+    function readonlyField(name, value) {
+      const wrap = document.createElement("div");
+      wrap.appendChild(label(name));
+      const box = document.createElement("div");
+      box.className = "readonly-line";
+      box.style.minHeight = "42px";
+      box.textContent = String(value || "");
+      wrap.appendChild(box);
+      return wrap;
+    }
+
+    function editableText(name, value, onChange) {
+      const wrap = document.createElement("div");
+      wrap.appendChild(label(name));
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = value;
+      input.disabled = !state.reviewMode;
+      input.addEventListener("input", () => onChange(input.value));
+      input.addEventListener("change", renderDetails);
+      input.addEventListener("blur", renderDetails);
+      wrap.appendChild(input);
+      return wrap;
+    }
+
+    function editableArea(name, value, onChange) {
+      const wrap = document.createElement("div");
+      wrap.appendChild(label(name));
+      const area = document.createElement("textarea");
+      area.value = value;
+      area.disabled = !state.reviewMode;
+      area.addEventListener("input", () => onChange(area.value));
+      area.addEventListener("change", renderDetails);
+      area.addEventListener("blur", renderDetails);
+      wrap.appendChild(area);
+      return wrap;
+    }
+
+    function compareBox(name, value) {
+      const wrap = document.createElement("div");
+      wrap.appendChild(label(name));
+      const pre = document.createElement("pre");
+      pre.textContent = cleanText(value);
+      wrap.appendChild(pre);
+      return wrap;
+    }
+
+    function jsonField(name, value, onChange) {
+      const wrap = document.createElement("div");
+      wrap.appendChild(label(name));
+      const area = document.createElement("textarea");
+      area.value = value === undefined || value === null ? "" : JSON.stringify(value, null, 2);
+      area.disabled = !state.reviewMode;
+      area.addEventListener("change", () => {
+        const text = area.value.trim();
+        try {
+          onChange(text ? JSON.parse(text) : null);
+          area.style.borderColor = "";
+        } catch (error) {
+          area.style.borderColor = "var(--bad)";
+          alert(name + " must be valid JSON.");
+        }
+      });
+      wrap.appendChild(area);
+      return wrap;
+    }
+
+    function choiceEditor(node) {
+      const wrap = document.createElement("div");
+      wrap.appendChild(label("Choices"));
+      const table = document.createElement("div");
+      table.className = "choice-table";
+      const choices = Array.isArray(node.choices) ? node.choices : [];
+      choices.forEach((choice, index) => {
+        const originalChoice = ((state.originalNodes.get(node.id) || {}).choices || [])[index] || {};
+        const row = document.createElement("div");
+        row.className = "choice-row" + (JSON.stringify(choice) !== JSON.stringify(originalChoice) ? " changed" : "");
+
+        const fields = document.createElement("div");
+        fields.className = "inline-fields";
+        fields.appendChild(editableText("Button text", choice.text || "", value => {
+          choice.text = value;
+          afterNodeEdit();
+        }));
+        fields.appendChild(editableText("Next target", choice.next || "", value => {
+          choice.next = value.trim();
+          afterNodeEdit();
+        }));
+        row.appendChild(fields);
+
+        const actions = document.createElement("div");
+        actions.className = "mini-actions";
+        const jump = document.createElement("button");
+        jump.type = "button";
+        jump.textContent = "Jump";
+        jump.disabled = !choice.next || !state.workingNodes.has(choice.next);
+        jump.addEventListener("click", () => selectNode(choice.next));
+        actions.appendChild(jump);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "danger";
+        remove.textContent = "Remove";
+        remove.disabled = !state.reviewMode;
+        remove.addEventListener("click", () => {
+          choices.splice(index, 1);
+          node.choices = choices;
+          afterNodeEdit(true);
+        });
+        actions.appendChild(remove);
+        row.appendChild(actions);
+        table.appendChild(row);
+      });
+
+      const add = document.createElement("button");
+      add.type = "button";
+      add.textContent = "Add choice";
+      add.disabled = !state.reviewMode;
+      add.addEventListener("click", () => {
+        if (!Array.isArray(node.choices)) node.choices = [];
+        node.choices.push({ text: "New choice", next: "" });
+        afterNodeEdit(true);
+      });
+
+      wrap.appendChild(table);
+      wrap.appendChild(add);
+      return wrap;
+    }
+
+    function reviewEditor(node) {
+      const panel = document.createElement("div");
+      panel.className = "review-panel";
+      panel.appendChild(label("Review comment"));
+      const area = document.createElement("textarea");
+      area.placeholder = "Friend note, suggested rewrite, confusion, or approval.";
+      area.value = state.comments.get(node.id) || "";
+      area.addEventListener("input", () => {
+        if (area.value.trim()) state.comments.set(node.id, area.value);
+        else state.comments.delete(node.id);
+        afterNodeEdit(false);
+      });
+      area.addEventListener("change", renderDetails);
+      area.addEventListener("blur", renderDetails);
+      panel.appendChild(area);
+
+      const changes = document.createElement("div");
+      changes.className = "changes";
+      for (const [nodeId, fields] of state.changes.entries()) {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "change";
+        item.innerHTML = "<strong></strong><span></span>";
+        item.querySelector("strong").textContent = nodeId;
+        item.querySelector("span").textContent = fields.join(", ");
+        item.addEventListener("click", () => selectNode(nodeId));
+        changes.appendChild(item);
+      }
+      if (state.changes.size === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "No tracked edits or comments yet.";
+        changes.appendChild(empty);
+      }
+      panel.appendChild(changes);
+      return panel;
+    }
+
+    function afterNodeEdit(fullRender) {
+      rebuildIndexes();
+      renderStatus();
+      renderWarnings();
+      renderNodeList();
+      renderGraphTypeOptions();
+      if (fullRender) renderDetails();
+      renderGraph();
+    }
+
+    function revertSelectedNode() {
+      const original = state.originalNodes.get(state.selectedId);
+      if (!original || !state.workingScript) return;
+      const nodes = getNodes(state.workingScript);
+      const index = nodes.findIndex(node => node.id === state.selectedId);
+      if (index >= 0) nodes[index] = clone(original);
+      state.comments.delete(state.selectedId);
+      rebuildIndexes();
+      renderAll();
+    }
+
+    function clearReviewChanges() {
+      if (!state.originalScript) return;
+      if (!confirm("Clear all review edits and comments?")) return;
+      state.workingScript = clone(state.originalScript);
+      state.comments.clear();
+      rebuildIndexes();
+      renderAll();
+    }
+
+    function downloadText(filename, mime, text) {
+      const blob = new Blob([text], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportJson() {
+      if (!state.workingScript) return alert("Load a script first.");
+      downloadText("scripted_nodes.reviewed.json", "application/json", JSON.stringify(state.workingScript, null, 2));
+    }
+
+    function exportNotes() {
+      if (!state.workingScript) return alert("Load a script first.");
+      const lines = [];
+      lines.push("# Project Chill Dialogue Review");
+      lines.push("");
+      lines.push("- Source: " + (state.sourceName || "unknown"));
+      lines.push("- Nodes: " + getNodes(state.workingScript).length);
+      lines.push("- Changed/commented nodes: " + state.changes.size);
+      lines.push("");
+      if (state.issues.length) {
+        lines.push("## Flow Issues");
+        for (const issue of state.issues) lines.push("- " + issue.text);
+        lines.push("");
+      }
+      lines.push("## Review Changes");
+      for (const [nodeId, fields] of state.changes.entries()) {
+        const node = state.workingNodes.get(nodeId);
+        const original = state.originalNodes.get(nodeId) || {};
+        lines.push("### " + nodeId);
+        lines.push("- Fields: " + fields.join(", "));
+        if (state.comments.get(nodeId)) lines.push("- Comment: " + state.comments.get(nodeId).replace(/\n/g, " "));
+        if (fields.includes("line")) {
+          lines.push("");
+          lines.push("Original:");
+          lines.push("```");
+          lines.push(cleanText(original.line || ""));
+          lines.push("```");
+          lines.push("Edited:");
+          lines.push("```");
+          lines.push(cleanText((node && node.line) || ""));
+          lines.push("```");
+        }
+        lines.push("");
+      }
+      downloadText("dialogue_review_notes.md", "text/markdown", lines.join("\n"));
+    }
+
+    function exportSnapshot() {
+      if (!state.workingScript) return alert("Load a script first.");
+      const cloneDoc = document.documentElement.cloneNode(true);
+      const scripted = cloneDoc.querySelector("#embedded-scripted");
+      const reactive = cloneDoc.querySelector("#embedded-reactive");
+      scripted.textContent = JSON.stringify(state.workingScript);
+      reactive.textContent = state.reactiveLines ? JSON.stringify(state.reactiveLines) : "";
+      const html = "<!doctype html>\n" + cloneDoc.outerHTML;
+      downloadText("dialogue_viewer_snapshot.html", "text/html", html);
+    }
+
+    function buildMermaid() {
+      if (!state.workingScript) return "";
+      const lines = ["flowchart TD"];
+      const nodes = getNodes(state.workingScript).filter(passesGraphType);
+      for (const node of nodes) {
+        const safeId = node.id.replace(/[^A-Za-z0-9_]/g, "_");
+        lines.push("  " + safeId + "[\"" + node.id.replace(/"/g, "'") + "\"]");
+        for (const choice of Array.isArray(node.choices) ? node.choices : []) {
+          if (!choice.next) continue;
+          const targetId = choice.next.replace(/[^A-Za-z0-9_]/g, "_");
+          lines.push("  " + safeId + " -->|\"" + String(choice.text || "").replace(/"/g, "'") + "\"| " + targetId);
+        }
+      }
+      return lines.join("\n");
+    }
+
+    async function copyMermaid() {
+      const text = buildMermaid();
+      if (!text) return alert("Load a script first.");
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("Mermaid flowchart copied.");
+      } catch (error) {
+        downloadText("dialogue_flowchart.mmd", "text/plain", text);
+      }
+    }
+
+    function fitGraph() {
+      els.graphFrame.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+    }
+
+    function loadEmbeddedIfPresent() {
+      const scriptedText = document.getElementById("embedded-scripted").textContent.trim();
+      const reactiveText = document.getElementById("embedded-reactive").textContent.trim();
+      if (scriptedText) {
+        try {
+          setScriptData(JSON.parse(scriptedText), "embedded snapshot");
+        } catch (error) {
+          console.warn(error);
+        }
+      }
+      if (reactiveText) {
+        try {
+          setReactiveData(JSON.parse(reactiveText), "embedded snapshot");
+        } catch (error) {
+          console.warn(error);
+        }
+      }
+    }
+
+    els.loadScriptButton.addEventListener("click", () => els.scriptFileInput.click());
+    els.loadReactiveButton.addEventListener("click", () => els.reactiveFileInput.click());
+    els.scriptFileInput.addEventListener("change", () => loadJsonFile(els.scriptFileInput.files[0], setScriptData));
+    els.reactiveFileInput.addEventListener("change", () => loadJsonFile(els.reactiveFileInput.files[0], setReactiveData));
+    els.tryRepoButton.addEventListener("click", tryRepoAutoLoad);
+    els.reviewModeToggle.addEventListener("change", () => {
+      state.reviewMode = els.reviewModeToggle.checked;
+      renderDetails();
+    });
+    els.compareToggle.addEventListener("change", () => {
+      state.compareMode = els.compareToggle.checked;
+      renderDetails();
+    });
+    els.searchInput.addEventListener("input", renderNodeList);
+    els.filterSelect.addEventListener("change", renderNodeList);
+    els.flowTabs.addEventListener("click", event => {
+      const button = event.target.closest("button[data-flow-type]");
+      if (!button || button.disabled) return;
+      setGraphType(button.dataset.flowType);
+    });
+    els.episodeSelect.addEventListener("change", () => {
+      setGraphType("episode");
+    });
+    els.exportJsonButton.addEventListener("click", exportJson);
+    els.exportNotesButton.addEventListener("click", exportNotes);
+    els.exportSnapshotButton.addEventListener("click", exportSnapshot);
+    els.clearChangesButton.addEventListener("click", clearReviewChanges);
+    els.revertNodeButton.addEventListener("click", revertSelectedNode);
+    els.fitGraphButton.addEventListener("click", fitGraph);
+    els.copyMermaidButton.addEventListener("click", copyMermaid);
+
+    loadEmbeddedIfPresent();
+  </script>
+</body>
+</html>

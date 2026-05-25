@@ -124,11 +124,54 @@ func _register_node(node_data: Variant) -> void:
 	var node_id := str(node_data.get("id", ""))
 	if node_id.is_empty():
 		return
+	# Preserve milestone metadata (speaker/tags/set_flags/unlock) alongside the
+	# original id/line/choices behavior. Without this, JSON-authored gate metadata
+	# (e.g. ep00_close set_flags ["intro_seen"], Ep1 payoff unlock) is dropped and
+	# the progression gate has nothing to read. See docs/Milestone_Contract_VS01.md.
 	nodes_by_id[node_id] = {
 		"id": node_id,
 		"line": str(node_data.get("line", "")),
-		"choices": _sanitize_choices(node_data.get("choices", []))
+		"choices": _sanitize_choices(node_data.get("choices", [])),
+		"speaker": str(node_data.get("speaker", "")),
+		"tags": _sanitize_tags(node_data.get("tags", [])),
+		"set_flags": _sanitize_set_flags(node_data.get("set_flags", {})),
+		"unlock": _sanitize_unlock(node_data.get("unlock", {}))
 	}
+
+func _sanitize_tags(raw_tags: Variant) -> Array:
+	var cleaned: Array = []
+	if typeof(raw_tags) != TYPE_ARRAY:
+		return cleaned
+	for tag in raw_tags:
+		var text := str(tag).strip_edges()
+		if not text.is_empty() and not cleaned.has(text):
+			cleaned.append(text)
+	return cleaned
+
+func _sanitize_set_flags(raw_flags: Variant) -> Dictionary:
+	# Accept either ["flag_a", "flag_b"] (each set to true) or {"flag_a": value}.
+	# Normalizes to one shape — a Dictionary of flag_name -> value — so the
+	# coordinator can apply node-level flags without re-checking the JSON form.
+	var cleaned: Dictionary = {}
+	if typeof(raw_flags) == TYPE_ARRAY:
+		for flag in raw_flags:
+			var key := str(flag).strip_edges()
+			if not key.is_empty():
+				cleaned[key] = true
+	elif typeof(raw_flags) == TYPE_DICTIONARY:
+		for key in raw_flags.keys():
+			var key_str := str(key).strip_edges()
+			if not key_str.is_empty():
+				cleaned[key_str] = raw_flags[key]
+	return cleaned
+
+func _sanitize_unlock(raw_unlock: Variant) -> Dictionary:
+	var cleaned: Dictionary = {}
+	if typeof(raw_unlock) != TYPE_DICTIONARY:
+		return cleaned
+	for key in raw_unlock.keys():
+		cleaned[str(key)] = raw_unlock[key]
+	return cleaned
 
 func _sanitize_choices(raw_choices: Variant) -> Array:
 	var cleaned: Array = []

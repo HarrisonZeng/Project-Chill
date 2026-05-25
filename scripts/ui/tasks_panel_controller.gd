@@ -9,7 +9,7 @@ extends Control
 
 signal save_requested
 
-const PANEL_MIN_WIDTH := 220.0
+const PANEL_MIN_WIDTH := 280.0
 const PANEL_MAX_WIDTH := 560.0
 const PANEL_MIN_HEIGHT := 250.0
 const PANEL_MAX_HEIGHT := 720.0
@@ -44,6 +44,7 @@ func _ready() -> void:
 		new_task_input.text_submitted.connect(_on_new_task_submitted)
 	if tasks_resize_handle != null:
 		tasks_resize_handle.gui_input.connect(_on_resize_handle_input)
+	refresh_controls()
 
 func _input(event: InputEvent) -> void:
 	if not resizing:
@@ -120,7 +121,7 @@ func refresh_controls() -> void:
 		for item in todo_items:
 			if not bool(item.get("completed", false)):
 				pending += 1
-		tasks_tab.text = "📋 %d" % pending
+		tasks_tab.text = "Tasks %d" % pending
 		tasks_tab.tooltip_text = UiStrings.t("tasks.tab.label", language)
 	if tasks_panel != null:
 		tasks_panel.visible = panel_visible
@@ -156,7 +157,8 @@ func render_tasks() -> void:
 	if tasks_rows == null:
 		return
 	for child in tasks_rows.get_children():
-		child.queue_free()
+		tasks_rows.remove_child(child)
+		child.free()
 	hovered_task_index = -1
 
 	if todo_items.is_empty():
@@ -176,18 +178,18 @@ func render_tasks() -> void:
 		row.custom_minimum_size = Vector2(0, 32)
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_constant_override("separation", 8)
-		row.mouse_filter = Control.MOUSE_FILTER_PASS
+		row.mouse_filter = Control.MOUSE_FILTER_STOP
 		row.mouse_entered.connect(_on_task_row_mouse_entered.bind(index))
 		row.mouse_exited.connect(_on_task_row_mouse_exited.bind(index))
 
 		var done_toggle := Button.new()
 		done_toggle.toggle_mode = true
 		done_toggle.flat = true
-		done_toggle.custom_minimum_size = Vector2(24, 24)
-		done_toggle.text = "●" if completed else "◯"
+		done_toggle.custom_minimum_size = Vector2(34, 28)
+		done_toggle.text = "[x]" if completed else "[ ]"
 		done_toggle.button_pressed = completed
 		done_toggle.tooltip_text = UiStrings.t("tasks.mark_done", language)
-		done_toggle.add_theme_font_size_override("font_size", 18)
+		done_toggle.add_theme_font_size_override("font_size", 13)
 		var done_color := get_theme_color("sage", "Palette") if completed else get_theme_color("sand", "Palette")
 		done_toggle.add_theme_color_override("font_color", done_color)
 		done_toggle.add_theme_color_override("font_hover_color", get_theme_color("honey_amber", "Palette"))
@@ -208,15 +210,17 @@ func render_tasks() -> void:
 		row.add_child(text_field)
 
 		var delete_button := Button.new()
-		delete_button.text = "✕"
-		delete_button.custom_minimum_size = Vector2(24, 24)
+		delete_button.text = "X"
+		delete_button.custom_minimum_size = Vector2(30, 28)
 		delete_button.flat = true
-		delete_button.visible = false
+		delete_button.visible = true
+		delete_button.focus_mode = Control.FOCUS_NONE
+		delete_button.mouse_filter = Control.MOUSE_FILTER_STOP
 		delete_button.tooltip_text = UiStrings.t("tasks.delete", language)
 		delete_button.add_theme_font_size_override("font_size", 14)
 		delete_button.add_theme_color_override("font_color", get_theme_color("brick_warm", "Palette"))
 		delete_button.add_theme_color_override("font_hover_color", get_theme_color("cream", "Palette"))
-		delete_button.pressed.connect(_on_todo_delete_pressed.bind(index))
+		delete_button.pressed.connect(_on_todo_delete_pressed_from_button.bind(delete_button))
 		row.add_child(delete_button)
 		row.set_meta("delete_button", delete_button)
 
@@ -352,3 +356,12 @@ func _on_todo_delete_pressed(index: int) -> void:
 	render_tasks()
 	refresh_controls()
 	save_requested.emit()
+
+func _on_todo_delete_pressed_from_button(button: Button) -> void:
+	if tasks_rows == null or button == null:
+		return
+	var row := button.get_parent()
+	if row == null:
+		return
+	var index := tasks_rows.get_children().find(row)
+	_on_todo_delete_pressed(index)

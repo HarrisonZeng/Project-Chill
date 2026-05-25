@@ -6,6 +6,7 @@ const FOCUS_DURATION_SECONDS: float = 25.0 * 60.0
 const LOOP_VIDEO_PATH := "res://assets/video/yua_idle_loop.ogv"
 const FOCUS_COMPLETE_LINE := "Focus block complete. Nice work."
 const PERSONA_PATH := "res://data/dialogue/yua_system_prompt.txt"
+const WORLD_PATH := "res://data/dialogue/yua_world.txt"
 const RUNTIME_RULES_PATH := "res://data/dialogue/yua_runtime_rules.txt"
 const DEFAULT_MODE_CONTEXT := "Scene type: short return-after-task check-in\nReply briefly in 1-3 sentences\nYua should sound gently curious and reserved\nThis is a small side conversation and should return to the main flow soon"
 const INPUT_PLACEHOLDER_TEXT := "Type a reply"
@@ -24,17 +25,23 @@ const REACTIVE_LINES_PATH := "res://data/dialogue/reactive_lines.json"
 const AI_MODES_PATH := "res://data/dialogue/ai_modes.json"
 const QUICK_TEST_SECONDS := 3.0
 const DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND := 34.0
+const TASK_PANEL_LAYOUT_VERSION := 3
 # Reactive line pools (focus_click etc) live in data/dialogue/reactive_lines.json
 # and are loaded at runtime into `reactive_lines`. Add a new pool by adding a
 # new key in that JSON — no code change needed unless a brand new trigger is added.
 
-@onready var dialogue_text: RichTextLabel = $BottomPanel/DialoguePanel/Margin/VBox/DialogueCard/DialogueMargin/DialogueText
-@onready var dialogue_card: PanelContainer = $BottomPanel/DialoguePanel/Margin/VBox/DialogueCard
-@onready var choice_list: GridContainer = $BottomPanel/DialoguePanel/Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/ChoiceList
-@onready var player_input: LineEdit = $BottomPanel/DialoguePanel/Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/InputRow/PlayerInput
-@onready var ai_mode_toggle: CheckButton = $BottomPanel/DialoguePanel/Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/InputRow/AIModeToggle
-@onready var status_label: Label = $BottomPanel/DialoguePanel/Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/StatusLabel
-@onready var send_button: Button = $BottomPanel/DialoguePanel/Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/InputRow/SendButton
+@onready var dialogue_text: RichTextLabel = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/DialogueText
+@onready var dialogue_card: PanelContainer = $BottomPanel/DialoguePanel/DialogueCard
+@onready var response_card: Control = $BottomPanel/DialoguePanel/ResponseCard
+@onready var choice_list: Node = $BottomPanel/DialoguePanel/ResponseCard/ChoiceList
+@onready var input_row: Control = $BottomPanel/DialoguePanel/InputRow
+@onready var player_input: LineEdit = $BottomPanel/DialoguePanel/InputRow/PlayerInput
+@onready var ai_mode_toggle: CheckButton = null  # AIModeToggle removed from UI; all uses are null-checked
+@onready var status_label: Label = $BottomPanel/DialoguePanel/ResponseCard/StatusLabel
+@onready var send_button: Button = $BottomPanel/DialoguePanel/InputRow/SendButton
+@onready var chat_history_button: Button = $ChatHistoryButton
+@onready var chat_history_panel: Control = $ChatHistoryPanel
+@onready var chat_history_rows: VBoxContainer = $ChatHistoryPanel/Margin/VBox/Scroll/HistoryRows
 @onready var background_node: CanvasItem = $Background
 @onready var companion_stage: CanvasItem = $CompanionStage
 @onready var video_stage: Control = $VideoStage
@@ -68,6 +75,10 @@ const DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND := 34.0
 
 @onready var scripted_dialogue_manager: ScriptedDialogueManager = ScriptedDialogueManager.new()
 
+# Pure deterministic progression gate (static helpers). Preloaded as a const so
+# the static calls resolve without depending on global class_name timing.
+const ProgressionGate = preload("res://scripts/core/progression_gate.gd")
+
 var current_node_id: String = "idle"
 var focus_duration_seconds: float = FOCUS_DURATION_SECONDS
 var focus_time_left: float = FOCUS_DURATION_SECONDS
@@ -89,14 +100,41 @@ var completed_focus_sessions: int = 0
 var current_focus_task: String = ""
 var focus_click_count: int = 0
 var last_seen_unix: int = 0
+# The last_seen_unix value loaded at launch (the PREVIOUS session's stamp). Kept
+# separate because _save_persistent_state overwrites last_seen_unix with "now"
+# every save, which would otherwise make return detection always read "just now".
+var previous_last_seen_unix: int = 0
 var ui_language: String = "en"
 var dialogue_typewriter_chars_per_second: float = DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND
+var chat_history: Array = []
 var suppress_settings_save: bool = false
 var dialogue_typewriter_active: bool = false
 var dialogue_typewriter_timer: float = 0.0
 var dialogue_typewriter_total_chars: int = 0
 var pending_choice_payloads: Array = []
 var current_choice_payloads: Array = []
+
+# --- Vertical Slice 01 progression / co-presence state ----------------------
+# Persisted via _save_persistent_state (single profile, owned by memory_manager).
+# completed_focus_sessions (above) is persisted under the canonical save key
+# `completed_focus_count`; the legacy key is still read on load for migration.
+var total_focus_seconds: int = 0
+var _focus_seconds_accum: float = 0.0  # sub-second carry for total_focus_seconds
+var last_completed_focus_minutes: int = 0  # whole minutes of the just-finished session ({focus_minutes} token)
+var focus_started_count: int = 0
+var engaged_interaction_count: int = 0
+var engaged_time_seconds: int = 0
+var last_meaningful_interaction_at: String = ""
+var _last_interaction_unix: int = 0
+var return_count: int = 0
+var yua_openness: int = 0
+var current_story_milestone: String = ""
+var player_nickname: String = ""
+# Privacy / AI on-off backend flag. Settings UI flips it via set_ai_features_enabled.
+# When false, dialogue_router makes no AI/network calls at all. Default on (mock).
+var ai_features_enabled: bool = true
+const ENGAGED_GAP_CAP_SECONDS := 60     # cap a single engaged-time gap (AFK-safe)
+const NAME_INPUT_TAG := "name_input"    # narrative tags the Ep0 name node with this
 
 # Loaded from data/dialogue/* on _ready. See REACTIVE_LINES_PATH / AI_MODES_PATH
 # constants and the loader helpers near the bottom of the file.
@@ -115,8 +153,6 @@ func _ready() -> void:
 	_setup_memory_profile()  # must exist before _load_persistent_state (single profile store)
 	_load_persistent_state()
 	_load_prompt_assets()
-	if not tasks_ui.has_todos():
-		tasks_ui.seed_default_tasks()
 	call_status.refresh(ui_language, focus_running)
 	_update_timer_label()
 	add_child(scripted_dialogue_manager)
@@ -124,13 +160,14 @@ func _ready() -> void:
 	_load_episode_metadata_from_manager()
 	_load_reactive_lines()
 	_load_ai_modes()
-	if not scripted_dialogue_manager.has_dialogue_node(current_node_id):
-		current_node_id = "idle"
-	current_node_id = _resolve_start_node_id()
-	ai_return_node_id = _safe_node_id()
+	# Co-presence-first: land on idle (Yua quietly working). Do NOT auto-open the
+	# greeting/return dialogue — that surfaces on the FIRST click of Yua (see
+	# _on_character_clicked). The idle node's line is the gentle "click to talk"
+	# hint, not a greeting. Spec: docs/AI_Context_Packet_Spec.md open-dep #2.
+	current_node_id = "idle"
+	ai_return_node_id = "idle"
 	_setup_dialogue_services()
-	_show_node(current_node_id)
-	_maybe_show_follow_up()
+	_show_node("idle")
 	_refresh_focus_controls()
 	_highlight_duration_chip(int(round(focus_duration_seconds / 60.0)))
 	tasks_ui.refresh_controls()
@@ -143,8 +180,27 @@ func _process(delta: float) -> void:
 	_maybe_autosave()
 	music_bar.update_progress()
 
+# Any unhandled left-click (not on a Button / LineEdit / etc.) advances dialogue.
+# This is more reliable than wiring gui_input on specific nodes and gives the
+# standard visual-novel "click anywhere to continue" feel.
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mouse_event := event as InputEventMouseButton
+	if mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed:
+		_on_subtitle_clicked()
+
 func _load_prompt_assets() -> void:
+	# Layer 1 (personality) + Layer 2 (world facts) form the persona system block,
+	# in that order, per docs/AI_Context_Packet_Spec.md. Without Layer 2 the
+	# aquarium / writing world facts never reach the model.
 	persona_text = _load_text_file(PERSONA_PATH)
+	var world_text := _load_text_file(WORLD_PATH)
+	if not world_text.strip_edges().is_empty():
+		if persona_text.strip_edges().is_empty():
+			persona_text = world_text
+		else:
+			persona_text = persona_text + "\n\n" + world_text
 	runtime_rules_text = _load_text_file(RUNTIME_RULES_PATH)
 
 func _load_text_file(path: String) -> String:
@@ -175,6 +231,9 @@ func _setup_dialogue_services() -> void:
 
 	dialogue_router = preload("res://scripts/core/dialogue_router.gd").new()
 	dialogue_router.set_ai_service(ai_dialogue_service)
+	# Honor the persisted privacy flag: when AI is off the router never calls out.
+	if dialogue_router.has_method("set_ai_allowed"):
+		dialogue_router.call("set_ai_allowed", ai_features_enabled)
 	add_child(dialogue_router)
 
 func _maybe_show_follow_up() -> void:
@@ -225,6 +284,15 @@ func _wire_signals() -> void:
 			var minutes := int(btn.text)
 			btn.pressed.connect(_on_duration_chip_pressed.bind(minutes))
 	tasks_ui.save_requested.connect(_save_persistent_state)
+	if dialogue_card != null:
+		dialogue_card.mouse_filter = Control.MOUSE_FILTER_STOP
+		dialogue_card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		dialogue_card.gui_input.connect(_on_subtitle_input)
+	if chat_history_button != null:
+		chat_history_button.pressed.connect(_toggle_chat_history)
+	var close_history_btn := get_node_or_null("ChatHistoryPanel/Margin/VBox/HeaderRow/CloseHistoryButton")
+	if close_history_btn != null:
+		close_history_btn.pressed.connect(_toggle_chat_history)
 	settings_button.pressed.connect(_on_settings_button_pressed)
 	language_button.pressed.connect(_on_language_button_pressed)
 	text_speed_slider.value_changed.connect(_on_text_speed_changed)
@@ -266,10 +334,14 @@ func _configure_visual_mode() -> void:
 		companion_stage.visible = not use_video_mode
 
 func _refresh_input_placeholder() -> void:
-	if ai_mode_toggle.button_pressed:
+	if player_input == null:
+		return
+	var type_mode_on := ai_mode_toggle != null and ai_mode_toggle.button_pressed
+	if type_mode_on:
 		player_input.placeholder_text = _ui_text("type_input_placeholder")
 	else:
 		player_input.placeholder_text = _ui_text("input_placeholder")
+	_update_response_slot_visibility()
 
 func _ui_text(key: String) -> String:
 	var zh := ui_language == "zh"
@@ -475,10 +547,12 @@ func _show_node_data(node_data: Dictionary) -> void:
 		return
 
 	current_node_id = str(node_data.get("id", current_node_id))
+	_apply_node_flags(node_data)
 	var line_text := str(node_data.get("line", ""))
 	_set_dialogue_text(line_text)
 	_set_status_message("")
 	_render_choices(_get_display_choices(node_data))
+	_update_response_slot_visibility()
 	_play_voice_for_line(current_node_id, line_text)
 
 func _get_display_choices(node_data: Dictionary) -> Array:
@@ -549,6 +623,7 @@ func _render_choices(choices: Array) -> void:
 	if dialogue_typewriter_active:
 		pending_choice_payloads = choices.duplicate(true)
 		_clear_choice_buttons()
+		_update_response_slot_visibility(false)
 		return
 
 	_render_choices_now(choices)
@@ -557,18 +632,48 @@ func _render_choices_now(choices: Array) -> void:
 	for child in choice_list.get_children():
 		child.queue_free()
 
+	# A single choice means "click to continue" — no button shown; the subtitle
+	# card itself is the tap target (see _on_subtitle_clicked).
+	if choices.size() <= 1:
+		_update_response_slot_visibility(false)
+		return
+
 	for choice in choices:
 		var choice_button := Button.new()
-		choice_button.text = str(choice.get("text", "Continue"))
-		choice_button.custom_minimum_size = Vector2(0, 28)
+		choice_button.text = _apply_text_tokens(str(choice.get("text", "Continue")))
+		choice_button.custom_minimum_size = Vector2(0, 36)
 		choice_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_style_choice_button(choice_button)
+		choice_button.theme_type_variation = &"ChipButton"
 		choice_button.pressed.connect(_on_choice_selected.bind(choice.duplicate(true)))
 		choice_list.add_child(choice_button)
+	_update_response_slot_visibility(true)
 
 func _clear_choice_buttons() -> void:
 	for child in choice_list.get_children():
 		child.queue_free()
+	_update_response_slot_visibility(false)
+
+func _should_show_type_input() -> bool:
+	if current_ai_mode_id != "":
+		return true
+	if _current_node_has_tag(NAME_INPUT_TAG):
+		return true
+	# Existing Ep0 name node predates the tag metadata; keep the UI behavior
+	# stable even if the JSON is missing tags.
+	return current_node_id == "ep00_04"
+
+func _update_response_slot_visibility(has_visible_choices: bool = false) -> void:
+	var allow_response_slot := not dialogue_typewriter_active
+	var show_choices := allow_response_slot and has_visible_choices and not _should_show_type_input()
+	var show_type := allow_response_slot and _should_show_type_input() and not show_choices
+	if choice_list != null:
+		choice_list.visible = show_choices
+	if response_card != null:
+		response_card.visible = show_choices
+	if input_row != null:
+		input_row.visible = show_type
+	if show_type and player_input != null and not player_input.has_focus():
+		player_input.grab_focus()
 
 func _enter_scripted_mode() -> void:
 	current_ai_mode_id = ""
@@ -586,6 +691,57 @@ func _show_system_status(text: String) -> void:
 	_hide_dialogue_text()
 	_set_status_message(text)
 
+func _on_subtitle_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mouse_event := event as InputEventMouseButton
+	if mouse_event.button_index != MOUSE_BUTTON_LEFT or not mouse_event.pressed:
+		return
+	_on_subtitle_clicked()
+
+func _on_subtitle_clicked() -> void:
+	# While the typewriter is running, click skips to the full line immediately.
+	if dialogue_typewriter_active:
+		_finish_dialogue_typewriter()
+		return
+	# With exactly one choice (a "Continue"-type advance), click the subtitle
+	# to auto-select it — no button is shown.
+	if current_choice_payloads.size() == 1:
+		_on_choice_selected(current_choice_payloads[0].duplicate(true))
+		return
+	# Terminal node (0 choices, e.g. ep00_close): dismiss the card and enter
+	# idle co-presence mode so the player isn't stuck.
+	if current_choice_payloads.is_empty() and current_node_id != "idle":
+		_hide_dialogue_text()
+		current_node_id = "idle"
+
+func _toggle_chat_history() -> void:
+	if chat_history_panel == null:
+		return
+	chat_history_panel.visible = not chat_history_panel.visible
+	if chat_history_panel.visible:
+		_scroll_history_to_bottom()
+
+func _append_history_entry(text: String) -> void:
+	chat_history.append(text)
+	if chat_history_rows == null:
+		return
+	var entry := Label.new()
+	entry.text = text
+	entry.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	entry.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	entry.add_theme_color_override("font_color", Color(0.901961, 0.811765, 0.682353, 0.88))
+	entry.add_theme_font_size_override("font_size", 13)
+	chat_history_rows.add_child(entry)
+	_scroll_history_to_bottom()
+
+func _scroll_history_to_bottom() -> void:
+	var scroll := get_node_or_null("ChatHistoryPanel/Margin/VBox/Scroll")
+	if not (scroll is ScrollContainer):
+		return
+	await get_tree().process_frame
+	(scroll as ScrollContainer).scroll_vertical = 999999
+
 func _show_todo_status(_text: String) -> void:
 	# No-op since the toast label was removed; the bottom counter on the new
 	# tasks panel replaces this feedback. Kept as a no-op so any straggling
@@ -595,10 +751,24 @@ func _show_todo_status(_text: String) -> void:
 func _set_dialogue_text(text: String) -> void:
 	if dialogue_text == null:
 		return
+	text = _apply_text_tokens(text)
 	dialogue_text.text = text
 	_start_dialogue_typewriter(text)
 	if dialogue_card != null:
 		dialogue_card.visible = not text.strip_edges().is_empty()
+	if not text.strip_edges().is_empty():
+		_append_history_entry(text)
+
+# Substitutes authored text tokens at render time. Today only {focus_minutes}:
+# the whole-minute length of the just-completed focus session. When there's no
+# usable value (e.g. the 3-second test chip), swap the known token-bearing phrase
+# for a clean fallback and strip any stray token so no "{focus_minutes}" leaks.
+func _apply_text_tokens(text: String) -> String:
+	if not text.contains("{focus_minutes}"):
+		return text
+	if last_completed_focus_minutes > 0:
+		return text.replace("{focus_minutes}", str(last_completed_focus_minutes))
+	return text.replace("很充实，这 {focus_minutes} 分钟值了！", "很充实，坐得住！").replace("{focus_minutes}", "")
 
 func _hide_dialogue_text() -> void:
 	dialogue_typewriter_active = false
@@ -648,6 +818,8 @@ func _finish_dialogue_typewriter() -> void:
 	pending_choice_payloads = []
 	if not choices_to_show.is_empty():
 		_render_choices_now(choices_to_show)
+	else:
+		_update_response_slot_visibility(false)
 
 func _style_choice_button(choice_button: Button) -> void:
 	var normal_style := _make_choice_style(Color(0.24, 0.17, 0.19, 0.84), Color(1.0, 0.84, 0.72, 0.24))
@@ -678,17 +850,43 @@ func _on_character_clicked() -> void:
 		_show_focus_click_line()
 		return
 
-	if current_node_id == "idle":
-		var click_intro_id := intro_node_id if scripted_dialogue_manager.has_dialogue_node(intro_node_id) else "return_open_01"
-		_show_node(click_intro_id)
+	# A click that opens talk is a light interaction: remembered + ambient warmth,
+	# never story progress. (Clicks during focus go to the reactive pool above.)
+	_note_meaningful_interaction()
+
+	# If a line is still typing, reveal it fully first — don't act on the click yet.
+	# (Prevents a click from skipping past a terminal payoff line into a re-engage.)
+	if dialogue_typewriter_active:
+		_finish_dialogue_typewriter()
 		return
 
-	_set_status_message("")
-	if current_ai_mode_id.is_empty():
-		_set_dialogue_text("我在。先选一个回复，或者在下面写你自己的话。")
-	else:
+	# Re-enter the conversation whenever it's closed: either truly idle, OR sitting
+	# on a finished terminal node (an episode/greeting that ended with empty choices).
+	# Resolve a real line — greeting / return / next available beat — then surface
+	# any pending memory follow-up. This is the fix for the old dead-end where
+	# clicking Yua after an episode hit a legacy "先选一个回复" meta line.
+	if current_node_id == "idle" or current_choice_payloads.is_empty():
+		current_node_id = "idle"
+		var start_id := _resolve_start_node_id()
+		if start_id == "idle" or not scripted_dialogue_manager.has_dialogue_node(start_id):
+			start_id = intro_node_id if scripted_dialogue_manager.has_dialogue_node(intro_node_id) else "return_open_01"
+		_show_node(start_id)
+		_maybe_show_follow_up()
+		return
+
+	# Single "continue"-type choice: clicking Yua advances it, same as tapping the
+	# card (keeps the 1-choice intro nodes responsive to a Yua click).
+	if current_choice_payloads.size() == 1:
+		_on_choice_selected(current_choice_payloads[0].duplicate(true))
+		return
+
+	# Multi-choice mid-conversation. In Type Mode, nudge gently toward the
+	# input/buttons; otherwise leave the visible choices to stand on their own
+	# (no meta line — clicking Yua must never dead-end).
+	if not current_ai_mode_id.is_empty():
+		_set_status_message("")
 		_set_dialogue_text("我在。想继续自己写就继续，不想的话也可以回到按钮。")
-	_play_voice_for_line("prompt_pick_response", dialogue_text.text)
+		_play_voice_for_line("prompt_pick_response", dialogue_text.text)
 
 func _show_focus_click_line() -> void:
 	var pool: PackedStringArray = _reactive_pool("focus_click")
@@ -733,6 +931,97 @@ func _apply_choice_flags(choice_data: Dictionary) -> void:
 		return
 	for key in flag_data.keys():
 		memory_manager.call("set_story_flag", str(key), flag_data[key])
+
+# Apply node-level `set_flags` (preserved by ScriptedDialogueManager) when a node
+# is shown. This is how authored milestones mark themselves, e.g. ep00_close sets
+# `intro_seen`. AI never reaches this path — only authored nodes set flags.
+func _apply_node_flags(node_data: Dictionary) -> void:
+	if memory_manager == null or not memory_manager.has_method("set_story_flag"):
+		return
+	var flags = node_data.get("set_flags", {})
+	if typeof(flags) != TYPE_DICTIONARY:
+		return
+	for key in flags.keys():
+		memory_manager.call("set_story_flag", str(key), flags[key])
+
+func _current_node_has_tag(tag: String) -> bool:
+	if scripted_dialogue_manager == null:
+		return false
+	var node_data: Dictionary = scripted_dialogue_manager.get_dialogue_node(current_node_id)
+	var tags: Array = node_data.get("tags", [])
+	return tags.has(tag)
+
+# Light interaction bookkeeping. Remembered + small ambient warmth, but it NEVER
+# advances yua_openness or story flags — those come from focus only (see
+# docs/Milestone_Contract_VS01.md and AGENTS.md). Called only on real, player-
+# initiated interactions (a click that opens talk, a Type Mode send, a task
+# entry), so pure AFK idling never bumps these counters.
+func _note_meaningful_interaction() -> void:
+	var now_unix := int(Time.get_unix_time_from_system())
+	engaged_interaction_count += 1
+	if _last_interaction_unix > 0:
+		var gap := now_unix - _last_interaction_unix
+		if gap > 0:
+			engaged_time_seconds += mini(gap, ENGAGED_GAP_CAP_SECONDS)
+	_last_interaction_unix = now_unix
+	last_meaningful_interaction_at = Time.get_datetime_string_from_system()
+	_save_persistent_state()
+
+# Capture the nickname the player types at the Ep0 name node (tagged NAME_INPUT_TAG
+# in the JSON). Stored as a value, not a flag (contract: player_nickname, nullable).
+# Then advance via the node's authored first choice so its set_flags still apply.
+func _capture_player_nickname(nickname: String) -> void:
+	var clean := nickname.strip_edges()
+	if clean.is_empty():
+		return
+	player_nickname = clean
+	_note_meaningful_interaction()
+	var node_data: Dictionary = scripted_dialogue_manager.get_dialogue_node(current_node_id)
+	var choices: Array = node_data.get("choices", [])
+	var next_id := ""
+	if not choices.is_empty() and typeof(choices[0]) == TYPE_DICTIONARY:
+		next_id = str((choices[0] as Dictionary).get("next", ""))
+	if next_id.is_empty() or not scripted_dialogue_manager.has_dialogue_node(next_id):
+		next_id = "ep00_close" if scripted_dialogue_manager.has_dialogue_node("ep00_close") else _safe_node_id()
+	_show_node(next_id)
+
+# Relationship progress is advanced ONLY here (on a completed focus). Monotonic.
+func _apply_focus_completion_progress() -> void:
+	# Whole-minute length of the session that just finished, for the {focus_minutes}
+	# token (e.g. ep01_01's "这 {focus_minutes} 分钟值了"). 0 for the 3-sec test chip.
+	last_completed_focus_minutes = int(round(focus_duration_seconds / 60.0))
+	var tier := ProgressionGate.openness_tier_for(completed_focus_sessions, total_focus_seconds)
+	yua_openness = maxi(yua_openness, tier)
+
+# Snapshot of deterministic progression state for ProgressionGate. Note: no idle
+# or light-interaction inputs — only focus, returns, flags, and memory presence.
+func _build_progression_state() -> Dictionary:
+	var flags: Dictionary = {}
+	var memory_has := false
+	if memory_manager != null:
+		if memory_manager.has_method("get_story_flags"):
+			flags = memory_manager.call("get_story_flags")
+		if memory_manager.has_method("has_valid_memory"):
+			memory_has = bool(memory_manager.call("has_valid_memory"))
+	return {
+		"completed_focus_count": completed_focus_sessions,
+		"total_focus_seconds": total_focus_seconds,
+		"return_count": return_count,
+		"intro_seen": bool(flags.get("intro_seen", false)) or has_seen_intro,
+		"story_flags": flags,
+		"has_valid_memory": memory_has,
+		"memory_echo_cooldown_active": false
+	}
+
+# Settings UI privacy hook (exposes the backend flag the UI session can flip).
+func set_ai_features_enabled(enabled: bool) -> void:
+	ai_features_enabled = enabled
+	if dialogue_router != null and dialogue_router.has_method("set_ai_allowed"):
+		dialogue_router.call("set_ai_allowed", ai_features_enabled)
+	_save_persistent_state()
+
+func is_ai_features_enabled() -> bool:
+	return ai_features_enabled
 
 func _should_use_night_exit() -> bool:
 	var now: Dictionary = Time.get_datetime_dict_from_system()
@@ -803,6 +1092,7 @@ func _set_focus_minutes_from_script(minutes: int, yua_line: String) -> void:
 
 func _start_focus_from_script() -> void:
 	focus_running = true
+	focus_started_count += 1
 	focus_click_count = 0
 	if focus_time_left <= 0.0:
 		focus_time_left = focus_duration_seconds
@@ -825,7 +1115,7 @@ func _on_ai_mode_toggled(pressed: bool) -> void:
 	_refresh_input_placeholder()
 
 func _handle_ai_mode_choice(mode_id: String) -> void:
-	if not ai_mode_toggle.button_pressed:
+	if ai_mode_toggle != null and not ai_mode_toggle.button_pressed:
 		ai_mode_toggle.button_pressed = true
 	current_ai_mode_id = mode_id
 	ai_return_node_id = _safe_node_id()
@@ -850,7 +1140,8 @@ func _return_to_scripted_node(node_id: String) -> void:
 
 	current_ai_mode_id = ""
 	ai_return_node_id = target_node_id
-	ai_mode_toggle.button_pressed = false
+	if ai_mode_toggle != null:
+		ai_mode_toggle.button_pressed = false
 	_set_status_message("")
 	_show_node(target_node_id)
 
@@ -867,23 +1158,34 @@ func _handle_player_text(raw_text: String) -> void:
 
 	player_input.clear()
 
-	if not ai_mode_toggle.button_pressed and current_node_id == "TASK_INPUT_001":
+	# Ep0 name node: a typed line becomes the player's nickname (a value, not a
+	# flag). Narrative tags that node with NAME_INPUT_TAG.
+	var type_mode_on := ai_mode_toggle != null and ai_mode_toggle.button_pressed
+	if not type_mode_on and _current_node_has_tag(NAME_INPUT_TAG):
+		_capture_player_nickname(text)
+		return
+
+	if not type_mode_on and current_node_id == "TASK_INPUT_001":
 		_capture_focus_task(text)
 		return
 
-	if ai_mode_toggle.button_pressed:
+	if type_mode_on:
+		# Presence hard gate: never call the LLM for chat during active focus —
+		# use a deterministic reactive "later" line instead (AI_Context_Packet_Spec).
+		if focus_running:
+			_show_focus_click_line()
+			return
+		_note_meaningful_interaction()
 		_set_status_message("Yua is thinking...")
 		memory_manager.process_player_message(text)
-		var memory_context: String = memory_manager.get_memory_context()
 		var mode_id := current_ai_mode_id if not current_ai_mode_id.is_empty() else current_node_id
-		var mode_context := _get_mode_context_for_node(mode_id)
+		var context_packet := _build_context_packet(mode_id)
 		var route: Dictionary = await dialogue_router.route_player_text_async(
 			text,
 			true,
-			memory_context,
 			persona_text,
+			context_packet,
 			runtime_rules_text,
-			mode_context,
 			mode_id
 		)
 		_handle_ai_route(route)
@@ -897,6 +1199,7 @@ func _capture_focus_task(task_text: String) -> void:
 	current_focus_task = task_text.strip_edges()
 	if current_focus_task.is_empty():
 		return
+	_note_meaningful_interaction()
 	memory_manager.process_player_message(current_focus_task)
 	tasks_ui.add_todo_item(current_focus_task)
 	tasks_ui.refresh_controls()
@@ -923,6 +1226,80 @@ func _get_mode_context_for_node(node_id: String) -> String:
 	if ai_modes.has("default"):
 		return str(ai_modes["default"])
 	return DEFAULT_MODE_CONTEXT
+
+# --- Layer 3 context packet (docs/AI_Context_Packet_Spec.md) ----------------
+# Assembled per-call from the single profile + the live moment. Injected after
+# persona (Layer 1+2), before runtime rules. The AI only READS these — engine
+# enforces the gates; the AI never sets a flag, advances openness, reveals the
+# writing project, or invents a memory.
+func _build_context_packet(mode_id: String) -> String:
+	var sections: Array = []
+
+	# Mode tone/intent (from ai_modes.json).
+	var mode_tone := _get_mode_context_for_node(mode_id)
+	if not mode_tone.strip_edges().is_empty():
+		sections.append(mode_tone)
+
+	# Structured per-call fields.
+	var fields: Array = []
+	fields.append("mode=%s" % mode_id)
+	fields.append("presence_state=%s" % _presence_state_for_mode(mode_id))
+	fields.append("time_bucket=%s" % _time_bucket())
+	if not player_nickname.strip_edges().is_empty():
+		fields.append("player_nickname=%s" % player_nickname)
+	if not current_focus_task.strip_edges().is_empty():
+		fields.append("current_task=%s" % current_focus_task)
+	fields.append("completed_focus_count=%d" % completed_focus_sessions)
+	fields.append("total_focus_seconds=%d" % total_focus_seconds)
+	fields.append("return_context=%s" % _return_context())
+	fields.append("yua_openness=%d" % yua_openness)
+	var writing_disclosed := false
+	if memory_manager != null and memory_manager.has_method("get_story_flag"):
+		writing_disclosed = bool(memory_manager.call("get_story_flag", "yua_opened_once", false))
+	fields.append("writing_disclosed=%s" % ("true" if writing_disclosed else "false"))
+	var surfaced := _select_surfaced_memory()
+	fields.append("surfaced_memory=%s" % ("none" if surfaced.is_empty() else surfaced))
+	sections.append("[context]\n" + "\n".join(fields))
+
+	# Restate the hard gates compactly so the model honors them.
+	sections.append("[rules] Echo surfaced_memory only if it is not 'none'; never invent a memory. "
+		+ "Do not reveal or describe the writing project unless writing_disclosed=true. "
+		+ "Never act warmer/more disclosing than yua_openness allows. Never say you are an AI.")
+
+	return "\n\n".join(sections)
+
+func _presence_state_for_mode(mode_id: String) -> String:
+	if focus_running:
+		return "focus_active"
+	if mode_id == "AI_MODE_BREAK_CHAT" or mode_id == "AI_MODE_POST_SESSION":
+		return "break"
+	return "idle"
+
+func _time_bucket() -> String:
+	var hour := int(Time.get_datetime_dict_from_system().get("hour", 12))
+	if hour >= 6 and hour < 11:
+		return "morning"
+	if hour >= 11 and hour < 17:
+		return "noon"
+	if hour >= 17 and hour < 20:
+		return "evening"
+	return "night"
+
+func _return_context() -> String:
+	if previous_last_seen_unix <= 0:
+		return "new_session"
+	var elapsed := int(Time.get_unix_time_from_system()) - previous_last_seen_unix
+	if elapsed < 0:
+		return "new_session"
+	if elapsed <= 30 * 60:
+		return "short_return"
+	return "long_return"
+
+# One validated memory the game chooses to surface, or "" if none. Never invents.
+func _select_surfaced_memory() -> String:
+	if memory_manager == null or not memory_manager.has_method("get_surfaced_memory_fact"):
+		return ""
+	return str(memory_manager.call("get_surfaced_memory_fact"))
 
 func _handle_ai_route(route: Dictionary) -> void:
 	var route_text := str(route.get("text", ""))
@@ -995,10 +1372,18 @@ func _update_focus_timer() -> void:
 	focus_last_tick_ms = now_ms
 	focus_time_left -= float(elapsed_ms) / 1000.0
 
+	# Accumulate real focused time — the deterministic driver of the story.
+	_focus_seconds_accum += float(elapsed_ms) / 1000.0
+	if _focus_seconds_accum >= 1.0:
+		var whole_seconds := int(floor(_focus_seconds_accum))
+		total_focus_seconds += whole_seconds
+		_focus_seconds_accum -= float(whole_seconds)
+
 	if focus_time_left <= 0.0:
 		focus_time_left = 0.0
 		focus_running = false
 		completed_focus_sessions += 1
+		_apply_focus_completion_progress()
 		_show_focus_complete_node()
 		_refresh_focus_controls()
 		_save_persistent_state()
@@ -1006,12 +1391,15 @@ func _update_focus_timer() -> void:
 	_update_timer_label()
 
 func _show_focus_complete_node() -> void:
-	var episode_index: int = completed_focus_sessions - 1
-	if episode_index >= 0 and episode_index < episode_start_nodes.size():
-		var ep_node_id: String = episode_start_nodes[episode_index]
-		if scripted_dialogue_manager.has_dialogue_node(ep_node_id):
-			_show_node(ep_node_id)
-			return
+	# Focus is the only driver of story beats. The gate picks the eligible authored
+	# beat deterministically from saved state + the JSON episode metadata; it never
+	# forces — this fires at the natural moment a focus session ends.
+	var state := _build_progression_state()
+	var beat_node := ProgressionGate.select_focus_complete_node(state, episode_metadata)
+	if not beat_node.is_empty() and scripted_dialogue_manager.has_dialogue_node(beat_node):
+		current_story_milestone = ProgressionGate.current_milestone_label(state)
+		_show_node(beat_node)
+		return
 	if scripted_dialogue_manager.has_dialogue_node("FOCUS_DONE_REPEAT"):
 		_show_node("FOCUS_DONE_REPEAT")
 		return
@@ -1075,10 +1463,12 @@ func _pick_time_greeting_node_id() -> String:
 	return candidates[randi() % candidates.size()]
 
 func _should_use_short_return_node() -> bool:
-	if last_seen_unix <= 0:
+	# Use the PREVIOUS session's stamp, not last_seen_unix (which saves overwrite
+	# with "now" during this session — see previous_last_seen_unix).
+	if previous_last_seen_unix <= 0:
 		return false
 	var now_unix := int(Time.get_unix_time_from_system())
-	var elapsed := now_unix - last_seen_unix
+	var elapsed := now_unix - previous_last_seen_unix
 	return elapsed >= 0 and elapsed <= 30 * 60
 
 func _maybe_autosave() -> void:
@@ -1088,6 +1478,8 @@ func _maybe_autosave() -> void:
 		_save_persistent_state()
 
 func _save_persistent_state() -> void:
+	# Keep the milestone label consistent with deterministic state on every save.
+	current_story_milestone = ProgressionGate.current_milestone_label(_build_progression_state())
 	var payload := {
 		"focus_time_left": focus_time_left,
 		"focus_duration_seconds": focus_duration_seconds,
@@ -1096,8 +1488,20 @@ func _save_persistent_state() -> void:
 		"last_node_id": _safe_node_id(),
 		"has_seen_intro": has_seen_intro,
 		"demo_script_version_seen": demo_script_version_seen,
-		"completed_focus_sessions": completed_focus_sessions,
+		"completed_focus_count": completed_focus_sessions,
 		"current_focus_task": current_focus_task,
+		"total_focus_seconds": total_focus_seconds,
+		"last_completed_focus_minutes": last_completed_focus_minutes,
+		"focus_started_count": focus_started_count,
+		"engaged_interaction_count": engaged_interaction_count,
+		"engaged_time_seconds": engaged_time_seconds,
+		"last_meaningful_interaction_at": last_meaningful_interaction_at,
+		"return_count": return_count,
+		"current_story_milestone": current_story_milestone,
+		"yua_openness": yua_openness,
+		"player_nickname": player_nickname,
+		"ai_features_enabled": ai_features_enabled,
+		"last_seen_at": Time.get_datetime_string_from_system(),
 		"last_seen_unix": int(Time.get_unix_time_from_system()),
 		"music_track_index": music_bar.get_track_index(),
 		"music_paused": music_bar.is_paused(),
@@ -1105,6 +1509,7 @@ func _save_persistent_state() -> void:
 		"voice_enabled": voice_enabled,
 		"ui_language": ui_language,
 		"dialogue_typewriter_chars_per_second": dialogue_typewriter_chars_per_second,
+		"task_panel_layout_version": TASK_PANEL_LAYOUT_VERSION,
 		"todo_panel_left": tasks_ui.get_panel_left(),
 		"todo_panel_top": tasks_ui.get_panel_top(),
 		"tasks_panel_visible": tasks_ui.is_panel_visible()
@@ -1129,9 +1534,25 @@ func _load_persistent_state() -> void:
 	current_node_id = str(data.get("last_node_id", "idle"))
 	has_seen_intro = bool(data.get("has_seen_intro", false))
 	demo_script_version_seen = int(data.get("demo_script_version_seen", 0))
-	completed_focus_sessions = int(data.get("completed_focus_sessions", 0))
+	# Canonical save key is completed_focus_count; fall back to the legacy name.
+	completed_focus_sessions = int(data.get("completed_focus_count", data.get("completed_focus_sessions", 0)))
 	current_focus_task = str(data.get("current_focus_task", ""))
 	last_seen_unix = int(data.get("last_seen_unix", 0))
+	previous_last_seen_unix = last_seen_unix  # snapshot before saves overwrite it
+	total_focus_seconds = int(data.get("total_focus_seconds", 0))
+	last_completed_focus_minutes = int(data.get("last_completed_focus_minutes", 0))
+	focus_started_count = int(data.get("focus_started_count", 0))
+	engaged_interaction_count = int(data.get("engaged_interaction_count", 0))
+	engaged_time_seconds = int(data.get("engaged_time_seconds", 0))
+	last_meaningful_interaction_at = str(data.get("last_meaningful_interaction_at", ""))
+	return_count = int(data.get("return_count", 0))
+	yua_openness = int(data.get("yua_openness", 0))
+	current_story_milestone = str(data.get("current_story_milestone", ""))
+	player_nickname = str(data.get("player_nickname", ""))
+	ai_features_enabled = bool(data.get("ai_features_enabled", true))
+	# Count this launch as a return once, if we've met Yua before.
+	if has_seen_intro and last_seen_unix > 0:
+		return_count += 1
 	current_ai_mode_id = ""
 	ai_return_node_id = current_node_id
 	var loaded_music_index := int(data.get("music_track_index", 0))
@@ -1149,7 +1570,8 @@ func _load_persistent_state() -> void:
 	suppress_settings_save = true
 	text_speed_slider.value = dialogue_typewriter_chars_per_second
 	suppress_settings_save = false
-	if data.has("todo_panel_left") or data.has("todo_panel_top"):
+	var can_restore_task_panel_layout := int(data.get("task_panel_layout_version", 0)) == TASK_PANEL_LAYOUT_VERSION
+	if can_restore_task_panel_layout and (data.has("todo_panel_left") or data.has("todo_panel_top")):
 		tasks_ui.apply_panel_offsets(
 			float(data.get("todo_panel_left", tasks_ui.get_panel_left())),
 			float(data.get("todo_panel_top", tasks_ui.get_panel_top()))
@@ -1265,6 +1687,7 @@ func _reactive_pool(category: String) -> PackedStringArray:
 # ============================================================================
 const DEBUG_TIMELINE_ENABLED := true
 var _debug_timeline_panel: PanelContainer = null
+var _debug_ep_input: LineEdit = null
 
 func _debug_timeline_entries() -> Array:
 	# Build from intro_node_id + episode_metadata (loaded from scripted_nodes.json).
@@ -1331,15 +1754,27 @@ func _debug_timeline_setup() -> void:
 	title.add_theme_color_override("font_color", Color(1, 0.85, 0.4))
 	hbox.add_child(title)
 
-	for entry in _debug_timeline_entries():
-		var button := Button.new()
-		var label_text := str(entry.get("label", "Ep ?"))
-		var node_id := str(entry.get("node", ""))
-		var session_count := int(entry.get("session_count", 0))
-		button.text = label_text
-		button.custom_minimum_size = Vector2(0, 24)
-		button.pressed.connect(_debug_timeline_jump.bind(node_id, session_count))
-		hbox.add_child(button)
+	# Compact jumper: type an episode number (0 = intro) and Go, or Next Ep.
+	# Replaces the old 15-button row (Ep0 + 14 episodes was too wide).
+	var ep_input := LineEdit.new()
+	ep_input.placeholder_text = "EP"
+	ep_input.custom_minimum_size = Vector2(44, 24)
+	ep_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ep_input.text_submitted.connect(func(_submitted): _debug_timeline_go())
+	hbox.add_child(ep_input)
+	_debug_ep_input = ep_input
+
+	var go_button := Button.new()
+	go_button.text = "Go"
+	go_button.custom_minimum_size = Vector2(0, 24)
+	go_button.pressed.connect(_debug_timeline_go)
+	hbox.add_child(go_button)
+
+	var next_button := Button.new()
+	next_button.text = "Next Ep"
+	next_button.custom_minimum_size = Vector2(0, 24)
+	next_button.pressed.connect(_debug_timeline_next)
+	hbox.add_child(next_button)
 
 	var reset_button := Button.new()
 	reset_button.text = "Reset Save"
@@ -1371,6 +1806,25 @@ func _debug_timeline_jump(node_id: String, session_count: int) -> void:
 	_show_node(node_id)
 	_set_status_message("DEBUG: jumped to %s (sessions=%d)" % [node_id, session_count])
 	_save_persistent_state()
+
+func _debug_timeline_go() -> void:
+	if _debug_ep_input == null:
+		return
+	var text := _debug_ep_input.text.strip_edges()
+	if text.is_empty() or not text.is_valid_int():
+		_set_status_message("DEBUG: enter an episode number (0 = intro).")
+		return
+	_debug_jump_to_episode(int(text))
+
+func _debug_timeline_next() -> void:
+	_debug_jump_to_episode(completed_focus_sessions + 1)
+
+# N == 0 -> intro; otherwise epNN_01. session_count = N. Reuses _debug_timeline_jump
+# (which validates the node exists and falls back with a status message if not).
+func _debug_jump_to_episode(n: int) -> void:
+	var episode_index := maxi(n, 0)
+	var node_id := intro_node_id if episode_index == 0 else ("ep%02d_01" % episode_index)
+	_debug_timeline_jump(node_id, episode_index)
 
 func _debug_timeline_reset_save() -> void:
 	var paths := [

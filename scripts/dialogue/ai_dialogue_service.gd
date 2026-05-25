@@ -139,22 +139,23 @@ class PoeAiProvider extends AiProvider:
 		return await service._request_chat_completion(payload, api_key, endpoint_url, provider_name, timeout_seconds)
 
 	func _build_messages(request: Dictionary) -> Array:
+		# Prompt assembly order (docs/AI_Context_Packet_Spec.md):
+		#   1. persona  = Layer 1 personality + Layer 2 world
+		#   2. context_packet = Layer 3 per-call context block
+		#   3. runtime_rules
+		#   4. the player's message
 		var messages: Array = []
 		var persona: String = str(request.get("persona", ""))
 		if not persona.is_empty():
 			messages.append({"role": "system", "content": persona})
 
-		var memory_context: String = str(request.get("memory_context", ""))
-		if not memory_context.is_empty():
-			messages.append({"role": "system", "content": memory_context})
+		var context_packet: String = str(request.get("context_packet", ""))
+		if not context_packet.is_empty():
+			messages.append({"role": "system", "content": context_packet})
 
 		var runtime_rules: String = str(request.get("runtime_rules", ""))
 		if not runtime_rules.is_empty():
 			messages.append({"role": "system", "content": runtime_rules})
-
-		var mode_context: String = str(request.get("mode_context", ""))
-		if not mode_context.is_empty():
-			messages.append({"role": "system", "content": mode_context})
 
 		messages.append({
 			"role": "user",

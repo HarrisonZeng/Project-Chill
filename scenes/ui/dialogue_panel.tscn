@@ -1,181 +1,144 @@
 [gd_scene format=3 uid="uid://dlvbsxncwmeyp"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0, 0, 0, 0)
+[sub_resource type="StyleBoxFlat" id="StyleBox_subtitle_bg"]
+bg_color = Color(0.0, 0.0, 0.0, 0.46)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_choice"]
-bg_color = Color(0.25, 0.18, 0.2, 0.82)
+[sub_resource type="StyleBoxFlat" id="StyleBox_input"]
+bg_color = Color(0.1, 0.075, 0.09, 0.82)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(1, 0.82, 0.68, 0.32)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_text"]
-bg_color = Color(0.22, 0.15, 0.17, 0.86)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.82, 0.68, 0.36)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_response"]
-bg_color = Color(0.14, 0.09, 0.11, 0.74)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.82, 0.68, 0.3)
+border_color = Color(1.0, 0.752941, 0.596078, 0.4)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
-bg_color = Color(0.1, 0.075, 0.09, 0.86)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.752941, 0.596078, 0.4)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-
-[node name="DialoguePanel" type="PanelContainer" unique_id=1102142510]
-custom_minimum_size = Vector2(0, 166)
+[node name="DialoguePanel" type="Control" unique_id=1102142510]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+mouse_filter = 2
 
-[node name="Margin" type="MarginContainer" parent="." unique_id=45148882]
-layout_mode = 2
-theme_override_constants/margin_left = 0
-theme_override_constants/margin_top = 0
-theme_override_constants/margin_right = 0
-theme_override_constants/margin_bottom = 0
+[node name="DialogueCard" type="PanelContainer" parent="." unique_id=480828083]
+layout_mode = 1
+anchor_left = 0.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 480.0
+offset_right = -488.0
+offset_top = -278.0
+offset_bottom = -112.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/panel = SubResource("StyleBox_subtitle_bg")
 
-[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=804107933]
+[node name="DialogueMargin" type="MarginContainer" parent="DialogueCard" unique_id=1273634983]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 12
 
-[node name="HeaderRow" type="HBoxContainer" parent="Margin/VBox" unique_id=1153295238]
-visible = false
+[node name="DialogueText" type="RichTextLabel" parent="DialogueCard/DialogueMargin" unique_id=1283719266]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="SpeakerBadge" type="PanelContainer" parent="Margin/VBox/HeaderRow" unique_id=776413198]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_choice")
-
-[node name="SpeakerMargin" type="MarginContainer" parent="Margin/VBox/HeaderRow/SpeakerBadge" unique_id=840734102]
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 6
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 6
-
-[node name="SpeakerLabel" type="Label" parent="Margin/VBox/HeaderRow/SpeakerBadge/SpeakerMargin" unique_id=554241519]
-layout_mode = 2
-text = "Yua"
-
-[node name="ModeHint" type="Label" parent="Margin/VBox/HeaderRow" unique_id=1307756360]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Choose a reply, or type when you want to."
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="DialogueCard" type="PanelContainer" parent="Margin/VBox" unique_id=480828083]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_text")
-
-[node name="DialogueMargin" type="MarginContainer" parent="Margin/VBox/DialogueCard" unique_id=1273634983]
-layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 10
-
-[node name="DialogueText" type="RichTextLabel" parent="Margin/VBox/DialogueCard/DialogueMargin" unique_id=1283719266]
-custom_minimum_size = Vector2(0, 34)
-layout_mode = 2
-text = "Dialogue will appear here."
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.960784, 0.921569, 0.862745, 1.0)
+theme_override_font_sizes/normal_font_size = 20
+text = ""
 fit_content = true
 scroll_active = false
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="PromptLabel" type="Label" parent="Margin/VBox" unique_id=2009566140]
+[node name="ResponseCard" type="Control" parent="." unique_id=1792622167]
 visible = false
-layout_mode = 2
-text = "Tap a reply, or type below when you want your own words."
-horizontal_alignment = 1
+layout_mode = 1
+anchor_left = 0.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 480.0
+offset_right = -488.0
+offset_top = -74.0
+offset_bottom = -28.0
+grow_horizontal = 2
+mouse_filter = 2
 
-[node name="ResponseCard" type="PanelContainer" parent="Margin/VBox" unique_id=1792622167]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_response")
-
-[node name="ResponseMargin" type="MarginContainer" parent="Margin/VBox/ResponseCard" unique_id=902684418]
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 8
-
-[node name="ResponseVBox" type="VBoxContainer" parent="Margin/VBox/ResponseCard/ResponseMargin" unique_id=1961499632]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="StatusLabel" type="Label" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox" unique_id=1488762001]
+[node name="StatusLabel" type="Label" parent="ResponseCard" unique_id=1488762001]
 visible = false
-layout_mode = 2
-text = "System status appears here."
+layout_mode = 1
+anchor_right = 1.0
+offset_top = 4.0
+offset_bottom = 28.0
+theme_override_colors/font_color = Color(0.901961, 0.811765, 0.682353, 0.8)
+theme_override_font_sizes/font_size = 13
+text = ""
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="ChoiceList" type="GridContainer" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox" unique_id=1605307871]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/h_separation = 6
-theme_override_constants/v_separation = 5
-columns = 2
-
-[node name="InputRow" type="HBoxContainer" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox" unique_id=1912003737]
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
+[node name="ChoiceList" type="HBoxContainer" parent="ResponseCard" unique_id=1605307871]
+visible = false
+layout_mode = 1
+anchor_left = 0.0
+anchor_right = 1.0
+anchor_top = 0.0
+anchor_bottom = 1.0
+offset_top = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 8
+mouse_filter = 2
 
-[node name="PlayerInput" type="LineEdit" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/InputRow" unique_id=1400556828]
-custom_minimum_size = Vector2(0, 32)
+[node name="InputRow" type="HBoxContainer" parent="." unique_id=1912003737]
+visible = false
+layout_mode = 1
+anchor_left = 0.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 480.0
+offset_right = -488.0
+offset_top = -74.0
+offset_bottom = -28.0
+grow_horizontal = 2
+theme_override_constants/separation = 8
+mouse_filter = 2
+
+[node name="PlayerInput" type="LineEdit" parent="InputRow" unique_id=1400556828]
+custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/normal = SubResource("StyleBoxFlat_input")
-theme_override_styles/focus = SubResource("StyleBoxFlat_input")
-placeholder_text = "Type here, or use this text to add a todo."
+theme_override_styles/normal = SubResource("StyleBox_input")
+theme_override_styles/focus = SubResource("StyleBox_input")
+placeholder_text = "Type your reply"
+clear_button_enabled = true
 
-[node name="SendButton" type="Button" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/InputRow" unique_id=1286230115]
-custom_minimum_size = Vector2(64, 32)
+[node name="SendButton" type="Button" parent="InputRow" unique_id=1286230115]
+custom_minimum_size = Vector2(64, 46)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_choice")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_choice")
-theme_override_styles/hover = SubResource("StyleBoxFlat_choice")
-text = "Send"
-
-[node name="AIModeToggle" type="CheckButton" parent="Margin/VBox/ResponseCard/ResponseMargin/ResponseVBox/InputRow" unique_id=501993508]
-custom_minimum_size = Vector2(104, 32)
-layout_mode = 2
-text = "Type Mode"
+text = "发送"

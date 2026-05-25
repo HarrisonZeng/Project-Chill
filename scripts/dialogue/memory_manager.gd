@@ -44,10 +44,19 @@ const FOLLOW_UP_RULES := [
 
 var profile: Dictionary = {}
 var last_consumed_follow_up_tag: String = ""
+# Set by _load_profile_from_disk when the on-disk profile could not be parsed.
+# load_profile() copies it into profile["corrupted_save_recovery"] once loaded.
+var pending_recovery_meta: Dictionary = {}
 
 func load_profile() -> void:
 	_ensure_save_dir()
 	profile = _load_profile_from_disk()
+	# If the on-disk profile was corrupt, _load_profile_from_disk backed it up and
+	# returned a clean default. Record that so the rest of the game (and the owner)
+	# can tell a recovery happened.
+	if not pending_recovery_meta.is_empty():
+		profile["corrupted_save_recovery"] = pending_recovery_meta
+		pending_recovery_meta = {}
 	# Migrate BEFORE normalize: normalize fills profile_version from defaults,
 	# which would otherwise make the migration think it already ran.
 	_migrate_legacy_main_save()
@@ -163,10 +172,36 @@ func _ensure_profile_loaded() -> void:
 		load_profile()
 
 func _load_profile_from_disk() -> Dictionary:
+	# The real user profile gets corruption recovery; the res:// template is a
+	# read-only first-run seed, so a bad template is a dev error, not user data.
 	if FileAccess.file_exists(SAVE_PATH):
-		return _load_profile_file(SAVE_PATH)
+		return _load_user_profile_with_recovery(SAVE_PATH)
 	if FileAccess.file_exists(TEMPLATE_SAVE_PATH):
 		return _load_profile_file(TEMPLATE_SAVE_PATH)
+	return _build_default_profile()
+
+func _load_user_profile_with_recovery(path: String) -> Dictionary:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		# An existing file we cannot open (locked/permissions). Don't destroy it;
+		# start clean in memory but record that recovery happened.
+		pending_recovery_meta = _make_recovery_meta(path, "open_failed", "")
+		push_warning("memory_manager: could not open profile at %s; starting clean." % path)
+		return _build_default_profile()
+
+	var raw_text: String = file.get_as_text()
+	file.close()
+
+	var parsed: Variant = JSON.parse_string(raw_text)
+	if typeof(parsed) == TYPE_DICTIONARY:
+		return parsed
+
+	# Parse failure on the real user profile == corruption. Back up the bad bytes
+	# under a timestamped name, then start a clean profile flagged for recovery so
+	# the player never gets stuck on an unreadable save.
+	var backup_path: String = _backup_corrupt_file(path, raw_text)
+	pending_recovery_meta = _make_recovery_meta(path, "json_parse_failed", backup_path)
+	push_warning("memory_manager: corrupt profile at %s backed up to %s; starting clean." % [path, backup_path])
 	return _build_default_profile()
 
 func _load_profile_file(path: String) -> Dictionary:
@@ -179,6 +214,29 @@ func _load_profile_file(path: String) -> Dictionary:
 		return parsed
 
 	return _build_default_profile()
+
+func _backup_corrupt_file(path: String, raw_text: String) -> String:
+	# path is e.g. user://data/saves/player_profile.json
+	# -> user://data/saves/player_profile.corrupt-YYYYMMDD-HHMMSS.json
+	var backup_path: String = "%s.corrupt-%s.json" % [path.get_basename(), _timestamp_slug()]
+	var out: FileAccess = FileAccess.open(backup_path, FileAccess.WRITE)
+	if out == null:
+		return ""
+	out.store_string(raw_text)
+	out.close()
+	return backup_path
+
+func _make_recovery_meta(path: String, reason: String, backup_path: String) -> Dictionary:
+	return {
+		"recovered_at": _now_iso(),
+		"reason": reason,
+		"original_path": path,
+		"backup_path": backup_path
+	}
+
+func _timestamp_slug() -> String:
+	var now: Dictionary = Time.get_datetime_dict_from_system()
+	return "%04d%02d%02d-%02d%02d%02d" % [now.year, now.month, now.day, now.hour, now.minute, now.second]
 
 func _normalize_profile() -> void:
 	var defaults: Dictionary = _build_default_profile()
@@ -194,6 +252,19 @@ func _normalize_profile() -> void:
 	profile["follow_up_last_served_at"] = _normalize_follow_up_history(profile.get("follow_up_last_served_at", {}))
 	profile["memories"] = _normalize_memories(profile.get("memories", []))
 	profile["story_flags"] = _normalize_story_flags(profile.get("story_flags", {}))
+	# --- Vertical Slice 01 progression / co-presence fields ---
+	profile["last_seen_at"] = str(profile.get("last_seen_at", ""))
+	profile["last_meaningful_interaction_at"] = str(profile.get("last_meaningful_interaction_at", ""))
+	profile["return_count"] = int(profile.get("return_count", 0))
+	profile["engaged_interaction_count"] = int(profile.get("engaged_interaction_count", 0))
+	profile["engaged_time_seconds"] = int(profile.get("engaged_time_seconds", 0))
+	profile["focus_started_count"] = int(profile.get("focus_started_count", 0))
+	# Reconcile to the canonical name; migrate the legacy var spelling once.
+	profile["completed_focus_count"] = int(profile.get("completed_focus_count", profile.get("completed_focus_sessions", 0)))
+	profile["total_focus_seconds"] = int(profile.get("total_focus_seconds", 0))
+	profile["current_story_milestone"] = str(profile.get("current_story_milestone", ""))
+	profile["yua_openness"] = int(profile.get("yua_openness", 0))
+	profile["player_nickname"] = str(profile.get("player_nickname", ""))
 	_prune_memory_cache()
 	_refresh_recent_summary()
 
@@ -285,7 +356,21 @@ func _build_default_profile() -> Dictionary:
 		"follow_up_last_served_at": {},
 		"recent_summary": "",
 		"memories": [],
-		"story_flags": {}
+		"story_flags": {},
+		# --- Vertical Slice 01 progression / co-presence fields ---
+		"last_seen_at": "",
+		"last_meaningful_interaction_at": "",
+		"return_count": 0,
+		"engaged_interaction_count": 0,
+		"engaged_time_seconds": 0,
+		"focus_started_count": 0,
+		"completed_focus_count": 0,
+		"total_focus_seconds": 0,
+		"current_story_milestone": "",
+		"yua_openness": 0,
+		"player_nickname": ""
+		# corrupted_save_recovery is intentionally absent here — it only appears
+		# after a recovery actually happens (see _load_user_profile_with_recovery).
 	}
 
 func set_story_flag(key: String, value) -> void:
@@ -307,6 +392,44 @@ func get_story_flag(key: String, default_value = null):
 func get_story_flags() -> Dictionary:
 	_ensure_profile_loaded()
 	return _normalize_story_flags(profile.get("story_flags", {})).duplicate(true)
+
+# --- Relationship / nickname accessors (domain save concepts) ---------------
+
+func get_player_nickname() -> String:
+	_ensure_profile_loaded()
+	return str(profile.get("player_nickname", ""))
+
+func set_player_nickname(nickname: String) -> void:
+	_ensure_profile_loaded()
+	profile["player_nickname"] = nickname.strip_edges()
+	save_profile()
+
+func get_yua_openness() -> int:
+	_ensure_profile_loaded()
+	return int(profile.get("yua_openness", 0))
+
+func set_yua_openness(value: int) -> void:
+	# Relationship progress is monotonic for the slice — it never regresses, and
+	# (per the milestone contract) it is advanced ONLY by completed focus, never
+	# by clicks or Type Mode. Callers enforce the focus-only rule.
+	_ensure_profile_loaded()
+	profile["yua_openness"] = maxi(int(profile.get("yua_openness", 0)), value)
+	save_profile()
+
+# True only when at least one real, game-validated memory exists. The memory-echo
+# beat must consult this and stay silent otherwise — never fabricate a callback.
+func has_valid_memory() -> bool:
+	_ensure_profile_loaded()
+	return _normalize_memories(profile.get("memories", [])).size() > 0
+
+# The single most-recent validated memory fact to surface this turn, or "" if
+# there is none. This is the ONLY memory the AI may echo (see AI_Context_Packet_Spec).
+func get_surfaced_memory_fact() -> String:
+	_ensure_profile_loaded()
+	var facts: Array = _collect_recent_memory_facts(1)
+	if facts.is_empty():
+		return ""
+	return str(facts[0])
 
 func _normalize_story_flags(raw_value) -> Dictionary:
 	if typeof(raw_value) != TYPE_DICTIONARY:
