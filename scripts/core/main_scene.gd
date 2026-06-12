@@ -111,6 +111,11 @@ var suppress_settings_save: bool = false
 var dialogue_typewriter_active: bool = false
 var dialogue_typewriter_timer: float = 0.0
 var dialogue_typewriter_total_chars: int = 0
+# Movie-style paragraph beats: a dialogue line is split on blank lines into
+# beats shown one at a time; the player clicks to advance to the next beat, and
+# choices only appear after the final beat.
+var dialogue_beats: Array = []
+var dialogue_beat_index: int = 0
 var pending_choice_payloads: Array = []
 var current_choice_payloads: Array = []
 
@@ -227,7 +232,7 @@ func _setup_dialogue_services() -> void:
 	if poe_api_key.is_empty():
 		ai_dialogue_service.use_mock_provider()
 	else:
-		ai_dialogue_service.use_chat_completion_provider(poe_api_key, "minimax-m2.5")
+		ai_dialogue_service.use_chat_completion_provider(poe_api_key, "minimax-m2.7")
 
 	dialogue_router = preload("res://scripts/core/dialogue_router.gd").new()
 	dialogue_router.set_ai_service(ai_dialogue_service)
@@ -653,26 +658,35 @@ func _clear_choice_buttons() -> void:
 		child.queue_free()
 	_update_response_slot_visibility(false)
 
-func _should_show_type_input() -> bool:
+# Type Mode is always on, so the input box is available whenever the player can
+# reply. We only auto-grab focus where typing is the expected action (name/task
+# capture, or an AI-mode chip), so it never steals focus from quick-reply chips.
+func _should_autofocus_input() -> bool:
 	if current_ai_mode_id != "":
 		return true
 	if _current_node_has_tag(NAME_INPUT_TAG):
 		return true
-	# Existing Ep0 name node predates the tag metadata; keep the UI behavior
-	# stable even if the JSON is missing tags.
+	if current_node_id == "TASK_INPUT_001":
+		return true
 	return current_node_id == "ep00_04"
 
+# Always-on Type Mode: once a line finishes typing (and we're not mid-focus), the
+# input box is shown, and scripted choice chips are shown alongside it when the
+# node has them. The two live in stacked bands so they no longer fight for one slot.
 func _update_response_slot_visibility(has_visible_choices: bool = false) -> void:
-	var allow_response_slot := not dialogue_typewriter_active
-	var show_choices := allow_response_slot and has_visible_choices and not _should_show_type_input()
-	var show_type := allow_response_slot and _should_show_type_input() and not show_choices
+	var ready := not dialogue_typewriter_active and not focus_running
+	var show_choices := ready and has_visible_choices
+	var show_type := ready
 	if choice_list != null:
 		choice_list.visible = show_choices
+	# ResponseCard is a transparent container; keep it parent-visible while ready so
+	# its children (the status label "Yua is thinking..." and any choice chips) can
+	# render. The children manage their own visibility individually.
 	if response_card != null:
-		response_card.visible = show_choices
+		response_card.visible = ready
 	if input_row != null:
 		input_row.visible = show_type
-	if show_type and player_input != null and not player_input.has_focus():
+	if show_type and _should_autofocus_input() and player_input != null and not player_input.has_focus():
 		player_input.grab_focus()
 
 func _enter_scripted_mode() -> void:
@@ -700,9 +714,13 @@ func _on_subtitle_input(event: InputEvent) -> void:
 	_on_subtitle_clicked()
 
 func _on_subtitle_clicked() -> void:
-	# While the typewriter is running, click skips to the full line immediately.
+	# While the typewriter is running, click skips to the full beat immediately.
 	if dialogue_typewriter_active:
 		_finish_dialogue_typewriter()
+		return
+	# Beat finished but more remain: click reveals the next paragraph.
+	if _has_more_beats():
+		_advance_to_next_beat()
 		return
 	# With exactly one choice (a "Continue"-type advance), click the subtitle
 	# to auto-select it — no button is shown.
@@ -752,18 +770,44 @@ func _set_dialogue_text(text: String) -> void:
 	if dialogue_text == null:
 		return
 	text = _apply_text_tokens(text)
-	dialogue_text.text = text
-	_start_dialogue_typewriter(text)
 	if dialogue_card != null:
 		dialogue_card.visible = not text.strip_edges().is_empty()
 	if not text.strip_edges().is_empty():
 		_append_history_entry(text)
+	# A new line resets any deferred/visible choices; they re-appear after the
+	# final beat finishes (see _finish_dialogue_typewriter).
+	pending_choice_payloads.clear()
+	_clear_choice_buttons()
+	dialogue_beats = _split_into_beats(text)
+	dialogue_beat_index = 0
+	if dialogue_beats.is_empty():
+		dialogue_text.text = text
+		dialogue_typewriter_active = false
+		dialogue_text.visible_characters = -1
+		return
+	_begin_beat_typewriter()
 
 # Substitutes authored text tokens at render time. Today only {focus_minutes}:
 # the whole-minute length of the just-completed focus session. When there's no
 # usable value (e.g. the 3-second test chip), swap the known token-bearing phrase
 # for a clean fallback and strip any stray token so no "{focus_minutes}" leaks.
 func _apply_text_tokens(text: String) -> String:
+	text = _apply_name_token(text)
+	text = _apply_focus_minutes_token(text)
+	return text
+
+# {name} → the nickname the player gave at Ep0. When there's no nickname (e.g. a
+# save from before this feature, or a skipped name), drop the token and tidy the
+# adjacent separator so authored lines still read cleanly.
+func _apply_name_token(text: String) -> String:
+	if not text.contains("{name}"):
+		return text
+	var nick := player_nickname.strip_edges()
+	if not nick.is_empty():
+		return text.replace("{name}", nick)
+	return text.replace("{name}，", "").replace("，{name}", "").replace("{name}", "")
+
+func _apply_focus_minutes_token(text: String) -> String:
 	if not text.contains("{focus_minutes}"):
 		return text
 	if last_completed_focus_minutes > 0:
@@ -774,27 +818,53 @@ func _hide_dialogue_text() -> void:
 	dialogue_typewriter_active = false
 	dialogue_typewriter_timer = 0.0
 	dialogue_typewriter_total_chars = 0
+	dialogue_beats = []
+	dialogue_beat_index = 0
 	pending_choice_payloads.clear()
 	if dialogue_text != null:
 		dialogue_text.text = ""
 		dialogue_text.visible_characters = -1
 	if dialogue_card != null:
 		dialogue_card.visible = false
-
-func _start_dialogue_typewriter(text: String) -> void:
-	pending_choice_payloads.clear()
 	_clear_choice_buttons()
+	if choice_list != null:
+		choice_list.visible = false
+	if response_card != null:
+		response_card.visible = false
+	if input_row != null:
+		input_row.visible = false
 
-	var clean_text := text.strip_edges()
-	if clean_text.is_empty():
-		dialogue_typewriter_active = false
-		dialogue_text.visible_characters = -1
+# Split a line into paragraph beats on blank lines. Single-paragraph lines yield
+# one beat, so they behave exactly as before (type out, then show choices).
+func _split_into_beats(text: String) -> Array:
+	var beats: Array = []
+	for chunk in text.split("\n\n"):
+		var trimmed := str(chunk).strip_edges()
+		if not trimmed.is_empty():
+			beats.append(trimmed)
+	return beats
+
+func _has_more_beats() -> bool:
+	return dialogue_beat_index < dialogue_beats.size() - 1
+
+func _advance_to_next_beat() -> void:
+	if not _has_more_beats():
 		return
+	dialogue_beat_index += 1
+	_begin_beat_typewriter()
 
+# Show the current beat and start its character-by-character reveal. Does NOT
+# touch pending choices, so they survive across beats until the last one.
+func _begin_beat_typewriter() -> void:
+	if dialogue_text == null or dialogue_beats.is_empty():
+		return
+	var beat_text: String = str(dialogue_beats[dialogue_beat_index])
+	dialogue_text.text = beat_text
 	dialogue_typewriter_active = true
 	dialogue_typewriter_timer = 0.0
-	dialogue_typewriter_total_chars = text.length()
+	dialogue_typewriter_total_chars = beat_text.length()
 	dialogue_text.visible_characters = 0
+	_update_response_slot_visibility(false)
 
 func _update_dialogue_typewriter(delta: float) -> void:
 	if not dialogue_typewriter_active or dialogue_text == null:
@@ -811,6 +881,12 @@ func _finish_dialogue_typewriter() -> void:
 	if dialogue_text != null:
 		dialogue_text.visible_characters = -1
 	dialogue_typewriter_active = false
+
+	# More paragraph beats queued — hold here and wait for the player to click to
+	# advance. Choices stay deferred until the final beat is revealed.
+	if _has_more_beats():
+		_update_response_slot_visibility(false)
+		return
 
 	var choices_to_show := pending_choice_payloads
 	if choices_to_show.is_empty() and not current_choice_payloads.is_empty() and not focus_running:
@@ -858,6 +934,11 @@ func _on_character_clicked() -> void:
 	# (Prevents a click from skipping past a terminal payoff line into a re-engage.)
 	if dialogue_typewriter_active:
 		_finish_dialogue_typewriter()
+		return
+
+	# Beat finished but more remain: clicking Yua advances the paragraph too.
+	if _has_more_beats():
+		_advance_to_next_beat()
 		return
 
 	# Re-enter the conversation whenever it's closed: either truly idle, OR sitting
@@ -1121,7 +1202,7 @@ func _handle_ai_mode_choice(mode_id: String) -> void:
 	ai_return_node_id = _safe_node_id()
 	if ai_return_node_id == "idle":
 		ai_return_node_id = "TASK_INPUT_001"
-	_set_dialogue_text("Type Mode 开着。你可以用自己的话写。")
+	_set_dialogue_text("嗯，你说，我听着。\n\n想到什么写什么就行，不用组织得多漂亮。")
 	_set_status_message("Typed replies use your own words. The buttons stay as guided replies.")
 	_render_choices([
 		{"text": "回到按钮回复", "next": ai_return_node_id, "internal_return": true}
@@ -1160,40 +1241,37 @@ func _handle_player_text(raw_text: String) -> void:
 
 	# Ep0 name node: a typed line becomes the player's nickname (a value, not a
 	# flag). Narrative tags that node with NAME_INPUT_TAG.
-	var type_mode_on := ai_mode_toggle != null and ai_mode_toggle.button_pressed
-	if not type_mode_on and _current_node_has_tag(NAME_INPUT_TAG):
+	if _current_node_has_tag(NAME_INPUT_TAG):
 		_capture_player_nickname(text)
 		return
 
-	if not type_mode_on and current_node_id == "TASK_INPUT_001":
+	# Task input node: a typed line becomes the focus task, not an AI message.
+	if current_node_id == "TASK_INPUT_001":
 		_capture_focus_task(text)
 		return
 
-	if type_mode_on:
-		# Presence hard gate: never call the LLM for chat during active focus —
-		# use a deterministic reactive "later" line instead (AI_Context_Packet_Spec).
-		if focus_running:
-			_show_focus_click_line()
-			return
-		_note_meaningful_interaction()
-		_set_status_message("Yua is thinking...")
-		memory_manager.process_player_message(text)
-		var mode_id := current_ai_mode_id if not current_ai_mode_id.is_empty() else current_node_id
-		var context_packet := _build_context_packet(mode_id)
-		var route: Dictionary = await dialogue_router.route_player_text_async(
-			text,
-			true,
-			persona_text,
-			context_packet,
-			runtime_rules_text,
-			mode_id
-		)
-		_handle_ai_route(route)
+	# Presence hard gate: never call the LLM for chat during active focus — use a
+	# deterministic reactive "later" line instead (AI_Context_Packet_Spec).
+	if focus_running:
+		_show_focus_click_line()
 		return
 
-	_set_dialogue_text("现在是按钮回复模式。要自己写的话，可以打开 Type Mode。")
-	_set_status_message("Use the buttons, or switch to Type Mode.")
-	_play_voice_for_line("scripted_mode_hint", dialogue_text.text)
+	# Type Mode is always on: any other typed line routes to the AI. (The old
+	# AIModeToggle checkbox was removed from the UI; there is no "off" state.)
+	_note_meaningful_interaction()
+	_set_status_message("Yua is thinking...")
+	memory_manager.process_player_message(text)
+	var mode_id := current_ai_mode_id if not current_ai_mode_id.is_empty() else current_node_id
+	var context_packet := _build_context_packet(mode_id)
+	var route: Dictionary = await dialogue_router.route_player_text_async(
+		text,
+		true,
+		persona_text,
+		context_packet,
+		runtime_rules_text,
+		mode_id
+	)
+	_handle_ai_route(route)
 
 func _capture_focus_task(task_text: String) -> void:
 	current_focus_task = task_text.strip_edges()
@@ -1255,7 +1333,7 @@ func _build_context_packet(mode_id: String) -> String:
 	fields.append("yua_openness=%d" % yua_openness)
 	var writing_disclosed := false
 	if memory_manager != null and memory_manager.has_method("get_story_flag"):
-		writing_disclosed = bool(memory_manager.call("get_story_flag", "yua_opened_once", false))
+		writing_disclosed = bool(memory_manager.call("get_story_flag", "writing_disclosed", false))
 	fields.append("writing_disclosed=%s" % ("true" if writing_disclosed else "false"))
 	var surfaced := _select_surfaced_memory()
 	fields.append("surfaced_memory=%s" % ("none" if surfaced.is_empty() else surfaced))

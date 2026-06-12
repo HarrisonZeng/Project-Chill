@@ -1,0 +1,1108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CWYL Script Viewer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f3ed;
+      --surface: #fffdf8;
+      --surface-2: #f1ebe3;
+      --ink: #24211d;
+      --muted: #6f665c;
+      --line: #d9cec2;
+      --accent: #276d73;
+      --accent-soft: #dcebec;
+      --choice: #7b5132;
+      --choice-soft: #f5e6da;
+      --response: #42683e;
+      --response-soft: #e3efdf;
+      --shadow: 0 10px 24px rgba(43, 35, 27, 0.1);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button,
+    select,
+    input[type="search"] {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      min-height: 38px;
+    }
+
+    button {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button:hover,
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    button.primary,
+    .type-button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    button.subtle {
+      background: #faf6ef;
+      color: var(--muted);
+    }
+
+    input[type="search"],
+    select {
+      width: 100%;
+      padding: 8px 10px;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      border-bottom: 1px solid var(--line);
+      background: #eee6db;
+      padding: 14px 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .top-row,
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.15;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .actions,
+    .language-toggle,
+    .type-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .language-toggle,
+    .switch {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 999px;
+      padding: 4px;
+    }
+
+    .language-toggle button {
+      border: 0;
+      min-height: 30px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .language-toggle button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 7px 10px;
+    }
+
+    .switch input {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .sidebar,
+    .content {
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: var(--surface);
+      padding: 16px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .content {
+      padding: 18px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .metric,
+    .meta-card,
+    .line-card,
+    .branch-block,
+    .empty-state {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .metric {
+      padding: 10px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .metric span,
+    .section-label,
+    .episode-sub,
+    .id,
+    .voice,
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .section-label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .ep-select-wrap {
+      display: none;
+    }
+
+    .ep-select-wrap.visible {
+      display: block;
+    }
+
+    .episode-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .episode-button {
+      width: 100%;
+      text-align: left;
+      display: grid;
+      gap: 3px;
+      padding: 9px 10px;
+      font-weight: 700;
+    }
+
+    .episode-button.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .episode-title {
+      overflow-wrap: anywhere;
+    }
+
+    .header {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .meta-card {
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .meta-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .meta-card strong {
+      display: block;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+    }
+
+    .script {
+      display: grid;
+      gap: 12px;
+      max-width: 1180px;
+    }
+
+    .line-card {
+      position: relative;
+      padding: 12px 14px;
+      width: fit-content;
+      max-width: min(760px, 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .line-card::before,
+    .branch-block::before {
+      content: "";
+      position: absolute;
+      left: -13px;
+      top: -13px;
+      bottom: -13px;
+      width: 2px;
+      background: var(--line);
+    }
+
+    .line-card:first-child::before,
+    .branch-block:first-child::before {
+      top: 12px;
+    }
+
+    .line-card.yua {
+      border-left: 4px solid var(--accent);
+    }
+
+    .line-card.system {
+      border-left: 4px solid #8b8278;
+      background: #faf7f1;
+    }
+
+    .line-top,
+    .branch-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .speaker {
+      font-weight: 900;
+    }
+
+    .text-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .text-grid.side {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .text {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    .zh {
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Inter, sans-serif;
+    }
+
+    .branch-block {
+      position: relative;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 1180px;
+    }
+
+    .branch-block .section-label {
+      margin: 0;
+    }
+
+    .branch-flow {
+      display: grid;
+      gap: 10px;
+    }
+
+    .branch-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .option-card {
+      border: 1px solid #dcc2ab;
+      background: var(--choice-soft);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .option-label,
+    .response-label {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .option-label {
+      background: var(--choice);
+      color: white;
+    }
+
+    .response-label {
+      background: var(--response);
+      color: white;
+    }
+
+    .reaction-stack {
+      display: grid;
+      gap: 8px;
+      border-top: 1px dashed #caa887;
+      padding-top: 9px;
+    }
+
+    .reaction-line {
+      border: 1px solid #bdd2b7;
+      background: var(--response-soft);
+      border-radius: 8px;
+      padding: 9px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .empty-state {
+      padding: 26px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .error {
+      border: 1px solid #ddb6b6;
+      background: #fff1f1;
+      color: #842f2f;
+      border-radius: 8px;
+      padding: 10px;
+      display: none;
+    }
+
+    .error.visible {
+      display: block;
+    }
+
+    @media (max-width: 900px) {
+      .main {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .meta-grid,
+      .text-grid.side {
+        grid-template-columns: 1fr;
+      }
+
+      .content {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="top-row">
+        <div>
+          <h1>CWYL Script Viewer</h1>
+          <div id="status" class="status">Loading extracted script data...</div>
+        </div>
+        <div class="actions">
+          <button id="autoLoadButton" class="primary" type="button">Reload data</button>
+          <button id="loadFilesButton" type="button">Load files</button>
+          <button id="snapshotButton" type="button">Save snapshot</button>
+          <input id="fileInput" class="file-input" type="file" accept=".json" multiple>
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="type-tabs" id="typeTabs"></div>
+        <div class="actions">
+          <div class="language-toggle" aria-label="Language view">
+            <button type="button" data-lang="both" class="active">EN + 中文</button>
+            <button type="button" data-lang="en">EN</button>
+            <button type="button" data-lang="zh">中文</button>
+          </div>
+          <label class="switch">
+            <input id="techToggle" type="checkbox">
+            Show technical rows
+          </label>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <aside class="sidebar">
+        <div class="error" id="errorBox"></div>
+        <div class="metrics">
+          <div class="metric"><strong id="groupCount">0</strong><span>Groups</span></div>
+          <div class="metric"><strong id="choiceCount">0</strong><span>Choice groups</span></div>
+          <div class="metric"><strong id="lineCount">0</strong><span>Text lines</span></div>
+          <div class="metric"><strong id="visibleCount">0</strong><span>Visible</span></div>
+        </div>
+
+        <div>
+          <label class="section-label" for="searchInput">Search</label>
+          <input id="searchInput" type="search" placeholder="ID, title, English, Chinese, voice...">
+        </div>
+
+        <div id="epSelectWrap" class="ep-select-wrap">
+          <label class="section-label" for="episodeSelect">Main episode</label>
+          <select id="episodeSelect"></select>
+        </div>
+
+        <div>
+          <div class="section-label">Episodes / line pools</div>
+          <div id="episodeList" class="episode-list"></div>
+        </div>
+      </aside>
+
+      <section class="content">
+        <div id="episodeHeader" class="header"></div>
+        <div id="scriptView" class="script"></div>
+      </section>
+    </main>
+  </div>
+
+  <script id="embedded-data" type="application/json"></script>
+  <script>
+    const REQUIRED_FILES = {
+      scenarios: "scenario_readable.json",
+      localization: "LocalizationMaster.json",
+      groups: "ScenarioGroupMaster.json"
+    };
+
+    const AUTO_PATHS = {
+      scenarios: ["../../tmp/cwyl_extract/clean/scenario_readable.json", "/tmp/cwyl_extract/clean/scenario_readable.json"],
+      localization: ["../../tmp/cwyl_extract/clean/LocalizationMaster.json", "/tmp/cwyl_extract/clean/LocalizationMaster.json"],
+      groups: ["../../tmp/cwyl_extract/clean/ScenarioGroupMaster.json", "/tmp/cwyl_extract/clean/ScenarioGroupMaster.json"]
+    };
+
+    const CATEGORY_ORDER = [
+      ["all", "All"],
+      ["tutorial", "Tutorial"],
+      ["main", "EP"],
+      ["pomodoro", "Pomodoro"],
+      ["click", "Click"],
+      ["selftalk", "Self Talk"],
+      ["smalltalk", "Small Talk"],
+      ["event", "Event"],
+      ["system", "System"],
+      ["other", "Other"]
+    ];
+
+    const state = {
+      raw: null,
+      groups: [],
+      visibleGroups: [],
+      selectedId: "",
+      category: "all",
+      query: "",
+      lang: "both",
+      showTech: false
+    };
+
+    const els = {
+      status: document.getElementById("status"),
+      error: document.getElementById("errorBox"),
+      typeTabs: document.getElementById("typeTabs"),
+      groupCount: document.getElementById("groupCount"),
+      choiceCount: document.getElementById("choiceCount"),
+      lineCount: document.getElementById("lineCount"),
+      visibleCount: document.getElementById("visibleCount"),
+      search: document.getElementById("searchInput"),
+      epSelectWrap: document.getElementById("epSelectWrap"),
+      episodeSelect: document.getElementById("episodeSelect"),
+      episodeList: document.getElementById("episodeList"),
+      episodeHeader: document.getElementById("episodeHeader"),
+      scriptView: document.getElementById("scriptView"),
+      fileInput: document.getElementById("fileInput"),
+      techToggle: document.getElementById("techToggle")
+    };
+
+    document.getElementById("autoLoadButton").addEventListener("click", loadFromRepo);
+    document.getElementById("loadFilesButton").addEventListener("click", () => els.fileInput.click());
+    document.getElementById("snapshotButton").addEventListener("click", saveSnapshot);
+    els.fileInput.addEventListener("change", loadFromFiles);
+    els.search.addEventListener("input", () => {
+      state.query = els.search.value.trim().toLowerCase();
+      render();
+    });
+    els.episodeSelect.addEventListener("change", () => {
+      state.selectedId = els.episodeSelect.value;
+      render();
+    });
+    els.techToggle.addEventListener("change", () => {
+      state.showTech = els.techToggle.checked;
+      renderEpisode();
+    });
+
+    document.querySelectorAll("[data-lang]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.lang = button.dataset.lang;
+        document.querySelectorAll("[data-lang]").forEach((item) => item.classList.toggle("active", item === button));
+        renderEpisode();
+      });
+    });
+
+    init();
+
+    async function init() {
+      renderTypeTabs();
+      const embedded = readEmbeddedData();
+      if (embedded) {
+        useRawData(embedded, "Loaded embedded snapshot data.");
+        return;
+      }
+      await loadFromRepo();
+    }
+
+    function readEmbeddedData() {
+      const text = document.getElementById("embedded-data").textContent.trim();
+      if (!text) return null;
+      try {
+        return JSON.parse(text);
+      } catch (error) {
+        showError("Snapshot data could not be parsed: " + error.message);
+        return null;
+      }
+    }
+
+    async function loadFromRepo() {
+      clearError();
+      els.status.textContent = "Loading data from tmp/cwyl_extract/clean...";
+      try {
+        const raw = {};
+        for (const key of Object.keys(REQUIRED_FILES)) {
+          raw[key] = await fetchFirstJson(AUTO_PATHS[key]);
+        }
+        useRawData(raw, "Loaded current extracted data from the repo.");
+      } catch (error) {
+        els.status.textContent = "Auto-load blocked. Use Load files and select the three JSON files.";
+        showError(error.message);
+      }
+    }
+
+    async function fetchFirstJson(paths) {
+      const errors = [];
+      for (const path of paths) {
+        try {
+          const response = await fetch(path, { cache: "no-store" });
+          if (!response.ok) throw new Error(response.status + " " + response.statusText);
+          return await response.json();
+        } catch (error) {
+          errors.push(path + ": " + error.message);
+        }
+      }
+      throw new Error("Could not auto-load file. Tried: " + errors.join(" | "));
+    }
+
+    async function loadFromFiles(event) {
+      clearError();
+      const files = Array.from(event.target.files || []);
+      const raw = {};
+      for (const [key, filename] of Object.entries(REQUIRED_FILES)) {
+        const file = files.find((item) => item.name === filename);
+        if (!file) {
+          showError("Missing " + filename + ". Please select all three required JSON files together.");
+          return;
+        }
+        raw[key] = JSON.parse(await file.text());
+      }
+      useRawData(raw, "Loaded selected files.");
+      event.target.value = "";
+    }
+
+    function useRawData(raw, message) {
+      state.raw = raw;
+      state.groups = buildGroups(raw);
+      state.selectedId = state.groups[0]?.id || "";
+      els.status.textContent = message;
+      render();
+    }
+
+    function buildGroups(raw) {
+      const locById = new Map((raw.localization.Items || []).map((item) => [item.ID, item]));
+      const metaById = new Map((raw.groups.Items || []).map((item) => [item.ID, item]));
+      return raw.scenarios.map((scenario, index) => {
+        const meta = metaById.get(scenario.group_id) || {};
+        const titleLoc = locById.get(meta.TitleLocalizationID) || {};
+        const subtitleLoc = locById.get(meta.SubtitleLocalizationID) || {};
+        const commands = scenario.commands.map((command, commandIndex) => enrichCommand(command, commandIndex, locById));
+        const searchBlob = [
+          scenario.group_id,
+          scenario.title,
+          scenario.subtitle,
+          titleLoc.En,
+          titleLoc.ZhHans,
+          subtitleLoc.En,
+          subtitleLoc.ZhHans,
+          ...commands.flatMap((command) => [command.id, command.voice, command.en, command.zh])
+        ].filter(Boolean).join(" ").toLowerCase();
+
+        return {
+          id: scenario.group_id,
+          index,
+          category: categoryFor(scenario.group_id),
+          title: {
+            en: titleLoc.En || scenario.title || scenario.group_id,
+            zh: titleLoc.ZhHans || scenario.title || scenario.group_id
+          },
+          subtitle: {
+            en: subtitleLoc.En || scenario.subtitle || "",
+            zh: subtitleLoc.ZhHans || scenario.subtitle || ""
+          },
+          scenario,
+          meta,
+          commands,
+          hasChoices: commands.some((command) => command.kind === "selection"),
+          textCount: commands.filter((command) => command.hasText).length,
+          searchBlob
+        };
+      });
+    }
+
+    function enrichCommand(command, index, locById) {
+      const loc = locById.get(command.localization_id) || locById.get(command.id) || {};
+      const en = cleanText(loc.En || command.en || "");
+      const zh = cleanText(loc.ZhHans || "");
+      const id = String(command.id || "");
+      const selectionMatch = id.match(/_selection_([^_]+)/);
+      const reactionMatch = id.match(/_reaction(?:_([^_]+))?$/) || (/_reaction_/.test(id) ? id.match(/_reaction_([^_]+)/) : null);
+      const hasText = Boolean(en || zh);
+      return {
+        ...command,
+        order: index,
+        id,
+        en,
+        zh,
+        voice: loc.Voice || command.voice || "",
+        hasText,
+        kind: selectionMatch ? "selection" : reactionMatch ? "reaction" : hasText ? "dialogue" : "technical",
+        choiceNumber: selectionMatch ? selectionMatch[1] : "",
+        reactionNumber: reactionMatch ? reactionMatch[1] || "" : ""
+      };
+    }
+
+    function cleanText(text) {
+      return String(text || "").replace(/\r\n/g, "\n").trim();
+    }
+
+    function categoryFor(id) {
+      if (id.startsWith("tutorial")) return "tutorial";
+      if (id.startsWith("main") || id.startsWith("later")) return "main";
+      if (id.startsWith("pomodoro")) return "pomodoro";
+      if (id.startsWith("clickheroine")) return "click";
+      if (id.startsWith("selftalk")) return "selftalk";
+      if (id.startsWith("smalltalk")) return "smalltalk";
+      if (id.startsWith("event") || id.startsWith("special") || id.startsWith("extra")) return "event";
+      if (id.startsWith("game") || id.startsWith("motion") || id.startsWith("leave") || id.startsWith("snack")) return "system";
+      return "other";
+    }
+
+    function renderTypeTabs() {
+      els.typeTabs.replaceChildren(...CATEGORY_ORDER.map(([key, label]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "type-button" + (key === state.category ? " active" : "");
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          state.category = key;
+          if (state.category === "main") {
+            const firstMain = state.groups.find((group) => group.category === "main");
+            if (firstMain) state.selectedId = firstMain.id;
+          }
+          render();
+        });
+        return button;
+      }));
+    }
+
+    function render() {
+      renderTypeTabs();
+      const groups = state.groups.filter((group) => {
+        const categoryOk = state.category === "all" || group.category === state.category;
+        const queryOk = !state.query || group.searchBlob.includes(state.query);
+        return categoryOk && queryOk;
+      });
+      state.visibleGroups = groups;
+
+      if (!groups.some((group) => group.id === state.selectedId)) {
+        state.selectedId = groups[0]?.id || "";
+      }
+
+      renderMetrics(groups);
+      renderEpisodeSelect(groups);
+      renderEpisodeList(groups);
+      renderEpisode();
+    }
+
+    function renderMetrics(groups) {
+      const all = state.groups;
+      els.groupCount.textContent = all.length;
+      els.choiceCount.textContent = all.filter((group) => group.hasChoices).length;
+      els.lineCount.textContent = all.reduce((sum, group) => sum + group.textCount, 0);
+      els.visibleCount.textContent = groups.length;
+    }
+
+    function renderEpisodeSelect(groups) {
+      const mainGroups = groups.filter((group) => group.category === "main");
+      els.epSelectWrap.classList.toggle("visible", state.category === "main");
+      els.episodeSelect.replaceChildren(...mainGroups.map((group) => {
+        const option = document.createElement("option");
+        option.value = group.id;
+        option.textContent = groupLabel(group);
+        option.selected = group.id === state.selectedId;
+        return option;
+      }));
+    }
+
+    function renderEpisodeList(groups) {
+      if (!groups.length) {
+        els.episodeList.innerHTML = '<div class="empty-state">No matching script groups.</div>';
+        return;
+      }
+      els.episodeList.replaceChildren(...groups.map((group) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "episode-button" + (group.id === state.selectedId ? " active" : "");
+        button.addEventListener("click", () => {
+          state.selectedId = group.id;
+          render();
+        });
+        button.append(
+          el("span", { className: "episode-title" }, groupLabel(group)),
+          el("span", { className: "episode-sub" }, [
+            group.id,
+            group.hasChoices ? "choices" : "",
+            "Lv " + safeMeta(group.meta.UnlockLevel)
+          ].filter(Boolean).join(" | "))
+        );
+        return button;
+      }));
+    }
+
+    function renderEpisode() {
+      const group = state.groups.find((item) => item.id === state.selectedId);
+      if (!group) {
+        els.episodeHeader.innerHTML = "";
+        els.scriptView.innerHTML = '<div class="empty-state">Load CWYL data or choose a script group.</div>';
+        return;
+      }
+      els.episodeHeader.replaceChildren(renderHeader(group));
+      const blocks = buildScriptBlocks(group);
+      if (!blocks.length) {
+        els.scriptView.innerHTML = '<div class="empty-state">This group has no displayable text rows.</div>';
+        return;
+      }
+      els.scriptView.replaceChildren(...blocks.map(renderBlock));
+    }
+
+    function renderHeader(group) {
+      const wrap = document.createElement("div");
+      const title = document.createElement("h2");
+      title.textContent = groupLabel(group);
+      const subtitle = el("div", { className: "status" }, displayText(group.subtitle));
+      const metaGrid = el("div", { className: "meta-grid" }, [
+        metaCard("Group ID", group.id),
+        metaCard("Unlock level", safeMeta(group.meta.UnlockLevel)),
+        metaCard("Unlock story", safeMeta(group.meta.UnlockStoryEpisode)),
+        metaCard("Play timing", safeMeta(group.meta.PlayTiming)),
+        metaCard("Content type", safeMeta(group.meta.ContentType)),
+        metaCard("Scenario", safeMeta(group.meta.Scenario ?? group.scenario.scenario)),
+        metaCard("Episode number", safeMeta(group.meta.EpisodeNumber ?? group.scenario.episode_number)),
+        metaCard("Choices", group.commands.filter((command) => command.kind === "selection").length)
+      ]);
+      wrap.append(title, subtitle, metaGrid);
+      return wrap;
+    }
+
+    function buildScriptBlocks(group) {
+      const blocks = [];
+      const consumed = new Set();
+      const commands = group.commands;
+
+      for (let i = 0; i < commands.length; i++) {
+        const command = commands[i];
+        if (consumed.has(command.id)) continue;
+
+        if (command.kind === "selection") {
+          const options = [];
+          let j = i;
+          while (j < commands.length && commands[j].kind === "selection") {
+            const option = commands[j];
+            options.push({
+              option,
+              reactions: collectReactions(commands, option)
+            });
+            j++;
+          }
+          options.forEach((choice) => choice.reactions.forEach((reaction) => consumed.add(reaction.id)));
+          blocks.push({ type: "branch", options });
+          i = j - 1;
+          continue;
+        }
+
+        if (command.kind === "reaction" && consumed.has(command.id)) continue;
+        if (command.kind === "technical" && !state.showTech) continue;
+        if (!command.hasText && !state.showTech) continue;
+
+        blocks.push({ type: "line", command });
+      }
+      return blocks;
+    }
+
+    function collectReactions(commands, option) {
+      const target = String(option.arg1 || "");
+      const families = new Set();
+      if (target && target !== "0") families.add(reactionFamily(target));
+      const fallback = option.id.replace(/_selection_([^_]+)/, "_reaction_$1");
+      families.add(reactionFamily(fallback));
+
+      return commands.filter((command) => {
+        if (!command.hasText || !isReactionId(command.id)) return false;
+        return Array.from(families).some((family) => command.id === family || command.id.startsWith(family + "_"));
+      });
+    }
+
+    function reactionFamily(id) {
+      const match = String(id).match(/^(.*_reaction_[^_]+)(?:_\d+)?$/);
+      return match ? match[1] : String(id);
+    }
+
+    function isReactionId(id) {
+      return /_reaction(?:_|$)/.test(String(id));
+    }
+
+    function renderBlock(block) {
+      if (block.type === "branch") return renderBranch(block);
+      return renderLine(block.command);
+    }
+
+    function renderLine(command) {
+      const card = el("article", { className: "line-card " + (command.kind === "technical" ? "system" : "yua") });
+      card.append(
+        el("div", { className: "line-top" }, [
+          el("span", { className: "speaker" }, command.kind === "technical" ? "Technical command" : "Satone"),
+          el("span", { className: "id" }, command.id)
+        ]),
+        renderText(command),
+        renderVoice(command)
+      );
+      return card;
+    }
+
+    function renderBranch(block) {
+      const branch = el("section", { className: "branch-block" });
+      branch.append(
+        el("div", { className: "branch-top" }, [
+          el("span", { className: "section-label" }, "Player options"),
+          el("span", { className: "hint" }, "Each response below is shown based on that player choice.")
+        ]),
+        el("div", { className: "branch-flow" }, [
+          el("div", { className: "branch-options" }, block.options.map(renderOption))
+        ])
+      );
+      return branch;
+    }
+
+    function renderOption(choice) {
+      const option = choice.option;
+      const card = el("article", { className: "option-card" });
+      card.append(
+        el("div", { className: "line-top" }, [
+          el("span", { className: "option-label" }, "Player choice " + option.choiceNumber),
+          el("span", { className: "id" }, option.id)
+        ]),
+        renderText(option),
+        el("div", { className: "reaction-stack" }, [
+          el("span", { className: "response-label" }, "Satone response"),
+          ...(choice.reactions.length ? choice.reactions.map(renderReaction) : [el("div", { className: "hint" }, "No linked response line found.")]
+          )
+        ])
+      );
+      return card;
+    }
+
+    function renderReaction(command) {
+      return el("div", { className: "reaction-line" }, [
+        el("div", { className: "line-top" }, [
+          el("span", { className: "speaker" }, "Response"),
+          el("span", { className: "id" }, command.id)
+        ]),
+        renderText(command),
+        renderVoice(command)
+      ]);
+    }
+
+    function renderText(item) {
+      const mode = state.lang;
+      if (mode === "en") return el("div", { className: "text-grid" }, [el("div", { className: "text" }, item.en || "[No English text]")]);
+      if (mode === "zh") return el("div", { className: "text-grid" }, [el("div", { className: "text zh" }, item.zh || "[No Chinese text]")]);
+      return el("div", { className: "text-grid side" }, [
+        el("div", { className: "text" }, item.en || "[No English text]"),
+        el("div", { className: "text zh" }, item.zh || "[No Chinese text]")
+      ]);
+    }
+
+    function renderVoice(command) {
+      return command.voice ? el("div", { className: "voice" }, command.voice) : document.createTextNode("");
+    }
+
+    function groupLabel(group) {
+      const title = displayText(group.title);
+      const subtitle = displayText(group.subtitle);
+      return subtitle ? title + " - " + subtitle : title;
+    }
+
+    function displayText(textPair) {
+      if (!textPair) return "";
+      if (state.lang === "en") return textPair.en || textPair.zh || "";
+      if (state.lang === "zh") return textPair.zh || textPair.en || "";
+      if (textPair.en && textPair.zh && textPair.en !== textPair.zh) return textPair.en + " / " + textPair.zh;
+      return textPair.en || textPair.zh || "";
+    }
+
+    function metaCard(label, value) {
+      return el("div", { className: "meta-card" }, [
+        el("span", {}, label),
+        el("strong", {}, String(value ?? ""))
+      ]);
+    }
+
+    function safeMeta(value) {
+      if (value === undefined || value === null || value === "" || value === "None") return "None";
+      return value;
+    }
+
+    function saveSnapshot() {
+      if (!state.raw) {
+        showError("Load data before saving a snapshot.");
+        return;
+      }
+      const html = "<!doctype html>\n" + document.documentElement.outerHTML
+        .replace(/<script id="embedded-data" type="application\/json">[\s\S]*?<\/script>/, '<script id="embedded-data" type="application/json">' + escapeScriptJson(JSON.stringify(state.raw)) + '<\/script>');
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "cwyl_script_viewer_snapshot.html";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function escapeScriptJson(json) {
+      return json.replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+    }
+
+    function showError(message) {
+      els.error.textContent = message;
+      els.error.classList.add("visible");
+    }
+
+    function clearError() {
+      els.error.textContent = "";
+      els.error.classList.remove("visible");
+    }
+
+    function el(tag, attrs = {}, children = []) {
+      const node = document.createElement(tag);
+      for (const [key, value] of Object.entries(attrs)) {
+        if (key === "className") node.className = value;
+        else node.setAttribute(key, value);
+      }
+      const childList = Array.isArray(children) ? children : [children];
+      for (const child of childList) {
+        if (child === null || child === undefined || child === "") continue;
+        node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+      }
+      return node;
+    }
+  </script>
+</body>
+</html>

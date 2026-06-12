@@ -8,7 +8,7 @@ enum PlaybackMode {
 	LOOP,
 	SEQUENTIAL,
 	RANDOM
-}
+} 
 
 var bgm_player: AudioStreamPlayer
 var current_index: int = 0
