@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>Project Chill — 对话层 UI 方案对比</title>
+<style>
+  :root{
+    --cream:#f3e9d8; --amber:#e8b96f; --ink:#2a2018;
+  }
+  body{margin:0;font-family:"Segoe UI","Microsoft YaHei",sans-serif;background:#171310;color:var(--cream);padding:24px;}
+  h1{font-size:20px;font-weight:600;margin:0 0 4px;}
+  p.sub{margin:0 0 16px;color:#b8a88f;font-size:13px;}
+  .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .tabs button{background:#2b2119;border:1px solid #4a3a28;color:var(--cream);padding:8px 18px;border-radius:20px;cursor:pointer;font-size:14px;}
+  .tabs button.active{background:var(--amber);color:var(--ink);border-color:var(--amber);font-weight:600;}
+  .stage{position:relative;width:100%;max-width:1100px;aspect-ratio:16/9;border-radius:14px;overflow:hidden;margin:0 auto;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 30%, #f7ecd4 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 15% 45%, #cfe3c8 0%, transparent 60%),
+      radial-gradient(ellipse 45% 55% at 85% 55%, #e9d3ae 0%, transparent 65%),
+      linear-gradient(180deg,#efe3c9 0%,#e3cfa8 45%,#caa877 75%,#a5824f 100%);
+  }
+  .stage::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 90% 80% at 50% 45%, transparent 55%, rgba(42,26,10,.38) 100%);}
+  .yua{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);width:30%;height:64%;
+    background:radial-gradient(ellipse at 50% 26%, #8a6b4d 0%, #7c5f44 22%, #f0e2c8 23%, #e8d5b4 46%, #f2e6cf 47%, #d9c39c 100%);
+    border-radius:46% 46% 38% 38%/34% 34% 60% 60%;filter:blur(1.5px);opacity:.9;}
+  .yua-label{position:absolute;left:50%;top:88%;transform:translateX(-50%);font-size:11px;color:rgba(42,26,10,.55);z-index:1;}
+  .chrome{position:absolute;z-index:5;}
+  .pill{background:rgba(20,14,9,.55);backdrop-filter:blur(6px);border:1px solid rgba(255,220,170,.14);border-radius:12px;color:var(--cream);}
+  .call-pill{top:14px;left:14px;padding:8px 14px;font-size:13px;}
+  .call-pill .dot{color:#7fd98a;}
+  .call-pill small{display:block;color:#b8a88f;font-size:11px;margin-top:2px;}
+  .timer-mini{top:14px;right:14px;padding:8px 14px;font-size:13px;text-align:right;}
+  .timer-mini b{font-size:17px;letter-spacing:1px;}
+  .selfview{bottom:76px;right:14px;width:120px;height:72px;display:flex;align-items:center;justify-content:center;
+    font-size:11px;color:#b8a88f;background:rgba(20,14,9,.7);border:1px solid rgba(255,220,170,.14);border-radius:10px;}
+  /* ------- 方案 A：字幕式 ------- */
+  .sub-grad{position:absolute;left:0;right:0;bottom:0;height:26%;z-index:3;
+    background:linear-gradient(180deg,transparent 0%,rgba(18,12,7,.55) 55%,rgba(18,12,7,.8) 100%);}
+  .subtitle{position:absolute;left:50%;bottom:56px;transform:translateX(-50%);z-index:6;text-align:center;width:72%;}
+  .subtitle .name{font-size:11px;color:var(--amber);letter-spacing:2px;margin-bottom:6px;}
+  .subtitle .line{font-size:17px;line-height:1.55;text-shadow:0 1px 8px rgba(0,0,0,.8);}
+  .chips{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;z-index:6;}
+  .chip{padding:7px 18px;border-radius:18px;font-size:13px;background:rgba(38,27,18,.72);
+    border:1px solid rgba(255,210,150,.35);color:var(--cream);cursor:pointer;}
+  .chip:hover{background:rgba(70,50,32,.85);}
+  .type-pill{position:absolute;left:16px;bottom:16px;z-index:6;display:flex;align-items:center;gap:8px;
+    padding:8px 14px;border-radius:20px;background:rgba(20,14,9,.6);border:1px solid rgba(255,220,170,.18);
+    color:#9c8b72;font-size:13px;width:120px;transition:width .25s, color .25s;cursor:text;}
+  .type-pill:hover{width:300px;color:var(--cream);}
+  .type-pill::before{content:"✎";color:var(--amber);}
+  /* ------- 方案 B：气泡式 ------- */
+  .bubbles{position:absolute;left:16px;top:64px;z-index:6;display:flex;flex-direction:column;gap:8px;max-width:34%;}
+  .bubble{padding:10px 14px;border-radius:4px 14px 14px 14px;background:rgba(20,14,9,.62);backdrop-filter:blur(4px);
+    border:1px solid rgba(255,220,170,.12);font-size:14px;line-height:1.5;}
+  .bubble .bname{font-size:10px;color:var(--amber);margin-bottom:3px;letter-spacing:1px;}
+  .bubble.faded{opacity:.45;}
+  .bubble-chips{display:flex;gap:8px;margin-top:2px;}
+  .hidden{display:none;}
+  .notes{max-width:1100px;margin:18px auto 0;font-size:13.5px;line-height:1.8;color:#cbbba0;}
+  .notes b{color:var(--cream);}
+  .notes li{margin-bottom:6px;}
+</style>
+</head>
+<body>
+<h1>对话层两个方案（点按钮切换）</h1>
+<p class="sub">背景和人物是 CSS 占位（模糊示意），只看<b>对话/输入的形态和位置</b>。两个方案都去掉了大对话框，让画面回到「视频通话」而不是 galgame。</p>
+<div class="tabs">
+  <button class="active" onclick="show('a',this)">方案 A · 字幕式（推荐）</button>
+  <button onclick="show('b',this)">方案 B · 通话气泡式</button>
+</div>
+
+<div class="stage">
+  <div class="yua"></div><div class="yua-label">Yua 立绘（示意）</div>
+  <div class="chrome pill call-pill"><span class="dot">●</span> Yua · 已连接 · 20:27<small>2026/08/09 · 周日 · 傍晚</small></div>
+  <div class="chrome pill timer-mini">专注计时<br><b>45:00</b></div>
+  <div class="chrome selfview">你 · 摄像头关</div>
+
+  <!-- 方案 A -->
+  <div id="v-a">
+    <div class="sub-grad"></div>
+    <div class="subtitle">
+      <div class="name">YUA</div>
+      <div class="line">普通就挺好。又不是每一段都得轰轰烈烈——<br>能坐下来，就已经算数了。</div>
+    </div>
+    <div class="chips">
+      <div class="chip">挺充实的</div><div class="chip">还可以吧</div><div class="chip">有点没坐住</div>
+    </div>
+    <div class="type-pill">说点什么…</div>
+  </div>
+
+  <!-- 方案 B -->
+  <div id="v-b" class="hidden">
+    <div class="bubbles">
+      <div class="bubble faded"><div class="bname">YUA</div>……响了。等一下，我把这半句收个尾。</div>
+      <div class="bubble"><div class="bname">YUA</div>刚才那段，你自己觉得怎么样？</div>
+      <div class="bubble-chips"><div class="chip">挺充实的</div><div class="chip">没坐住…</div></div>
+    </div>
+    <div class="type-pill">说点什么…</div>
+  </div>
+</div>
+
+<div class="notes">
+  <b>两个方案共同点：</b>
+  <ul>
+    <li>大对话框消失。文字直接压在画面上（A：底部字幕渐变；B：左上角小气泡，像会议软件的聊天浮层）。</li>
+    <li>输入框收成左下角一颗小药丸「说点什么…」，鼠标移过去才展开（鼠标悬停试试）——Type Mode 永远在，但不抢戏。</li>
+    <li>右下角加了一个小小的「你 · 摄像头关」自视窗——一格假窗口，立刻让整个画面读成视频通话。这是视频截图/小红书封面里最能说明「这是通话」的一个元素。可做可不做。</li>
+    <li>选择片变小变少，贴着文字走，不再占一整行。</li>
+  </ul>
+  <b>A vs B 的取舍：</b>
+  <ul>
+    <li><b>A 字幕式</b>：安静、电影感、和分拍逐句的节奏最配；文字始终在固定位置，工作时用余光就能读。<b>我推荐 A</b>。</li>
+    <li><b>B 气泡式</b>:「通话软件」的既视感最强，也天然适合以后显示「你」发出去的 Type Mode 消息（右侧气泡）；但左上会和 Log 按钮/日期抢位置，长句更占地方。</li>
+    <li>折中：默认 A，Type Mode 连续对话时临时切 B（你一句我一句像聊天记录）。工程上都不难。</li>
+  </ul>
+</div>
+
+<script>
+function show(which,btn){
+  document.getElementById('v-a').classList.toggle('hidden',which!=='a');
+  document.getElementById('v-b').classList.toggle('hidden',which!=='b');
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

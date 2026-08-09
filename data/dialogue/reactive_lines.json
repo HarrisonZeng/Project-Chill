@@ -1,5 +1,18 @@
 {
-  "_doc": "Short reactive line pools. Add new categories by adding a new key with a string array. Categories used by main_scene.gd: focus_click. Future C deliverable will add: status_idle, status_morning, status_noon, status_evening, status_night, break_start, break_mid, break_end, action_water, action_glasses, action_window, action_typing_pause.",
+  "_doc": "Short reactive line pools. Add new categories by adding a new key with a string array. Categories used by main_scene.gd: focus_click (click during focus, 3-min reply cooldown), idle_click_prefocus (click with no conversation open, before first-ever completed focus — soft timer nudge), idle_click (same but after first completed focus — plain co-presence). Future: status_idle, break_start, break_mid, break_end, action_water, action_glasses, action_window, action_typing_pause.",
+  "idle_click_prefocus": [
+    "嗯？我在。\n\n……想试试一起专注一段吗？时间随你挑。",
+    "怎么啦。\n\n我先把这段写完……你要是想开一段计时，我随时奉陪。",
+    "我在呢。\n\n不急。等你想开始了，开个短的就行，十五分钟也算数。",
+    "……被你点到了。\n\n那要不，一起坐一段？你做你的，我做我的。"
+  ],
+  "idle_click": [
+    "嗯？我在。",
+    "怎么啦。\n\n……没事的话，我先写两句。",
+    "我在这儿呢。\n\n你随意，想开一段就开。",
+    "……嗯。喝口水吧，我也刚喝。",
+    "在的在的。\n\n我这段写得正有点顺，先不聊太久哦。"
+  ],
   "focus_click": [
     "还差一会儿，再撑一下。",
     "嗯，我也在。",

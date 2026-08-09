@@ -145,6 +145,9 @@ const NAME_INPUT_TAG := "name_input"    # narrative tags the Ep0 name node with 
 # constants and the loader helpers near the bottom of the file.
 var intro_node_id: String = DEFAULT_INTRO_NODE_ID
 var demo_script_version: int = DEFAULT_DEMO_SCRIPT_VERSION
+# True once this session's conversation opener (greeting/intro/follow-up) has
+# played. Later Yua-clicks fall back to short presence lines, never re-openers.
+var _conversation_opened_this_session: bool = false
 var episode_start_nodes: PackedStringArray = PackedStringArray()
 var episode_metadata: Array = []
 var reactive_lines: Dictionary = {}
@@ -943,14 +946,23 @@ func _on_character_clicked() -> void:
 
 	# Re-enter the conversation whenever it's closed: either truly idle, OR sitting
 	# on a finished terminal node (an episode/greeting that ended with empty choices).
-	# Resolve a real line — greeting / return / next available beat — then surface
-	# any pending memory follow-up. This is the fix for the old dead-end where
-	# clicking Yua after an episode hit a legacy "先选一个回复" meta line.
+	# The FIRST click of a session resolves a real opener (greeting / return) and
+	# surfaces any pending memory follow-up. LATER clicks in the same session get a
+	# short in-fiction presence line instead — they must never replay the intro,
+	# re-greet, or advance anything (story only moves through the timer).
 	if current_node_id == "idle" or current_choice_payloads.is_empty():
 		current_node_id = "idle"
+		if _conversation_opened_this_session:
+			_show_idle_click_line()
+			return
+		_conversation_opened_this_session = true
 		var start_id := _resolve_start_node_id()
 		if start_id == "idle" or not scripted_dialogue_manager.has_dialogue_node(start_id):
-			start_id = intro_node_id if scripted_dialogue_manager.has_dialogue_node(intro_node_id) else "return_open_01"
+			# Never fall back into the intro for a returning player.
+			if not has_seen_intro and scripted_dialogue_manager.has_dialogue_node(intro_node_id):
+				start_id = intro_node_id
+			else:
+				start_id = "return_open_01"
 		_show_node(start_id)
 		_maybe_show_follow_up()
 		return
@@ -961,24 +973,49 @@ func _on_character_clicked() -> void:
 		_on_choice_selected(current_choice_payloads[0].duplicate(true))
 		return
 
-	# Multi-choice mid-conversation. In Type Mode, nudge gently toward the
-	# input/buttons; otherwise leave the visible choices to stand on their own
-	# (no meta line — clicking Yua must never dead-end).
+	# Multi-choice mid-conversation. In Type Mode, a gentle in-fiction presence
+	# line (never UI-speak — Yua doesn't narrate buttons); otherwise leave the
+	# visible choices to stand on their own (clicking Yua must never dead-end).
 	if not current_ai_mode_id.is_empty():
 		_set_status_message("")
-		_set_dialogue_text("我在。想继续自己写就继续，不想的话也可以回到按钮。")
+		_set_dialogue_text("我在。\n\n你慢慢想，不急。我先写我这段。")
 		_play_voice_for_line("prompt_pick_response", dialogue_text.text)
+
+# A short presence line for clicking Yua while no conversation is open (and no
+# focus running). Pool choice: before the first-ever completed focus we nudge
+# softly toward trying the timer; afterwards, plain co-presence lines. These are
+# light interactions — remembered upstream, never story progress.
+func _show_idle_click_line() -> void:
+	_enter_scripted_mode()
+	var category := "idle_click_prefocus" if completed_focus_sessions == 0 else "idle_click"
+	var pool: PackedStringArray = _reactive_pool(category)
+	if pool.is_empty():
+		pool = _reactive_pool("idle_click")
+	if pool.is_empty():
+		return
+	var line := pool[randi() % pool.size()]
+	_set_dialogue_text(line)
+	_set_status_message("")
+	_render_choices([])
+	_play_voice_for_line("idle_click", line)
+
+# During focus she answers a click at most once per cooldown window; inside the
+# window every further click gets "……" (she's working). The first click of each
+# focus session always gets a real line.
+const FOCUS_CLICK_REPLY_COOLDOWN_SECONDS := 180
+var _last_focus_click_reply_unix: int = 0
 
 func _show_focus_click_line() -> void:
 	var pool: PackedStringArray = _reactive_pool("focus_click")
 	if pool.is_empty():
 		return
 	focus_click_count += 1
-	var line_index := randi() % pool.size()
-	if focus_click_count > 3:
+	var now_unix := int(Time.get_unix_time_from_system())
+	if _last_focus_click_reply_unix > 0 and now_unix - _last_focus_click_reply_unix < FOCUS_CLICK_REPLY_COOLDOWN_SECONDS:
 		_set_dialogue_text("……")
 	else:
-		_set_dialogue_text(pool[line_index])
+		_last_focus_click_reply_unix = now_unix
+		_set_dialogue_text(pool[randi() % pool.size()])
 	_set_status_message("")
 	_play_voice_for_line("focus_click_%02d" % focus_click_count, dialogue_text.text)
 
@@ -1020,10 +1057,17 @@ func _apply_node_flags(node_data: Dictionary) -> void:
 	if memory_manager == null or not memory_manager.has_method("set_story_flag"):
 		return
 	var flags = node_data.get("set_flags", {})
-	if typeof(flags) != TYPE_DICTIONARY:
-		return
-	for key in flags.keys():
-		memory_manager.call("set_story_flag", str(key), flags[key])
+	# The script JSON uses the Array form ("set_flags": ["ep01_seen"]); accept the
+	# Dictionary form too. (Array entries are set to true.) Before this fix the
+	# Array form was silently ignored, so epNN_seen / intro_seen never persisted
+	# and Ep1 could replay after every focus session.
+	match typeof(flags):
+		TYPE_DICTIONARY:
+			for key in flags.keys():
+				memory_manager.call("set_story_flag", str(key), flags[key])
+		TYPE_ARRAY:
+			for key in flags:
+				memory_manager.call("set_story_flag", str(key), true)
 
 func _current_node_has_tag(tag: String) -> bool:
 	if scripted_dialogue_manager == null:
@@ -1175,6 +1219,7 @@ func _start_focus_from_script() -> void:
 	focus_running = true
 	focus_started_count += 1
 	focus_click_count = 0
+	_last_focus_click_reply_unix = 0  # first click of a fresh session gets a real line
 	if focus_time_left <= 0.0:
 		focus_time_left = focus_duration_seconds
 	focus_last_tick_ms = Time.get_ticks_msec()
@@ -1202,11 +1247,11 @@ func _handle_ai_mode_choice(mode_id: String) -> void:
 	ai_return_node_id = _safe_node_id()
 	if ai_return_node_id == "idle":
 		ai_return_node_id = "TASK_INPUT_001"
+	# Type-first: no escape chip, no meta status line. She just waits; typing
+	# talks to her, clicking her or starting the timer settles back naturally.
 	_set_dialogue_text("嗯，你说，我听着。\n\n想到什么写什么就行，不用组织得多漂亮。")
-	_set_status_message("Typed replies use your own words. The buttons stay as guided replies.")
-	_render_choices([
-		{"text": "回到按钮回复", "next": ai_return_node_id, "internal_return": true}
-	])
+	_set_status_message("")
+	_render_choices([])
 	player_input.grab_focus()
 
 func _return_to_scripted_node(node_id: String) -> void:
@@ -1382,17 +1427,16 @@ func _select_surfaced_memory() -> String:
 func _handle_ai_route(route: Dictionary) -> void:
 	var route_text := str(route.get("text", ""))
 	if route_text.is_empty():
-		route_text = "嗯。那先用按钮走吧，简单一点。"
+		# In-fiction failure: a flaky call connection, never a UI instruction.
+		route_text = "唔……刚才这边卡了一下，没听清。\n\n再说一遍？"
 
 	_set_dialogue_text(route_text)
 	_set_status_message("")
 	var ai_fallback_used := bool(route.get("fallback_used", false)) or not bool(route.get("success", false))
-	var choices: Array = [
-		{"text": "回到按钮回复", "next": ai_return_node_id, "internal_return": true}
-	]
-	if not ai_fallback_used and not current_ai_mode_id.is_empty():
-		choices.append({"text": "再写一句", "next": current_ai_mode_id})
-	_render_choices(choices)
+	# No meta chips ("back to buttons" is UI-speak). Her reply settles back into
+	# co-presence: the input stays open if the player wants to keep talking, a
+	# click on Yua re-engages, and scripted flows resume on their own triggers.
+	_render_choices([])
 	var voice_line_id := "ai_fallback" if ai_fallback_used else ""
 	_play_voice_for_line(voice_line_id, dialogue_text.text)
 
@@ -1492,16 +1536,14 @@ func _resolve_start_node_id() -> String:
 	if scripted_dialogue_manager == null:
 		return current_node_id
 
-	if demo_script_version_seen < demo_script_version and scripted_dialogue_manager.has_dialogue_node(intro_node_id):
+	# The intro can only ever play for a player who has never seen it. A script
+	# version bump no longer force-replays it (that caused "EP0 restarts" reports);
+	# use the debug bar (Ep 0 + Reset Save) to re-watch it during development.
+	if not has_seen_intro and scripted_dialogue_manager.has_dialogue_node(intro_node_id):
 		demo_script_version_seen = demo_script_version
 		has_seen_intro = true
-		completed_focus_sessions = 0
-		current_focus_task = ""
 		return intro_node_id
-
-	if not has_seen_intro and scripted_dialogue_manager.has_dialogue_node(intro_node_id):
-		has_seen_intro = true
-		return intro_node_id
+	demo_script_version_seen = demo_script_version
 
 	if has_seen_intro and _should_use_short_return_node() and scripted_dialogue_manager.has_dialogue_node("return_open_short"):
 		return "return_open_short"
