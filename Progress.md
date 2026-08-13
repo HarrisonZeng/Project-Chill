@@ -35,7 +35,8 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 | Debug tools | ✅ | Episode jumper + save reset (`DEBUG TIMELINE` block, `main_scene.gd:1760+`); auto-hidden in release exports |
 | Web (browser) export | ✅ | `Web` preset in `export_presets.cfg`; gl_compatibility override; verified booting + playable in Chromium |
 | Bundled CJK font | ✅ | `assets/fonts/chill_kai_gb.woff2` (1.5 MB subset) as theme fallback — browser builds have no system fonts |
-| Auto-publish to itch.io | ✅ code / ⏸ owner setup | `.github/workflows/publish-web-demo.yml`; needs itch page + `BUTLER_API_KEY` — see `docs/Web_Demo_Publishing.md` |
+| Auto-publish to itch.io | ✅ live | <https://hzen666.itch.io/project-relax> (password-restricted). Every push to `main` republishes in ~3 min — see `docs/Web_Demo_Publishing.md` |
+| Real AI replies in the browser demo | ⏸ one step left | Key ships inside the build (`baked_keys.gd`, filled by CI). Owner must run `gh secret set MINIMAX_API_KEY` once; until then the demo uses mock replies |
 | Voice | ⏸ deferred | `voice_manager` plays pre-generated clips but **no clip assets exist**; fine for demo |
 | Idle video mode | ⏸ off by choice | File deliberately renamed `yua_idle_loop_disable.ogv`; rename back to re-enable (decision D2) |
 
@@ -46,7 +47,9 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 | Script depth pass (Ep1/2/3/5, FOCUS_DONE, ep13 honesty line) | 🔴 | Claude after owner verdicts | Proposal awaiting checkmarks: `docs/Yua_Script_Polish_Proposal.md` |
 | Call-frame visual composition | 🔴 | Claude implements; owner picks direction | Biggest lever for 小红书 scroll-appeal |
 | Windows export preset (only Xogot/iPad/Web exist) | 🔴 | Claude writes preset; owner exports | `export_presets.cfg` |
-| itch.io page + `BUTLER_API_KEY` secret (unblocks the web demo) | 🔴 | Owner, ~15 min | Steps in `docs/Web_Demo_Publishing.md` |
+| ~~itch.io page + `BUTLER_API_KEY` secret~~ | ✅ | Owner, done 2026-08-13 | Demo live and password-restricted |
+| `gh secret set MINIMAX_API_KEY` so the demo gives real AI replies | 🟡 | Owner, 1 command | Claude cannot do this one — it will not handle API keys. Command in `docs/Web_Demo_Publishing.md` |
+| Open the live demo with the password and confirm it boots | 🟡 | Owner, 2 min | Only check Claude could not run; the page password blocks it |
 | All-Chinese surface (system status lines are English) + zh default | 🟡 | Claude | B4/B5 in ship plan |
 | ~~Gate "3 秒试玩" chip behind debug flag~~ | ✅ | Claude | Now hidden unless `_debug_timeline_enabled()` |
 | ~~Debug bar off at ship~~ | ✅ | Claude | Now driven by `OS.is_debug_build()`; on in editor, off in release |
