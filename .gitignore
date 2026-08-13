@@ -9,3 +9,9 @@ assets/bgm/*.mp3
 artifacts/
 tmp/
 tools/python_libs/
+
+# Godot editor crash/save leftovers
+*.tscn*.tmp
+
+# Local web export output
+build/

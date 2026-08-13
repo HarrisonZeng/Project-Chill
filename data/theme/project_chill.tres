@@ -1,5 +1,7 @@
 [gd_resource type="Theme" format=3 uid="uid://ba0l0y3r20gdo"]
 
+[ext_resource type="FontFile" path="res://assets/fonts/chill_kai_gb.woff2" id="1_cjk_fallback"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBox_chip_hover"]
 content_margin_left = 12.0
 content_margin_top = 6.0
@@ -66,6 +68,7 @@ corner_radius_bottom_left = 20
 
 [sub_resource type="SystemFont" id="Font_mono"]
 font_names = PackedStringArray("JetBrains Mono", "Cascadia Mono", "Consolas", "DejaVu Sans Mono", "Monospace")
+fallbacks = Array[Font]([ExtResource("1_cjk_fallback")])
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_panel_glass"]
 content_margin_left = 14.0
@@ -149,6 +152,7 @@ corner_radius_bottom_left = 999
 
 [sub_resource type="SystemFont" id="Font_body"]
 font_names = PackedStringArray("LXGW WenKai", "Inter", "Microsoft YaHei UI", "PingFang SC", "Hiragino Sans GB", "Segoe UI", "Sans-Serif")
+fallbacks = Array[Font]([ExtResource("1_cjk_fallback")])
 
 [resource]
 default_font = SubResource("Font_body")

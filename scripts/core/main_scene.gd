@@ -1329,12 +1329,17 @@ func _capture_focus_task(task_text: String) -> void:
 	current_node_id = "TASK_INPUT_002"
 	_set_dialogue_text("……好。\n\n“%s”。\n\n不是很大，但很实际。这种任务我最喜欢，完成了有感觉。\n\n选个时长吧。" % current_focus_task)
 	_set_status_message("Task captured.")
-	_render_choices([
-		{"text": "3 秒试玩", "next": "ACTION_SET_TIMER_1"},
+	var duration_choices: Array = []
+	if _debug_timeline_enabled():
+		# Dev-only shortcut: real players should not be able to clear a focus
+		# session in three seconds and speed-run the episodes.
+		duration_choices.append({"text": "3 秒试玩", "next": "ACTION_SET_TIMER_1"})
+	duration_choices.append_array([
 		{"text": "15 分钟", "next": "ACTION_SET_TIMER_15"},
 		{"text": "25 分钟", "next": "ACTION_SET_TIMER_25"},
 		{"text": "45 分钟", "next": "ACTION_SET_TIMER_45"}
 	])
+	_render_choices(duration_choices)
 	_play_voice_for_line("task_captured", dialogue_text.text)
 	_save_persistent_state()
 
@@ -1805,7 +1810,12 @@ func _reactive_pool(category: String) -> PackedStringArray:
 #   1. delete the `_debug_timeline_setup()` call in _ready()
 #   2. delete everything between this marker and the END DEBUG TIMELINE marker.
 # ============================================================================
-const DEBUG_TIMELINE_ENABLED := true
+# On in the editor and in debug exports; off in release exports, so the public
+# web build cannot skip straight through the story with the episode jumper.
+# To force it on in a release build, add the "debug_tools" custom feature to the
+# export preset.
+static func _debug_timeline_enabled() -> bool:
+	return OS.is_debug_build() or OS.has_feature("debug_tools")
 var _debug_timeline_panel: PanelContainer = null
 var _debug_ep_input: LineEdit = null
 
@@ -1828,7 +1838,7 @@ func _debug_timeline_entries() -> Array:
 	return out
 
 func _debug_timeline_setup() -> void:
-	if not DEBUG_TIMELINE_ENABLED:
+	if not _debug_timeline_enabled():
 		return
 	if _debug_timeline_panel != null:
 		return
