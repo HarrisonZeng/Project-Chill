@@ -9,3 +9,13 @@ assets/bgm/*.mp3
 artifacts/
 tmp/
 tools/python_libs/
+
+# Screenshots produced by tools/godot_check (regenerate with -Mode shot)
+tools/godot_check/shots/
+
+# Yua Studio private data: owner's chats with Yua, distilled memory, drafts
+tools/yua_studio_data/
+
+# Python bytecode from tools/
+tools/__pycache__/
+__pycache__/

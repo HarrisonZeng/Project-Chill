@@ -25,8 +25,32 @@ You:
 1. **Understand** — read the relevant source-of-truth docs (below) and the current code before changing anything.
 2. **Plan** — for non-trivial work, lay out a short plan in plain language and confirm direction with the owner when there's a real choice to make.
 3. **Implement** — edit files directly in the main tree, in small vertical slices that stay playable/testable.
-4. **Verify** — sanity-check the change and give the owner concrete, numbered Godot editor steps for anything visual or scene/UI related.
+4. **Verify** — run `tools/godot_check/check.ps1` yourself first (see below), then give the owner concrete, numbered Godot editor steps for anything visual it can't cover.
 5. **Hand off** — when a chunk of work is done, summarize: files changed, what works, what's not done, risks/assumptions, next step, and Godot checks.
+
+## Verify Your Own Work First
+
+You can run the game yourself. Do it before asking the owner to check anything:
+
+```bash
+powershell -File "tools/godot_check/check.ps1"
+```
+
+This boots the real main scene headless, clicks Yua, walks the conversation, runs
+the focus timer, restarts the game, and reports in a few lines (~8s). It backs up
+the owner's save and disables AI, so it costs them nothing. Cheaper subsets:
+`-Mode lint` (0.4s, catches syntax and JSON errors), `-Mode boot` (~1s),
+`-Mode test -Scenario <name>`. See `tools/godot_check/README.md`.
+
+Rules:
+- After changing GDScript or dialogue JSON, run it. Do not hand the owner a change
+  you have not run.
+- When you fix a bug, add or extend a scenario that fails without the fix. Prove it
+  fails first, then fix.
+- For anything visual, look at it yourself before asking the owner to:
+  `-Mode shot -Node ep03_01 -Sessions 3` jumps to any beat and writes a PNG to
+  `tools/godot_check/shots/` that you can then Read. Only ask the owner for editor
+  steps for what a still frame can't show — feel, pacing, animation, audio.
 
 ## Core Product Guardrails (from AGENTS.md)
 

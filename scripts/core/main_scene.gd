@@ -231,11 +231,15 @@ func _setup_memory_profile() -> void:
 func _setup_dialogue_services() -> void:
 	ai_dialogue_service = preload("res://scripts/dialogue/ai_dialogue_service.gd").new()
 	add_child(ai_dialogue_service)
-	var poe_api_key := OS.get_environment("POE_API_KEY")
-	if poe_api_key.is_empty():
-		ai_dialogue_service.use_mock_provider()
+	# Provider preference: owner's direct MiniMax subscription (MINIMAX_API_KEY,
+	# MiniMax-M3 — faster and better in-voice than M2.7 in our 2026-08-10 test),
+	# then Poe (POE_API_KEY), then the offline mock.
+	if not OS.get_environment("MINIMAX_API_KEY").is_empty():
+		ai_dialogue_service.use_minimax_provider()
+	elif not OS.get_environment("POE_API_KEY").is_empty():
+		ai_dialogue_service.use_poe_provider("minimax-m2.7")
 	else:
-		ai_dialogue_service.use_chat_completion_provider(poe_api_key, "minimax-m2.7")
+		ai_dialogue_service.use_mock_provider()
 
 	dialogue_router = preload("res://scripts/core/dialogue_router.gd").new()
 	dialogue_router.set_ai_service(ai_dialogue_service)

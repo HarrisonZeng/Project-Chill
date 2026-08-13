@@ -130,9 +130,13 @@ class PoeAiProvider extends AiProvider:
 				"error": "api_key_missing"
 			}
 
+		# max_tokens must be generous: MiniMax M-series models spend a <think>
+		# reasoning block (stripped client-side) before the visible reply, and a
+		# tight budget would starve the actual line.
 		var payload: Dictionary = {
 			"model": model_name,
-			"messages": _build_messages(request)
+			"messages": _build_messages(request),
+			"max_tokens": 3000
 		}
 
 		var timeout_seconds: float = float(request.get("timeout_seconds", 20.0))
@@ -165,6 +169,11 @@ class PoeAiProvider extends AiProvider:
 		return messages
 
 const DEFAULT_CHAT_COMPLETIONS_URL := "https://api.poe.com/v1/chat/completions"
+# Direct MiniMax (owner's subscription). NOTE: api.minimaxi.com is the working
+# host for this key (api.minimax.io rejects it); M-series models emit <think>
+# blocks that _request_chat_completion strips before the text reaches the game.
+const MINIMAX_CHAT_COMPLETIONS_URL := "https://api.minimaxi.com/v1/chat/completions"
+const MINIMAX_DEFAULT_MODEL := "MiniMax-M3"
 const FALLBACK_REPLY := "Mm. I can't reach the AI right now, so let's keep to the scripted choices for now."
 
 var provider: AiProvider = null
@@ -183,6 +192,9 @@ func use_mock_provider() -> void:
 
 func use_poe_provider(model_name: String) -> void:
 	use_chat_completion_provider(OS.get_environment("POE_API_KEY"), model_name, DEFAULT_CHAT_COMPLETIONS_URL)
+
+func use_minimax_provider(model_name: String = MINIMAX_DEFAULT_MODEL) -> void:
+	use_chat_completion_provider(OS.get_environment("MINIMAX_API_KEY"), model_name, MINIMAX_CHAT_COMPLETIONS_URL)
 
 func use_chat_completion_provider(api_key: String, model_name: String, endpoint_url: String = DEFAULT_CHAT_COMPLETIONS_URL) -> void:
 	provider = PoeAiProvider.new(self, api_key, model_name, endpoint_url)
@@ -300,6 +312,7 @@ func _request_chat_completion(payload: Dictionary, api_key: String, endpoint_url
 
 	var message: Dictionary = choices[0].get("message", {})
 	var content: String = str(message.get("content", ""))
+	content = _strip_reasoning(content)
 	if content.is_empty():
 		last_error = "response_empty"
 		content = FALLBACK_REPLY
@@ -310,3 +323,17 @@ func _request_chat_completion(payload: Dictionary, api_key: String, endpoint_url
 		"provider": provider_name,
 		"fallback_used": false
 	}
+
+# MiniMax M-series (and other reasoning models) return their chain-of-thought
+# inline as <think>...</think> before the reply. Strip it so it never reaches
+# the dialogue box. Unclosed <think> (truncated response) drops everything.
+func _strip_reasoning(content: String) -> String:
+	if not content.contains("<think>"):
+		return content.strip_edges()
+	var regex := RegEx.new()
+	if regex.compile("(?s)<think>.*?</think>") == OK:
+		content = regex.sub(content, "", true)
+	var open_idx := content.find("<think>")
+	if open_idx != -1:
+		content = content.substr(0, open_idx)
+	return content.strip_edges()
