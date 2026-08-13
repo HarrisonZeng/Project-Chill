@@ -18,8 +18,8 @@ env:
   # ── Edit these two to match your itch.io page ──────────────────────────────
   # If your itch URL is https://yuadev.itch.io/project-chill then
   # ITCH_USER is "yuadev" and ITCH_GAME is "project-chill".
-  ITCH_USER: CHANGE_ME
-  ITCH_GAME: project-chill
+  ITCH_USER: hzen666
+  ITCH_GAME: project-relax
   # ───────────────────────────────────────────────────────────────────────────
   ITCH_CHANNEL: html5
 

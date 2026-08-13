@@ -7,6 +7,10 @@ friends and supporters, that updates itself whenever you push new work.
 uploaded to an itch.io page. You never run the export yourself. You push your
 work to `main`, wait about three minutes, and the link is new.
 
+**The live demo:** <https://hzen666.itch.io/project-relax> — set up 2026-08-13.
+The one-time setup below is already done; it is kept as a record of how, and for
+if the page ever has to be rebuilt.
+
 ---
 
 ## Why itch.io
