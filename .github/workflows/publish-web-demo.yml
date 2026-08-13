@@ -156,6 +156,16 @@ jobs:
             "${ITCH_USER}/${ITCH_GAME}:${ITCH_CHANNEL}" \
             --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
 
+      - name: Report itch.io build status
+        # butler push only means itch accepted the upload; itch then processes
+        # it, and the page shows "developer has not uploaded a game yet" until
+        # that finishes. This reports what itch actually did with the build.
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          sleep 75
+          /tmp/butler/butler status "${ITCH_USER}/${ITCH_GAME}" || true
+
       - name: Summary
         run: |
           {
