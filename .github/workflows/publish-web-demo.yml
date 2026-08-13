@@ -40,6 +40,45 @@ jobs:
             exit 1
           fi
 
+      - name: Refuse to build if an API key was committed to the repository
+        # baked_keys.gd is filled in below, in this runner only. If a real key
+        # ever arrives via git it is public the moment it is pushed, so stop
+        # rather than build on top of a leak.
+        run: |
+          if grep -qE '^const MINIMAX_API_KEY := ".+"' scripts/dialogue/baked_keys.gd; then
+            echo "::error::A key is committed in scripts/dialogue/baked_keys.gd. Remove it, then rotate that key at MiniMax immediately — this repository is public."
+            exit 1
+          fi
+
+      - name: Bake the MiniMax key into the build
+        id: bake
+        # The browser build has no environment variables, so the key has to be
+        # inside the export or the demo falls back to the offline mock replies.
+        # Deliberate trade-off, accepted for a password-restricted demo shared
+        # with close family and friends: anyone who can load the page can read
+        # this key out of the downloaded build. See docs/Web_Demo_Publishing.md.
+        env:
+          MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MINIMAX_API_KEY}" ]; then
+            echo "::warning::No MINIMAX_API_KEY secret set — the demo will use the offline mock replies."
+            echo "baked=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "baked=true" >> "$GITHUB_OUTPUT"
+          python3 - <<'PY'
+          import os, pathlib, json
+          path = pathlib.Path("scripts/dialogue/baked_keys.gd")
+          text = path.read_text(encoding="utf-8")
+          # json.dumps gives a correctly escaped GDScript string literal.
+          key = json.dumps(os.environ["MINIMAX_API_KEY"])
+          new = text.replace('const MINIMAX_API_KEY := ""', f'const MINIMAX_API_KEY := {key}')
+          assert new != text, "baked_keys.gd no longer has the expected empty constant"
+          path.write_text(new, encoding="utf-8")
+          PY
+          echo "Key baked in (value masked by Actions)."
+
       # The editor binary and the export templates are ~1.3 GB together and never
       # change unless GODOT_VERSION does, so they are worth caching.
       - name: Cache Godot ${{ env.GODOT_VERSION }}
@@ -94,6 +133,11 @@ jobs:
           fi
 
       - name: Upload build as a workflow artifact
+        # Skipped once a key is baked in. This repository is public, so its
+        # workflow artifacts are downloadable by anyone — publishing a build
+        # containing the key here would hand it out with no itch.io password in
+        # front of it. To inspect a keyed build, take it from the itch page.
+        if: steps.bake.outputs.baked != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: web-demo

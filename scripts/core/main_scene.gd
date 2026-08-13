@@ -233,11 +233,15 @@ func _setup_dialogue_services() -> void:
 	add_child(ai_dialogue_service)
 	# Provider preference: owner's direct MiniMax subscription (MINIMAX_API_KEY,
 	# MiniMax-M3 — faster and better in-voice than M2.7 in our 2026-08-10 test),
-	# then Poe (POE_API_KEY), then the offline mock.
+	# then Poe (POE_API_KEY), then a key baked in at build time for the browser
+	# demo (which has no environment to read), then the offline mock.
+	var baked_minimax_key: String = preload("res://scripts/dialogue/baked_keys.gd").MINIMAX_API_KEY
 	if not OS.get_environment("MINIMAX_API_KEY").is_empty():
 		ai_dialogue_service.use_minimax_provider()
 	elif not OS.get_environment("POE_API_KEY").is_empty():
 		ai_dialogue_service.use_poe_provider("minimax-m2.7")
+	elif not baked_minimax_key.is_empty():
+		ai_dialogue_service.use_minimax_provider_with_key(baked_minimax_key)
 	else:
 		ai_dialogue_service.use_mock_provider()
 

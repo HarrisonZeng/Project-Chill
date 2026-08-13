@@ -65,6 +65,16 @@ You only do this once. After that, publishing is automatic.
    - **Name**: `BUTLER_API_KEY`
    - **Secret**: paste the key from step 2
    - Click **Add secret**.
+
+   Add a second secret the same way if you want the demo to give real AI
+   replies rather than the built-in mock ones:
+
+   - **Name**: `MINIMAX_API_KEY`
+   - **Secret**: your MiniMax key
+
+   Read "The AI replies are real, and the key is inside the build" below before
+   you do — it is a deliberate trade-off, safe only while the page stays
+   password-restricted to people you know.
 2. Open `.github/workflows/publish-web-demo.yml` and edit the two lines near the
    top so they match the page you made in step 1:
 
@@ -107,11 +117,33 @@ browser, per device. Clearing site data wipes it, and a player who opens the
 link on their phone and then their laptop will have two separate saves. Nothing
 is stored on a server.
 
-**The AI replies are the built-in mock ones.** The AI provider needs an API key
-from the environment, and there is no such key in a browser build — so it falls
-back to the scripted mock replies automatically. This is deliberate: a real key
-shipped in a browser build would be readable by anyone who opens the page, and
-anyone could then spend your credits. Do not add one to the workflow.
+**The AI replies are real, and the key is inside the build.** By default a
+browser build has no environment to read a key from, so it would fall back to
+the scripted mock replies. Because this demo goes to close family and friends
+only, the owner chose to ship the real thing: the `MINIMAX_API_KEY` repository
+secret is written into `scripts/dialogue/baked_keys.gd` during the GitHub build
+and exported with the game. MiniMax allows browser-origin calls, so it works.
+
+Be clear about what that costs. **Anyone who can load the page can read that key
+out of the downloaded build** and spend your credits. The itch.io page password
+is the only thing deciding who that is. So:
+
+- Keep the page on **Restricted** visibility. If it ever goes public, delete the
+  `MINIMAX_API_KEY` secret first — the build silently falls back to the mock
+  replies without it, and nothing else breaks.
+- Never paste a key into `baked_keys.gd` and commit it. This repository is
+  public; that would expose the key to everyone instantly. CI refuses to build
+  if it finds one committed there.
+- If the key ever leaks, rotate it at MiniMax and re-run the workflow.
+- Watch your MiniMax spend for the first while, and set a spending cap there if
+  the account offers one.
+- The build is no longer uploaded as a GitHub workflow artifact once a key is
+  baked in, because artifacts on a public repository are downloadable by
+  anyone — that would hand the key out with no password in front of it.
+
+If the audience ever grows beyond people you know personally, the fix is a small
+server-side proxy that holds the key and forwards requests, so the key never
+reaches anyone's browser.
 
 **The debug bar is hidden.** The episode jumper, the save reset, and the
 "3 秒试玩" timer option only appear in the editor and in debug builds, so

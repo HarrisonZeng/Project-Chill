@@ -194,7 +194,12 @@ func use_poe_provider(model_name: String) -> void:
 	use_chat_completion_provider(OS.get_environment("POE_API_KEY"), model_name, DEFAULT_CHAT_COMPLETIONS_URL)
 
 func use_minimax_provider(model_name: String = MINIMAX_DEFAULT_MODEL) -> void:
-	use_chat_completion_provider(OS.get_environment("MINIMAX_API_KEY"), model_name, MINIMAX_CHAT_COMPLETIONS_URL)
+	use_minimax_provider_with_key(OS.get_environment("MINIMAX_API_KEY"), model_name)
+
+# Same provider, but with the key handed in rather than read from the
+# environment — the browser build has no environment to read. See baked_keys.gd.
+func use_minimax_provider_with_key(api_key: String, model_name: String = MINIMAX_DEFAULT_MODEL) -> void:
+	use_chat_completion_provider(api_key, model_name, MINIMAX_CHAT_COMPLETIONS_URL)
 
 func use_chat_completion_provider(api_key: String, model_name: String, endpoint_url: String = DEFAULT_CHAT_COMPLETIONS_URL) -> void:
 	provider = PoeAiProvider.new(self, api_key, model_name, endpoint_url)
