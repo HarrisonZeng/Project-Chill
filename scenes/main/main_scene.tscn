@@ -560,7 +560,7 @@ text = "Tasks"
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 theme_type_variation = &"ChipButton"
-text = "✕"
+text = "×"
 
 [node name="Scroll" type="ScrollContainer" parent="OverlayLayer/Tools/TasksPanel/Col" unique_id=1449869815]
 layout_mode = 2
@@ -624,7 +624,7 @@ offset_bottom = 236.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_type_variation = &"ChipButton"
-text = "📜 Log"
+text = "▤ Log"
 
 [node name="ChatHistoryPanel" type="PanelContainer" parent="." unique_id=464568696]
 visible = false
@@ -664,7 +664,7 @@ text = "Chat Log"
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 theme_type_variation = &"ChipButton"
-text = "✕"
+text = "×"
 
 [node name="Scroll" type="ScrollContainer" parent="ChatHistoryPanel/Margin/VBox" unique_id=1542230439]
 layout_mode = 2

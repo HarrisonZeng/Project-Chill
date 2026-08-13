@@ -1,0 +1,123 @@
+# Builds the browser version of Project Chill and publishes it to itch.io.
+#
+# Runs automatically on every push to main, so "update the demo" just means
+# "get the change onto main". Can also be run by hand from the Actions tab
+# (Run workflow) when you want to publish without waiting for a push.
+#
+# Setup lives in docs/Web_Demo_Publishing.md — in short, this needs one repo
+# secret (BUTLER_API_KEY) and the two itch values below to match your page.
+name: Publish web demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: 4.6.1
+  # ── Edit these two to match your itch.io page ──────────────────────────────
+  # If your itch URL is https://yuadev.itch.io/project-chill then
+  # ITCH_USER is "yuadev" and ITCH_GAME is "project-chill".
+  ITCH_USER: CHANGE_ME
+  ITCH_GAME: project-chill
+  # ───────────────────────────────────────────────────────────────────────────
+  ITCH_CHANNEL: html5
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail early if itch.io details were never filled in
+        run: |
+          if [ "${ITCH_USER}" = "CHANGE_ME" ]; then
+            echo "::error::Set ITCH_USER in .github/workflows/publish-web-demo.yml to your itch.io username."
+            exit 1
+          fi
+          if [ -z "${{ secrets.BUTLER_API_KEY }}" ]; then
+            echo "::error::Missing BUTLER_API_KEY secret. See docs/Web_Demo_Publishing.md."
+            exit 1
+          fi
+
+      # The editor binary and the export templates are ~1.3 GB together and never
+      # change unless GODOT_VERSION does, so they are worth caching.
+      - name: Cache Godot ${{ env.GODOT_VERSION }}
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot-bin
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}
+
+      - name: Install Godot and export templates
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          mkdir -p ~/godot-bin ~/.local/share/godot/export_templates
+
+          curl -fsSL -o /tmp/godot.zip "${BASE}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d ~/godot-bin
+          mv ~/godot-bin/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot-bin/godot
+          chmod +x ~/godot-bin/godot
+
+          curl -fsSL -o /tmp/templates.tpz "${BASE}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q /tmp/templates.tpz -d /tmp/tpz
+          mv /tmp/tpz/templates ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+
+      - name: Import assets
+        # First run of a clean checkout has no .godot/ cache, so Godot has to
+        # import every asset before the export can see them.
+        run: |
+          ~/godot-bin/godot --headless --import --path "$GITHUB_WORKSPACE" 2>&1 | tail -20
+
+      - name: Export web build
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/build/web"
+          ~/godot-bin/godot --headless --path "$GITHUB_WORKSPACE" \
+            --export-release "Web" "$GITHUB_WORKSPACE/build/web/index.html"
+          test -f "$GITHUB_WORKSPACE/build/web/index.wasm"
+          test -f "$GITHUB_WORKSPACE/build/web/index.pck"
+          ls -la "$GITHUB_WORKSPACE/build/web"
+
+      - name: Guard against shipping a build with no Chinese font
+        # The bundled font is the only thing standing between the browser build
+        # and a screen full of empty boxes, and its absence is silent — so check
+        # it made it into the pack rather than finding out from a player.
+        run: |
+          if ! grep -qa "chill_kai_gb" "$GITHUB_WORKSPACE/build/web/index.pck"; then
+            echo "::error::assets/fonts/chill_kai_gb.woff2 is missing from the export."
+            exit 1
+          fi
+
+      - name: Upload build as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-demo
+          path: build/web
+          retention-days: 14
+
+      - name: Publish to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q /tmp/butler.zip -d /tmp/butler
+          chmod +x /tmp/butler/butler
+          /tmp/butler/butler push "$GITHUB_WORKSPACE/build/web" \
+            "${ITCH_USER}/${ITCH_GAME}:${ITCH_CHANNEL}" \
+            --userversion "$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Web demo published"
+            echo ""
+            echo "https://${ITCH_USER}.itch.io/${ITCH_GAME}"
+            echo ""
+            echo "Commit: \`${GITHUB_SHA::7}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

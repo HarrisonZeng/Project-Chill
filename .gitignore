@@ -19,3 +19,9 @@ tools/yua_studio_data/
 # Python bytecode from tools/
 tools/__pycache__/
 __pycache__/
+
+# Godot editor crash/save leftovers
+*.tscn*.tmp
+
+# Local web export output
+build/

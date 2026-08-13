@@ -32,7 +32,10 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 | Beat-by-beat dialogue display | ✅ | Blank line = one beat; choices appear after last beat |
 | BGM (Suno production tracks) | ✅ | Persona 5 placeholder REMOVED — no longer a blocker |
 | Music bar / settings / chat history / EN-ZH toggle | ✅ | |
-| Debug tools | ✅ | Episode jumper + save reset (`DEBUG TIMELINE` block, `main_scene.gd:1760+`) |
+| Debug tools | ✅ | Episode jumper + save reset (`DEBUG TIMELINE` block, `main_scene.gd:1760+`); auto-hidden in release exports |
+| Web (browser) export | ✅ | `Web` preset in `export_presets.cfg`; gl_compatibility override; verified booting + playable in Chromium |
+| Bundled CJK font | ✅ | `assets/fonts/chill_kai_gb.woff2` (1.5 MB subset) as theme fallback — browser builds have no system fonts |
+| Auto-publish to itch.io | ✅ code / ⏸ owner setup | `.github/workflows/publish-web-demo.yml`; needs itch page + `BUTLER_API_KEY` — see `docs/Web_Demo_Publishing.md` |
 | Voice | ⏸ deferred | `voice_manager` plays pre-generated clips but **no clip assets exist**; fine for demo |
 | Idle video mode | ⏸ off by choice | File deliberately renamed `yua_idle_loop_disable.ogv`; rename back to re-enable (decision D2) |
 
@@ -42,10 +45,11 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 |---|---|---|---|
 | Script depth pass (Ep1/2/3/5, FOCUS_DONE, ep13 honesty line) | 🔴 | Claude after owner verdicts | Proposal awaiting checkmarks: `docs/Yua_Script_Polish_Proposal.md` |
 | Call-frame visual composition | 🔴 | Claude implements; owner picks direction | Biggest lever for 小红书 scroll-appeal |
-| Windows export preset (only Xogot/iPad exists!) | 🔴 | Claude writes preset; owner exports | `export_presets.cfg` |
+| Windows export preset (only Xogot/iPad/Web exist) | 🔴 | Claude writes preset; owner exports | `export_presets.cfg` |
+| itch.io page + `BUTLER_API_KEY` secret (unblocks the web demo) | 🔴 | Owner, ~15 min | Steps in `docs/Web_Demo_Publishing.md` |
 | All-Chinese surface (system status lines are English) + zh default | 🟡 | Claude | B4/B5 in ship plan |
-| Gate "3 秒试玩" chip behind debug flag | 🟡 | Claude | Prevents public speed-running Ep1–Ep4 |
-| Debug bar off at ship | 🟡 | Claude (ship week) | `DEBUG_TIMELINE_ENABLED := false` |
+| ~~Gate "3 秒试玩" chip behind debug flag~~ | ✅ | Claude | Now hidden unless `_debug_timeline_enabled()` |
+| ~~Debug bar off at ship~~ | ✅ | Claude | Now driven by `OS.is_debug_build()`; on in editor, off in release |
 | Friend test (2–3 people) | 🟡 | Owner | Week 4 |
 | Post assets: video capture, copy, itch page | 🟡 | Claude drafts; owner records/posts | Week 5–6 |
 
