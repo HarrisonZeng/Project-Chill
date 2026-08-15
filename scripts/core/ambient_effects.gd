@@ -23,6 +23,15 @@ const FRONT_TEX := "res://assets/art/backgrounds/desk_front.png"
 # properly drawn view (or a night / rainy variant) and it is picked up with no
 # code change. If it is missing, the original painting is used instead.
 const OUTSIDE_TEX := "res://assets/art/backgrounds/outside_layer.png"
+# Real painted views of the world outside, one per condition. These are
+# free-standing backdrops seen through the window, so unlike the room layers
+# they do not have to line up with the original painting — any good picture
+# works. Weather now changes what is actually out there, not just the tint.
+const OUTSIDE_BY_WEATHER := {
+	"rain": "res://assets/art/backgrounds/outside_rain.png",
+	"clear": "res://assets/art/backgrounds/outside_day.png",
+	"night": "res://assets/art/backgrounds/outside_night.png",
+}
 
 var _room: TextureRect = null
 var _front: TextureRect = null
@@ -48,6 +57,7 @@ func setup(background: CanvasItem, companion_stage: CanvasItem, weather: String 
 	set_weather(weather)
 
 func set_weather(kind: String) -> void:
+	_use_outside_picture(kind)
 	var mat := _background.material as ShaderMaterial
 	match kind:
 		"rain":
@@ -70,13 +80,18 @@ func set_weather(kind: String) -> void:
 # Swap the Background node's texture for the dedicated outside picture. Done at
 # runtime rather than in the .tscn so the scene still previews the original
 # painting in the editor.
-func _use_outside_picture() -> void:
+func _use_outside_picture(weather: String = "") -> void:
 	if not (_background is TextureRect):
 		return
-	if not ResourceLoader.exists(OUTSIDE_TEX):
-		push_warning("ambient_effects: no %s — run bg_tool.gd --mode=outside" % OUTSIDE_TEX)
+	# Prefer a painted view for this weather; fall back to the generic outside
+	# layer, and finally leave the original painting in place.
+	var path: String = OUTSIDE_BY_WEATHER.get(weather, "")
+	if path.is_empty() or not ResourceLoader.exists(path):
+		path = OUTSIDE_TEX
+	if not ResourceLoader.exists(path):
+		push_warning("ambient_effects: no outside picture — run bg_tool.gd --mode=outside")
 		return
-	(_background as TextureRect).texture = load(OUTSIDE_TEX)
+	(_background as TextureRect).texture = load(path)
 
 func _apply_rain_shader() -> void:
 	var mat := ShaderMaterial.new()
