@@ -157,6 +157,13 @@ func _ready() -> void:
 	music_bar.setup(bgm_manager)
 	_wire_signals()
 	_configure_visual_mode()
+	# Ambient layer: window rain, room grade, dust, breathing zoom. Decorative
+	# only — see scripts/core/ambient_effects.gd. Change "rain" to "clear" here
+	# to turn the weather off.
+	var ambient := preload("res://scripts/core/ambient_effects.gd").new()
+	ambient.name = "AmbientEffects"
+	add_child(ambient)
+	ambient.setup(background_node, "rain")
 	_configure_companion_controls()
 	_setup_memory_profile()  # must exist before _load_persistent_state (single profile store)
 	_load_persistent_state()
