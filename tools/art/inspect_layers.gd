@@ -55,8 +55,11 @@ func _compare(a_path: String, b_path: String) -> void:
 		var x := 0
 		while x < a.get_width():
 			var cb := b.get_pixel(x, y)
-			# skip keyed area
-			if (cb.r + cb.b) * 0.5 - cb.g < 0.30:
+			# Compare only where the candidate actually carries content: skip
+			# magenta-keyed areas AND genuinely transparent ones. Transparent
+			# pixels keep arbitrary RGB (usually black), which would otherwise
+			# swamp the score and make every alpha layer look "regenerated".
+			if cb.a >= 0.5 and (cb.r + cb.b) * 0.5 - cb.g < 0.30:
 				var ca := a.get_pixel(x, y)
 				diff += absf(ca.r - cb.r) + absf(ca.g - cb.g) + absf(ca.b - cb.b)
 				n += 1

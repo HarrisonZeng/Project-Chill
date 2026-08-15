@@ -60,14 +60,15 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 
 ## Active Tasks
 
-- **[OWNER — 3 small decides left]** (phone artifact updated with them): ① confirm opening D
-  「开局翻车」(owner's own idea 8/13 — caught gaming when player connects; A's eavesdrop beat moves
-  to Ep4, B = promo footage, C = easter egg) ② confirm aquarium as anchor 主职 (or swap 书屋 up)
-  ③ name the fake penguin auto-battler (placeholder《企鹅要塞》). ALREADY DECIDED 8/13: B1 seaside,
-  C1 fantasy/轻小说, 兼职轮换制 (all jobs as unlockable guest arcs; bookstore+library merged;
-  小卖部 deleted) — see rewritten `Yua_World_Components.md`.
-- **[CLAUDE — after the 3 picks]** Write final Ep0–5 into `scripted_nodes.json` (v10): seaside +
-  aquarium anchor + fantasy novel + 兼职轮换 hooks + 暗线 + opening D. Then 杂谈池 pools.
+- **DIRECTION FINAL (8/13 evening).** 主职 = 书咖 (轻小说书店×咖啡角, placeholder 灯塔书咖);
+  副业 = 水族馆 (小七/企鹅/Hina kept); B1 seaside; C1 fantasy/轻小说; opening D confirmed with
+  explicit co-work-app framing; EP0 name-AI-reaction confirmed; 勇哥360° meme as a swappable
+  时事单元 slot; **暗线 DELETED**. See `Yua_World_Components.md` v3 + revised opening D beats.
+- **[OWNER — naming only]** ① 店长=退休轻小说编辑 yes/no ② 书咖 name ③ fake game name.
+  Placeholders are usable; not blocking.
+- **[CLAUDE — next big task, unblocked]** Write final Ep0–5 into `scripted_nodes.json` (v10):
+  书咖 world + opening D + name-AI-reaction + V1 skeleton transplanted (aquarium eps → 副业
+  weekend eps). Then 杂谈池 pools.
 - **[CLAUDE — next session]** Implement dialogue UI 方案 A in `main_scene.tscn` + controllers.
 - **[CLAUDE — next session]** Type Mode implementation (`docs/Type_Mode_Design.md` §4) + persona
   fixes found in AI sampling (stage-direction leak, romance over-escalation).

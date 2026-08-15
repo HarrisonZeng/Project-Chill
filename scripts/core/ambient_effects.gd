@@ -22,7 +22,7 @@ const FRONT_TEX := "res://assets/art/backgrounds/desk_front.png"
 # stand-in by tools/art/bg_tool.gd --mode=outside; replace this file with a
 # properly drawn view (or a night / rainy variant) and it is picked up with no
 # code change. If it is missing, the original painting is used instead.
-const OUTSIDE_TEX := "res://assets/art/backgrounds/outside_layer.png"
+const OUTSIDE_TEX := "res://assets/art/backgrounds/outside_day.png"
 # Real painted views of the world outside, one per condition. These are
 # free-standing backdrops seen through the window, so unlike the room layers
 # they do not have to line up with the original painting — any good picture

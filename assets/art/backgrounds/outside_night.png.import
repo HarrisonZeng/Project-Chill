@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bm45imgm5ada1"
-path="res://.godot/imported/outside_layer.png-12ac52330c634d42535e724f0120e8e1.ctex"
+uid="uid://ddr5qa7e6yvak"
+path="res://.godot/imported/outside_night.png-d38cd15906149a53ca0d51f79ae2bfed.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/backgrounds/outside_layer.png"
-dest_files=["res://.godot/imported/outside_layer.png-12ac52330c634d42535e724f0120e8e1.ctex"]
+source_file="res://assets/art/backgrounds/outside_night.png"
+dest_files=["res://.godot/imported/outside_night.png-d38cd15906149a53ca0d51f79ae2bfed.ctex"]
 
 [params]
 

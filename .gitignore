@@ -28,3 +28,8 @@ build/
 
 # Debug previews from tools/art/bg_tool.gd
 assets/art/backgrounds/_*_preview.png*
+
+# Unaligned layer regenerations dropped from the project (see Progress.md)
+assets/art/backgrounds/chair.png
+assets/art/backgrounds/desk_back.png
+assets/art/backgrounds/room_shell.png
