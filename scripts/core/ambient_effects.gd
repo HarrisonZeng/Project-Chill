@@ -18,18 +18,25 @@ extends Node
 const RAIN_SHADER := preload("res://assets/shaders/window_rain.gdshader")
 const ROOM_TEX := "res://assets/art/backgrounds/room_layer.png"
 const FRONT_TEX := "res://assets/art/backgrounds/desk_front.png"
+# The view through the window, as its own full-frame picture. Generated as a
+# stand-in by tools/art/bg_tool.gd --mode=outside; replace this file with a
+# properly drawn view (or a night / rainy variant) and it is picked up with no
+# code change. If it is missing, the original painting is used instead.
+const OUTSIDE_TEX := "res://assets/art/backgrounds/outside_layer.png"
 
 var _room: TextureRect = null
 var _front: TextureRect = null
 var _tint: ColorRect = null
 var _dust: CPUParticles2D = null
 var _background: CanvasItem = null
+var _bg_home := Vector2.ZERO   # outside layer's resting position; drift is relative to it
 
 func setup(background: CanvasItem, companion_stage: CanvasItem, weather: String = "rain") -> void:
 	_background = background
 	var root := background.get_parent()
 	if root == null:
 		return
+	_use_outside_picture()
 	_apply_rain_shader()
 	_room = _add_layer(root, "RoomLayer", ROOM_TEX, background.get_index() + 1)
 	# Desk goes directly in front of Yua so she is occluded by it.
@@ -59,6 +66,17 @@ func set_weather(kind: String) -> void:
 				_tint.color = Color(0, 0, 0, 0)
 			if _dust != null:
 				_dust.modulate.a = 0.55
+
+# Swap the Background node's texture for the dedicated outside picture. Done at
+# runtime rather than in the .tscn so the scene still previews the original
+# painting in the editor.
+func _use_outside_picture() -> void:
+	if not (_background is TextureRect):
+		return
+	if not ResourceLoader.exists(OUTSIDE_TEX):
+		push_warning("ambient_effects: no %s — run bg_tool.gd --mode=outside" % OUTSIDE_TEX)
+		return
+	(_background as TextureRect).texture = load(OUTSIDE_TEX)
 
 func _apply_rain_shader() -> void:
 	var mat := ShaderMaterial.new()
@@ -133,11 +151,14 @@ func _sync_layers() -> void:
 	if not (is_instance_valid(_background) and _background is Control):
 		return
 	var bg := _background as Control
+	# Pinned to the outside layer's RESTING position, not its live one — the
+	# outside drifts for parallax and the room must stay put, or the whole frame
+	# slides together and the depth effect disappears.
 	for layer in [_room, _front]:
 		if not is_instance_valid(layer):
 			continue
-		if layer.position != bg.position:
-			layer.position = bg.position
+		if layer.position != _bg_home:
+			layer.position = _bg_home
 		if layer.size != bg.size:
 			layer.size = bg.size
 		layer.pivot_offset = bg.size / 2.0
@@ -152,6 +173,8 @@ func _start_breathing() -> void:
 		if c is Control:
 			var ctl := c as Control
 			ctl.pivot_offset = ctl.size / 2.0
+	if _background is Control:
+		_bg_home = (_background as Control).position
 	var tw := create_tween().set_loops()
 	tw.tween_method(_set_breath, 0.0, 1.0, 16.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -159,8 +182,12 @@ func _start_breathing() -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _set_breath(k: float) -> void:
+	# The outside is now its own picture that extends past the window, so it can
+	# drift properly against the fixed frame instead of only breathing in place.
 	if is_instance_valid(_background) and _background is Control:
-		(_background as Control).scale = Vector2.ONE * (1.0 + 0.016 * k)
+		var bg := _background as Control
+		bg.scale = Vector2.ONE * (1.0 + 0.022 * k)
+		bg.position = _bg_home + Vector2(-10.0 * k, -4.0 * k)
 	var room_scale := Vector2.ONE * (1.0 + 0.004 * k)
 	if is_instance_valid(_room):
 		_room.scale = room_scale

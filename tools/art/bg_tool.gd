@@ -53,6 +53,7 @@ func _init() -> void:
 		"alpha": _write_alpha(img)
 		"crop": _write_crop(img)
 		"slice": _write_layers(img)
+		"outside": _write_outside(img)
 		"charfix": _write_charfix(img)
 		_:
 			push_error("unknown --mode")
@@ -198,6 +199,106 @@ func _feather_cuts(im: Image) -> void:
 				continue
 			var t2 := float(i) / float(ramp - 1)
 			im.set_pixel(x, y2, Color(c2.r, c2.g, c2.b, minf(c2.a, t2)))
+
+# ── outside ───────────────────────────────────────────────────────────────────
+# Build a full-frame picture of the view through the window.
+#
+# The painting only contains "outside" inside the glass. To make the outside a
+# real independent layer — one that can drift for parallax, or be swapped for a
+# night or rainy version — it has to cover the whole frame. So the glass content
+# is pushed outward to fill everything else. That invented area is never seen
+# directly; it only has to exist so the glass never runs out of picture when the
+# layer moves.
+#
+# This is a STAND-IN. Drop a properly generated view at the same path and it is
+# used instead, no code change: assets/art/backgrounds/outside_layer.png
+func _write_outside(img: Image) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	# Work at quarter resolution: the filled area is blurred anyway, and
+	# per-pixel GDScript over 1.5M pixels is far too slow.
+	var sw := w / 4
+	var sh := h / 4
+	var small := img.duplicate() as Image
+	small.resize(sw, sh, Image.INTERPOLATE_BILINEAR)
+
+	var m := Image.create(sw, sh, false, Image.FORMAT_RGBA8)
+	for y in range(sh):
+		for x in range(sw):
+			var inside := false
+			var pt := Vector2(float(x * 4) + 2.0, float(y * 4) + 2.0)
+			for poly in _panes():
+				if Geometry2D.is_point_in_polygon(pt, poly):
+					inside = true
+					break
+			m.set_pixel(x, y, Color(1, 1, 1, 1) if inside else Color(0, 0, 0, 1))
+
+	var filled := PackedByteArray()
+	filled.resize(sw * sh)
+	for y in range(sh):
+		for x in range(sw):
+			filled[y * sw + x] = 1 if m.get_pixel(x, y).r > 0.5 else 0
+
+	# Horizontal push, both directions.
+	for y in range(sh):
+		var last := -1
+		for x in range(sw):
+			if filled[y * sw + x] == 1:
+				last = x
+			elif last >= 0:
+				small.set_pixel(x, y, small.get_pixel(last, y))
+				filled[y * sw + x] = 2
+		last = -1
+		for x in range(sw - 1, -1, -1):
+			if filled[y * sw + x] == 1:
+				last = x
+			elif last >= 0 and filled[y * sw + x] != 2:
+				small.set_pixel(x, y, small.get_pixel(last, y))
+				filled[y * sw + x] = 2
+	# Vertical push, for rows with no glass at all (below the sill).
+	var last_row := -1
+	for y in range(sh):
+		var any := false
+		for x in range(sw):
+			if filled[y * sw + x] != 0:
+				any = true
+				break
+		if any:
+			last_row = y
+		elif last_row >= 0:
+			for x in range(sw):
+				small.set_pixel(x, y, small.get_pixel(x, last_row))
+	for i in range(4):
+		_blur_rgb(small)
+
+	small.resize(w, h, Image.INTERPOLATE_BILINEAR)
+	# Keep the real glass pixels sharp; only the invented surround is blurred.
+	for y in range(h):
+		for x in range(w):
+			var pt2 := Vector2(float(x) + 0.5, float(y) + 0.5)
+			for poly in _panes():
+				if Geometry2D.is_point_in_polygon(pt2, poly):
+					var c := img.get_pixel(x, y)
+					small.set_pixel(x, y, Color(c.r, c.g, c.b, 1.0))
+					break
+	small.save_png(ProjectSettings.globalize_path(OUT_DIR + "outside_layer.png"))
+	print("wrote outside_layer.png (stand-in; replace with a generated view)")
+
+func _blur_rgb(im: Image) -> void:
+	var w := im.get_width()
+	var h := im.get_height()
+	var src := im.duplicate() as Image
+	for y in range(h):
+		for x in range(w):
+			var acc := Color(0, 0, 0, 0)
+			var n := 0.0
+			for dy in [-1, 0, 1]:
+				for dx in [-1, 0, 1]:
+					var sx: int = clampi(x + dx, 0, w - 1)
+					var sy: int = clampi(y + dy, 0, h - 1)
+					acc += src.get_pixel(sx, sy)
+					n += 1.0
+			im.set_pixel(x, y, Color(acc.r / n, acc.g / n, acc.b / n, 1.0))
 
 # ── slice ─────────────────────────────────────────────────────────────────────
 
