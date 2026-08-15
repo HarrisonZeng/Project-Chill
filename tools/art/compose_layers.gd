@@ -57,6 +57,26 @@ func _init() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--mode="):
 			mode = a.substr(7)
+	if mode == "key":
+		# Convert one magenta-backed layer to a real alpha PNG in place.
+		var in_p := ""
+		var out_p := ""
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--in="):
+				in_p = a.substr(5)
+			elif a.begins_with("--out="):
+				out_p = a.substr(6)
+		var im := Image.load_from_file(in_p)
+		if im == null:
+			push_error("cannot load " + in_p)
+			quit(1)
+			return
+		im.convert(Image.FORMAT_RGBA8)
+		key_magenta(im)
+		im.save_png(out_p)
+		print("keyed -> ", out_p)
+		quit(0)
+		return
 	if mode == "ingest":
 		for a in OS.get_cmdline_user_args():
 			if a.begins_with("--dir="):
