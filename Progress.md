@@ -119,6 +119,16 @@ either. What still does: feel, pacing, animation, audio.
 
 ## Session Log
 
+- **2026-08-14 (Chinese quality pipeline):** Owner flagged persistent awkwardness in my Chinese.
+  Built the systemic fix: `docs/Chinese_Style_Guide.md` (checkable contract — 翻译腔 blacklist,
+  rhythm caps, Yua's five techniques, doc rules incl. "explain every proper noun on first use")
+  + `tools/zh_polish.py` (runs any text/file through native MiniMax-M3 with the guide as rubric;
+  outputs polished text + per-change reasons citing guide rules; 16k token budget because M-series
+  thinks long — empty-output guard added). Demo on the owner-flagged 书咖 paragraph: killed
+  「剧情的火就从这点燃」→「故事就从这儿开头」,「努力有了着落」 nominalization, long attributives
+  split. Polished copy applied to artifact + world doc. New writing flow: Claude drafts content →
+  M3 polishes per guide → Claude re-checks hard rules → owner sees only flagged deltas.
+
 - **2026-08-11 (creative package completed):** Closed the two gaps in
   `Opening_and_Script_Directions.md`: V2「站台与申请季」now has a full line-by-line Ep0–5
   (written against 套餐一 station-town+songwriting so it tastes both the stakes AND an alternate

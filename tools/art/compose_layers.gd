@@ -77,6 +77,29 @@ func _init() -> void:
 		print("keyed -> ", out_p)
 		quit(0)
 		return
+	if mode == "cutx":
+		# Keep only content left of a column, clear the rest. Used to test which
+		# desk objects need to occlude Yua: anything her hands rest ON must be
+		# drawn behind her, and the room layer already contains it.
+		var in_p2 := ""
+		var out_p2 := ""
+		var cx := 0
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--in="):
+				in_p2 = a.substr(5)
+			elif a.begins_with("--out="):
+				out_p2 = a.substr(6)
+			elif a.begins_with("--x="):
+				cx = int(a.substr(4))
+		var im2 := Image.load_from_file(in_p2)
+		im2.convert(Image.FORMAT_RGBA8)
+		for y in range(im2.get_height()):
+			for x in range(cx, im2.get_width()):
+				im2.set_pixel(x, y, Color(0, 0, 0, 0))
+		im2.save_png(out_p2)
+		print("cut at x=%d -> %s" % [cx, out_p2])
+		quit(0)
+		return
 	if mode == "ingest":
 		for a in OS.get_cmdline_user_args():
 			if a.begins_with("--dir="):

@@ -74,9 +74,50 @@ func _compare(a_path: String, b_path: String) -> void:
 		"ALIGNED EDIT" if mean < 0.04 else ("close" if mean < 0.10 else "REGENERATED, not aligned")
 	])
 
+# Crop a region and scale it up, to inspect an edge or artifact closely.
+#   --crop=<src>|<out>|x,y,w,h
+func _crop(spec: String) -> void:
+	var parts := spec.split("|")
+	var img := Image.load_from_file(parts[0])
+	if img == null:
+		push_error("cannot load " + parts[0])
+		return
+	img.convert(Image.FORMAT_RGBA8)
+	var r := parts[2].split(",")
+	var rect := Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3]))
+	var out := Image.create(rect.size.x, rect.size.y, false, Image.FORMAT_RGBA8)
+	out.blit_rect(img, rect, Vector2i.ZERO)
+	# "rgb" forces alpha opaque, revealing any colour still stored underneath a
+	# transparent area. If the pixels survived, a broken cutout is repairable by
+	# restoring alpha rather than repainting the art.
+	if parts.size() > 3 and parts[3] == "rgb":
+		for y in range(rect.size.y):
+			for x in range(rect.size.x):
+				var c0 := out.get_pixel(x, y)
+				out.set_pixel(x, y, Color(c0.r, c0.g, c0.b, 1.0))
+	# Checkerboard behind, so transparent areas are obvious rather than black.
+	var vis := Image.create(rect.size.x, rect.size.y, false, Image.FORMAT_RGBA8)
+	for y in range(rect.size.y):
+		for x in range(rect.size.x):
+			var chk := 0.25 if ((x / 16) + (y / 16)) % 2 == 0 else 0.6
+			var c := out.get_pixel(x, y)
+			vis.set_pixel(x, y, Color(
+				c.r * c.a + chk * (1.0 - c.a),
+				c.g * c.a + chk * (1.0 - c.a),
+				c.b * c.a + chk * (1.0 - c.a), 1.0))
+	if rect.size.x < 700:
+		vis.resize(rect.size.x * 2, rect.size.y * 2, Image.INTERPOLATE_NEAREST)
+	vis.save_png(parts[1])
+	print("cropped -> ", parts[1])
+
 func _init() -> void:
 	var dir_path := ""
 	var cmp := ""
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--crop="):
+			_crop(a.substr(7))
+			quit(0)
+			return
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--compare="):
 			cmp = a.substr(10)
