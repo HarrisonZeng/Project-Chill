@@ -25,3 +25,6 @@ __pycache__/
 
 # Local web export output
 build/
+
+# Debug previews from tools/art/bg_tool.gd
+assets/art/backgrounds/_*_preview.png*

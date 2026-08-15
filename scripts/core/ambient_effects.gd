@@ -1,65 +1,108 @@
 extends Node
-# Ambient scene layer: weather in the window, a room-wide grade, dust motes in
-# the light, and a slow breathing zoom on the background — so the single
-# painted background reads as a live place instead of a still image.
+# Ambient scene layer. Splits the single painted background into depth layers so
+# the room reads as a place rather than a photo with effects stamped on it:
 #
-# Everything here is decorative: every node ignores the mouse, nothing touches
-# game state, and removing the AmbientEffects node restores the old look.
-
-# Window glass area of Background_temp.png mapped to the 1600x900 design
-# resolution. Children are parented to the background so the breathing zoom
-# moves them together with the painting.
-const WINDOW_RECT := Rect2(300, 0, 694, 410)
+#   Background    the outside view; the rain shader lives here
+#   RoomLayer     the room, transparent where the glass is  <- weather shows
+#                 through the window's real shape, so no rectangle
+#   CompanionStage  Yua (existing node)
+#   DeskFront     monitor, keyboard, plush, plant, chair    <- she sits behind
+#   WeatherTint   whole-frame grade
+#   DustMotes     in the air, nearest the camera
+#
+# The room and desk layers are cut from the same painting by
+# tools/art/bg_tool.gd, so their seams are invisible. Everything here is
+# decorative: no game state is touched, all layers ignore the mouse, and
+# deleting the AmbientEffects node restores the flat look.
 
 const RAIN_SHADER := preload("res://assets/shaders/window_rain.gdshader")
+const ROOM_TEX := "res://assets/art/backgrounds/room_layer.png"
+const FRONT_TEX := "res://assets/art/backgrounds/desk_front.png"
 
-var _rain: ColorRect = null
+var _room: TextureRect = null
+var _front: TextureRect = null
 var _tint: ColorRect = null
 var _dust: CPUParticles2D = null
 var _background: CanvasItem = null
 
-func setup(background: CanvasItem, weather: String = "rain") -> void:
+func setup(background: CanvasItem, companion_stage: CanvasItem, weather: String = "rain") -> void:
 	_background = background
-	_build_rain()
-	_build_tint()
-	_build_dust()
+	var root := background.get_parent()
+	if root == null:
+		return
+	_apply_rain_shader()
+	_room = _add_layer(root, "RoomLayer", ROOM_TEX, background.get_index() + 1)
+	# Desk goes directly in front of Yua so she is occluded by it.
+	var stage_idx: int = companion_stage.get_index() if companion_stage != null else background.get_index() + 2
+	_front = _add_layer(root, "DeskFront", FRONT_TEX, stage_idx + 1)
+	_build_tint(root)
+	_build_dust(root)
 	_start_breathing()
 	set_weather(weather)
 
 func set_weather(kind: String) -> void:
+	var mat := _background.material as ShaderMaterial
 	match kind:
 		"rain":
-			_rain.visible = true
-			(_rain.material as ShaderMaterial).set_shader_parameter("intensity", 0.7)
-			_tint.color = Color(0.45, 0.52, 0.68, 0.07)
-			_dust.modulate.a = 0.35
+			if mat != null:
+				mat.set_shader_parameter("intensity", 0.8)
+				mat.set_shader_parameter("overcast", 0.62)
+			if _tint != null:
+				_tint.color = Color(0.44, 0.50, 0.66, 0.10)
+			if _dust != null:
+				_dust.modulate.a = 0.3
 		_:  # "clear"
-			_rain.visible = false
-			_tint.color = Color(0, 0, 0, 0)
-			_dust.modulate.a = 0.6
+			if mat != null:
+				mat.set_shader_parameter("intensity", 0.0)
+				mat.set_shader_parameter("overcast", 0.0)
+			if _tint != null:
+				_tint.color = Color(0, 0, 0, 0)
+			if _dust != null:
+				_dust.modulate.a = 0.55
 
-func _build_rain() -> void:
-	_rain = ColorRect.new()
-	_rain.name = "WindowRain"
-	_rain.position = WINDOW_RECT.position
-	_rain.size = WINDOW_RECT.size
-	_rain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+func _apply_rain_shader() -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = RAIN_SHADER
-	_rain.material = mat
-	_background.add_child(_rain)
+	_background.material = mat
 
-func _build_dust() -> void:
-	# Slow motes drifting in the window light. CPUParticles so the web build's
-	# compatibility renderer handles it identically to desktop.
+func _add_layer(root: Node, node_name: String, tex_path: String, at_index: int) -> TextureRect:
+	if not ResourceLoader.exists(tex_path):
+		push_warning("ambient_effects: missing %s — run tools/art/bg_tool.gd --mode=slice" % tex_path)
+		return null
+	var tr := TextureRect.new()
+	tr.name = node_name
+	tr.texture = load(tex_path)
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# These layers are the same painting as the Background, so they must occupy
+	# the EXACT same rect or the shared pixels show up twice, slightly offset.
+	# Anchors alone don't guarantee that (the texture's own minimum size can push
+	# the height past the viewport), so the rect is copied every frame instead.
+	if _background is TextureRect:
+		tr.expand_mode = (_background as TextureRect).expand_mode
+		tr.stretch_mode = (_background as TextureRect).stretch_mode
+	root.add_child(tr)
+	root.move_child(tr, clampi(at_index, 0, root.get_child_count() - 1))
+	return tr
+
+func _build_tint(root: Node) -> void:
+	_tint = ColorRect.new()
+	_tint.name = "WeatherTint"
+	_tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tint.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(_tint)
+	var anchor: Node = _front if _front != null else _room
+	if anchor != null:
+		root.move_child(_tint, clampi(anchor.get_index() + 1, 0, root.get_child_count() - 1))
+
+func _build_dust(root: Node) -> void:
 	_dust = CPUParticles2D.new()
 	_dust.name = "DustMotes"
-	_dust.position = Vector2(640, 300)
-	_dust.amount = 16
-	_dust.lifetime = 10.0
-	_dust.preprocess = 10.0  # already drifting on the first visible frame
+	_dust.position = Vector2(700, 330)
+	_dust.amount = 18
+	_dust.lifetime = 11.0
+	_dust.preprocess = 11.0  # already drifting on the first visible frame
 	_dust.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	_dust.emission_rect_extents = Vector2(340, 240)
+	_dust.emission_rect_extents = Vector2(420, 250)
 	_dust.direction = Vector2(0, 1)
 	_dust.spread = 180.0
 	_dust.gravity = Vector2(0, 1.5)
@@ -78,28 +121,48 @@ func _build_dust() -> void:
 	grad.set_color(1, Color(1, 1, 1, 0.0))
 	tex.gradient = grad
 	_dust.texture = tex
-	_background.add_child(_dust)
+	root.add_child(_dust)
+	if _tint != null:
+		root.move_child(_dust, clampi(_tint.get_index() + 1, 0, root.get_child_count() - 1))
 
-func _build_tint() -> void:
-	# Whole-room grade, above the background painting but below Yua and the UI
-	# (background children draw before the next sibling). Weather sets its color.
-	_tint = ColorRect.new()
-	_tint.name = "WeatherTint"
-	_tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tint.anchors_preset = Control.PRESET_FULL_RECT
-	_tint.anchor_right = 1.0
-	_tint.anchor_bottom = 1.0
-	_background.add_child(_tint)
+func _process(_delta: float) -> void:
+	_sync_layers()
 
-func _start_breathing() -> void:
-	# A ~1% zoom in and out over half a minute. Below conscious notice, but the
-	# stillness of a static screenshot is gone.
-	if not _background is Control:
+# Keep the cut layers exactly on top of the Background's rect.
+func _sync_layers() -> void:
+	if not (is_instance_valid(_background) and _background is Control):
 		return
 	var bg := _background as Control
+	for layer in [_room, _front]:
+		if not is_instance_valid(layer):
+			continue
+		if layer.position != bg.position:
+			layer.position = bg.position
+		if layer.size != bg.size:
+			layer.size = bg.size
+		layer.pivot_offset = bg.size / 2.0
 	bg.pivot_offset = bg.size / 2.0
+
+func _start_breathing() -> void:
+	# Depth cue: the view through the window drifts more than the room does, the
+	# way a distant view shifts against a fixed frame. The room and desk layers
+	# are driven from the SAME value — they share pixels, so any mismatch would
+	# show the desk twice, slightly offset.
+	for c in [_background, _room, _front]:
+		if c is Control:
+			var ctl := c as Control
+			ctl.pivot_offset = ctl.size / 2.0
 	var tw := create_tween().set_loops()
-	tw.tween_property(bg, "scale", Vector2(1.012, 1.012), 16.0) \
+	tw.tween_method(_set_breath, 0.0, 1.0, 16.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(bg, "scale", Vector2.ONE, 16.0) \
+	tw.tween_method(_set_breath, 1.0, 0.0, 16.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func _set_breath(k: float) -> void:
+	if is_instance_valid(_background) and _background is Control:
+		(_background as Control).scale = Vector2.ONE * (1.0 + 0.016 * k)
+	var room_scale := Vector2.ONE * (1.0 + 0.004 * k)
+	if is_instance_valid(_room):
+		_room.scale = room_scale
+	if is_instance_valid(_front):
+		_front.scale = room_scale

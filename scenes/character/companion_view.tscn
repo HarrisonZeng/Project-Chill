@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://veumbjakewke"]
 
-[ext_resource type="Texture2D" uid="uid://c5csdgvwscoc1" path="res://assets/art/character/Character_temp.png" id="1_kb4hv"]
+[ext_resource type="Texture2D" uid="uid://c5csdgvwscoc1" path="res://assets/art/character/Character_clean.png" id="1_kb4hv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hotspot"]
 bg_color = Color(1, 0.741176, 0.584314, 0.14)

@@ -60,10 +60,14 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 
 ## Active Tasks
 
-- **[OWNER — decides]** `docs/Opening_and_Script_Directions.md` — pick: opening (A/B/C/combo), script
-  direction (V1/V2/V3), 杂谈池 scope, yua_draft.py tool yes/no. This supersedes most of
-  `Yua_Script_Polish_Proposal.md` (only blocks 5 & 7 remain independently valid).
-- **[CLAUDE — after verdicts]** Write chosen Ep0–5 into `scripted_nodes.json` (v10) + 杂谈池 pools.
+- **[OWNER — 3 small decides left]** (phone artifact updated with them): ① confirm opening D
+  「开局翻车」(owner's own idea 8/13 — caught gaming when player connects; A's eavesdrop beat moves
+  to Ep4, B = promo footage, C = easter egg) ② confirm aquarium as anchor 主职 (or swap 书屋 up)
+  ③ name the fake penguin auto-battler (placeholder《企鹅要塞》). ALREADY DECIDED 8/13: B1 seaside,
+  C1 fantasy/轻小说, 兼职轮换制 (all jobs as unlockable guest arcs; bookstore+library merged;
+  小卖部 deleted) — see rewritten `Yua_World_Components.md`.
+- **[CLAUDE — after the 3 picks]** Write final Ep0–5 into `scripted_nodes.json` (v10): seaside +
+  aquarium anchor + fantasy novel + 兼职轮换 hooks + 暗线 + opening D. Then 杂谈池 pools.
 - **[CLAUDE — next session]** Implement dialogue UI 方案 A in `main_scene.tscn` + controllers.
 - **[CLAUDE — next session]** Type Mode implementation (`docs/Type_Mode_Design.md` §4) + persona
   fixes found in AI sampling (stage-direction leak, romance over-escalation).

@@ -163,7 +163,7 @@ func _ready() -> void:
 	var ambient := preload("res://scripts/core/ambient_effects.gd").new()
 	ambient.name = "AmbientEffects"
 	add_child(ambient)
-	ambient.setup(background_node, "rain")
+	ambient.setup(background_node, companion_stage, "rain")
 	_configure_companion_controls()
 	_setup_memory_profile()  # must exist before _load_persistent_state (single profile store)
 	_load_persistent_state()
