@@ -97,7 +97,7 @@ func setup(background: CanvasItem, companion_stage: CanvasItem, weather: String 
 	_front = _add_layer(root, "DeskFront", FRONT_TEX, stage_idx + 1)
 	_build_tint(root)
 	_build_dust(root)
-	_start_breathing()
+	_place_layers()
 	set_weather(weather)
 
 func set_weather(kind: String) -> void:
@@ -207,9 +207,9 @@ func _sync_layers() -> void:
 	if not (is_instance_valid(_background) and _background is Control):
 		return
 	var bg := _background as Control
-	# Pinned to the outside layer's RESTING position, not its live one — the
-	# outside drifts for parallax and the room must stay put, or the whole frame
-	# slides together and the depth effect disappears.
+	# The room and desk sit exactly where the painting does; only the outside
+	# layer is offset, and only vertically. Scale is held at 1 because these two
+	# layers share pixels and any resampling of them shimmers.
 	for layer in [_room, _front]:
 		if not is_instance_valid(layer):
 			continue
@@ -217,37 +217,29 @@ func _sync_layers() -> void:
 			layer.position = _room_home
 		if layer.size != bg.size:
 			layer.size = bg.size
-		layer.pivot_offset = bg.size / 2.0
-	bg.pivot_offset = bg.size / 2.0
+		if layer.scale != Vector2.ONE:
+			layer.scale = Vector2.ONE
+		if layer.pivot_offset != bg.size / 2.0:
+			layer.pivot_offset = bg.size / 2.0
+	if bg.pivot_offset != bg.size / 2.0:
+		bg.pivot_offset = bg.size / 2.0
 
-func _start_breathing() -> void:
-	# Depth cue: the view through the window drifts more than the room does, the
-	# way a distant view shifts against a fixed frame. The room and desk layers
-	# are driven from the SAME value — they share pixels, so any mismatch would
-	# show the desk twice, slightly offset.
+# Layers are placed once and then left alone.
+#
+# There used to be a slow "breathing" zoom here, with the view drifting further
+# than the room as a depth cue. It had to go: the room and desk layers are cut
+# from the same painting, so they carry identical pixels in the places they
+# overlap. Scaling them — even by the 0.4% that drift used — resampled that
+# shared content slightly differently every frame, and the whole picture
+# shimmered along every edge. Any future motion has to move the outside layer
+# ONLY, never the two that share pixels.
+func _place_layers() -> void:
 	for c in [_background, _room, _front]:
 		if c is Control:
 			var ctl := c as Control
 			ctl.pivot_offset = ctl.size / 2.0
+			ctl.scale = Vector2.ONE
 	if _background is Control:
 		_room_home = (_background as Control).position
 		_bg_home = _room_home - Vector2(0.0, OUTSIDE_LIFT_PX)
 		(_background as Control).position = _bg_home
-	var tw := create_tween().set_loops()
-	tw.tween_method(_set_breath, 0.0, 1.0, 16.0) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_method(_set_breath, 1.0, 0.0, 16.0) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-func _set_breath(k: float) -> void:
-	# The outside is now its own picture that extends past the window, so it can
-	# drift properly against the fixed frame instead of only breathing in place.
-	if is_instance_valid(_background) and _background is Control:
-		var bg := _background as Control
-		bg.scale = Vector2.ONE * (1.0 + 0.022 * k)
-		bg.position = _bg_home + Vector2(-10.0 * k, -4.0 * k)
-	var room_scale := Vector2.ONE * (1.0 + 0.004 * k)
-	if is_instance_valid(_room):
-		_room.scale = room_scale
-	if is_instance_valid(_front):
-		_front.scale = room_scale

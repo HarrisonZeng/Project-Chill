@@ -67,9 +67,12 @@ void fragment() {
 	// Overcast grade: pull the sunny view toward cool grey.
 	float grey = dot(src.rgb, vec3(0.299, 0.587, 0.114));
 	vec3 rainy = mix(src.rgb, vec3(grey) * vec3(0.82, 0.88, 0.97), overcast);
-	// Faint falling rain in the distance.
+	// Faint falling rain in the distance. Smoothstep rather than step: a hard
+	// cutoff makes each streak pop on and off between frames, which reads as
+	// flicker rather than rain.
 	float sn = hash1(floor(UV.x * 190.0 + UV.y * 12.0));
-	rainy += step(0.93, fract(UV.y * 1.4 - t * (1.1 + sn) + sn * 9.0)) * 0.045 * intensity;
+	float fall = fract(UV.y * 1.4 - t * (1.1 + sn) + sn * 9.0);
+	rainy += smoothstep(0.90, 0.99, fall) * (1.0 - smoothstep(0.99, 1.0, fall)) * 0.035 * intensity;
 	// Drops catch a little light.
 	rainy += drops * 0.035;
 
