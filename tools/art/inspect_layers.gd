@@ -110,12 +110,46 @@ func _crop(spec: String) -> void:
 	vis.save_png(parts[1])
 	print("cropped -> ", parts[1])
 
+# Bounding box of the actual subject, treating either transparency or magenta
+# as "not the subject". Comparing boxes says whether a replacement character
+# drops into the same place or has to be rescaled and repositioned.
+func _bbox(path: String) -> void:
+	var img := Image.load_from_file(path)
+	if img == null:
+		push_error("cannot load " + path)
+		return
+	img.convert(Image.FORMAT_RGBA8)
+	var w := img.get_width()
+	var h := img.get_height()
+	var x0 := w
+	var y0 := h
+	var x1 := -1
+	var y1 := -1
+	for y in range(h):
+		for x in range(w):
+			var c := img.get_pixel(x, y)
+			var is_subject := c.a > 0.5 and ((c.r + c.b) * 0.5 - c.g) < 0.30
+			if is_subject:
+				x0 = mini(x0, x)
+				y0 = mini(y0, y)
+				x1 = maxi(x1, x)
+				y1 = maxi(y1, y)
+	if x1 < 0:
+		print("%s: no subject found" % path.get_file())
+		return
+	print("%s  canvas %dx%d  subject x:%d..%d y:%d..%d  (w=%d h=%d)" % [
+		path.get_file().substr(0, 22), w, h, x0, x1, y0, y1, x1 - x0 + 1, y1 - y0 + 1])
+
 func _init() -> void:
 	var dir_path := ""
 	var cmp := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--crop="):
 			_crop(a.substr(7))
+			quit(0)
+			return
+		elif a.begins_with("--bbox="):
+			_bbox(a.substr(7))
 			quit(0)
 			return
 	for a in OS.get_cmdline_user_args():
