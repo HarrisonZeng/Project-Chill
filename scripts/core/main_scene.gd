@@ -135,6 +135,15 @@ var return_count: int = 0
 var yua_openness: int = 0
 var current_story_milestone: String = ""
 var player_nickname: String = ""
+# Player-chosen scene look, persisted with the rest of the profile.
+var window_weather: String = "rain"
+var yua_stance: String = "at_player"
+# Type Mode is explicit: the type box only claims the reply slot when this is on,
+# so scripted reply buttons get that space the rest of the time.
+var type_mode_active: bool = false
+var ambient_effects: Node = null
+var view_options: Node = null
+
 # Privacy / AI on-off backend flag. Settings UI flips it via set_ai_features_enabled.
 # When false, dialogue_router makes no AI/network calls at all. Default on (mock).
 var ai_features_enabled: bool = true
@@ -158,15 +167,16 @@ func _ready() -> void:
 	_wire_signals()
 	_configure_visual_mode()
 	# Ambient layer: window rain, room grade, dust, breathing zoom. Decorative
-	# only — see scripts/core/ambient_effects.gd. Change "rain" to "clear" here
-	# to turn the weather off.
-	var ambient := preload("res://scripts/core/ambient_effects.gd").new()
-	ambient.name = "AmbientEffects"
-	add_child(ambient)
-	ambient.setup(background_node, companion_stage, "rain")
+	# only — see scripts/core/ambient_effects.gd. The player picks the weather in
+	# Settings; this is only the starting value.
+	ambient_effects = preload("res://scripts/core/ambient_effects.gd").new()
+	ambient_effects.name = "AmbientEffects"
+	add_child(ambient_effects)
+	ambient_effects.setup(background_node, companion_stage, window_weather)
 	_configure_companion_controls()
 	_setup_memory_profile()  # must exist before _load_persistent_state (single profile store)
 	_load_persistent_state()
+	_setup_view_options()
 	_load_prompt_assets()
 	call_status.refresh(ui_language, focus_running)
 	_update_timer_label()
@@ -355,6 +365,46 @@ func _configure_visual_mode() -> void:
 		background_node.visible = not use_video_mode
 	if companion_stage != null:
 		companion_stage.visible = not use_video_mode
+
+# Built after the profile loads, so the saved weather and stance are what the
+# player sees on the first frame rather than a flash of the defaults.
+func _setup_view_options() -> void:
+	view_options = preload("res://scripts/core/view_options.gd").new()
+	view_options.name = "ViewOptions"
+	add_child(view_options)
+	view_options.setup(self, window_weather, yua_stance)
+	view_options.weather_picked.connect(_on_weather_picked)
+	view_options.stance_picked.connect(_on_stance_picked)
+	view_options.type_mode_toggled.connect(_on_type_mode_toggled)
+	_apply_yua_stance()
+
+func _on_weather_picked(kind: String) -> void:
+	window_weather = kind
+	if ambient_effects != null and ambient_effects.has_method("set_weather"):
+		ambient_effects.set_weather(kind)
+	_save_persistent_state()
+
+func _on_stance_picked(kind: String) -> void:
+	yua_stance = kind
+	_apply_yua_stance()
+	_save_persistent_state()
+
+# Both stance images share the same framing, so swapping the texture moves
+# nothing — see the bounding-box check in tools/art/inspect_layers.gd.
+func _apply_yua_stance() -> void:
+	var portrait := get_node_or_null("CompanionStage/CompanionView/Portrait")
+	if not (portrait is TextureRect):
+		return
+	var path := "res://assets/art/character/yua_%s.png" % yua_stance
+	if not ResourceLoader.exists(path):
+		return
+	(portrait as TextureRect).texture = load(path)
+
+func _on_type_mode_toggled(on: bool) -> void:
+	type_mode_active = on
+	_refresh_input_placeholder()
+	if not on and player_input != null:
+		player_input.release_focus()
 
 func _refresh_input_placeholder() -> void:
 	if player_input == null:
@@ -693,8 +743,11 @@ func _should_autofocus_input() -> bool:
 # node has them. The two live in stacked bands so they no longer fight for one slot.
 func _update_response_slot_visibility(has_visible_choices: bool = false) -> void:
 	var ready := not dialogue_typewriter_active and not focus_running
-	var show_choices := ready and has_visible_choices
-	var show_type := ready
+	# The reply slot belongs to the buttons unless the player has switched Type
+	# Mode on. When a node offers no buttons at all, the type box stays available
+	# so there is always some way to answer her.
+	var show_type := ready and (type_mode_active or not has_visible_choices)
+	var show_choices := ready and has_visible_choices and not show_type
 	if choice_list != null:
 		choice_list.visible = show_choices
 	# ResponseCard is a transparent container; keep it parent-visible while ready so
@@ -1648,6 +1701,8 @@ func _save_persistent_state() -> void:
 		"music_playback_mode": music_bar.get_playback_mode(),
 		"voice_enabled": voice_enabled,
 		"ui_language": ui_language,
+		"window_weather": window_weather,
+		"yua_stance": yua_stance,
 		"dialogue_typewriter_chars_per_second": dialogue_typewriter_chars_per_second,
 		"task_panel_layout_version": TASK_PANEL_LAYOUT_VERSION,
 		"todo_panel_left": tasks_ui.get_panel_left(),
@@ -1702,6 +1757,12 @@ func _load_persistent_state() -> void:
 	ui_language = str(data.get("ui_language", "en"))
 	if ui_language != "zh":
 		ui_language = "en"
+	window_weather = str(data.get("window_weather", "rain"))
+	if not window_weather in ["rain", "clear", "night"]:
+		window_weather = "rain"
+	yua_stance = str(data.get("yua_stance", "at_player"))
+	if not yua_stance in ["at_player", "at_work"]:
+		yua_stance = "at_player"
 	dialogue_typewriter_chars_per_second = clampf(
 		float(data.get("dialogue_typewriter_chars_per_second", DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND)),
 		text_speed_slider.min_value,
