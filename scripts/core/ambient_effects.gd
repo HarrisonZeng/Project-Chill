@@ -38,7 +38,14 @@ var _front: TextureRect = null
 var _tint: ColorRect = null
 var _dust: CPUParticles2D = null
 var _background: CanvasItem = null
-var _bg_home := Vector2.ZERO   # outside layer's resting position; drift is relative to it
+var _room_home := Vector2.ZERO  # where the room and desk layers stay pinned
+var _bg_home := Vector2.ZERO    # outside layer's resting position; drift is relative to it
+
+# The window only reveals the upper part of the frame, but a painted view puts
+# its horizon near the middle — so unshifted, the player sees nothing but sky.
+# Lifting the outside layer brings the skyline and treetops into the glass.
+# Measured against the window band: the panes end around y=505 of 1024.
+const OUTSIDE_LIFT_PX := 308.0
 
 func setup(background: CanvasItem, companion_stage: CanvasItem, weather: String = "rain") -> void:
 	_background = background
@@ -172,8 +179,8 @@ func _sync_layers() -> void:
 	for layer in [_room, _front]:
 		if not is_instance_valid(layer):
 			continue
-		if layer.position != _bg_home:
-			layer.position = _bg_home
+		if layer.position != _room_home:
+			layer.position = _room_home
 		if layer.size != bg.size:
 			layer.size = bg.size
 		layer.pivot_offset = bg.size / 2.0
@@ -189,7 +196,9 @@ func _start_breathing() -> void:
 			var ctl := c as Control
 			ctl.pivot_offset = ctl.size / 2.0
 	if _background is Control:
-		_bg_home = (_background as Control).position
+		_room_home = (_background as Control).position
+		_bg_home = _room_home - Vector2(0.0, OUTSIDE_LIFT_PX)
+		(_background as Control).position = _bg_home
 	var tw := create_tween().set_loops()
 	tw.tween_method(_set_breath, 0.0, 1.0, 16.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
