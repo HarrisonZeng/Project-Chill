@@ -33,6 +33,43 @@ const OUTSIDE_BY_WEATHER := {
 	"night": "res://assets/art/backgrounds/outside_night.png",
 }
 
+# What she can see out of her window. Each view names its picture and how the
+# room should respond to it — rain on the glass, a colour cast, how much the
+# dust catches the light. `alt` is the older filename, so a view still resolves
+# if the newer painted set has not been generated yet.
+static func view_defs() -> Array:
+	return [
+		{"key": "rain", "tex": "view_city_rain.png", "alt": "outside_rain.png",
+			"rain": 0.8, "overcast": 0.62, "tint": Color(0.44, 0.50, 0.66, 0.10), "dust": 0.30},
+		{"key": "clear", "tex": "view_city_day.png", "alt": "outside_day.png",
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0, 0, 0, 0), "dust": 0.55},
+		{"key": "sunset", "tex": "view_city_sunset.png", "alt": "",
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0.85, 0.55, 0.30, 0.12), "dust": 0.70},
+		{"key": "night", "tex": "view_city_night.png", "alt": "outside_night.png",
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0.20, 0.26, 0.48, 0.26), "dust": 0.22},
+		{"key": "seaside", "tex": "view_seaside.png", "alt": "",
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0.55, 0.72, 0.80, 0.07), "dust": 0.50},
+		{"key": "treetops", "tex": "view_treetops.png", "alt": "",
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0.40, 0.60, 0.35, 0.10), "dust": 0.45},
+	]
+
+## Path for a view, preferring the newer painting and falling back to the older
+## one. Empty when neither exists, which is how callers know to skip the view.
+static func view_texture_path(key: String) -> String:
+	for d in view_defs():
+		if d["key"] != key:
+			continue
+		var newer: String = "res://assets/art/backgrounds/" + str(d["tex"])
+		if ResourceLoader.exists(newer):
+			return newer
+		var older: String = str(d["alt"])
+		if not older.is_empty():
+			older = "res://assets/art/backgrounds/" + older
+			if ResourceLoader.exists(older):
+				return older
+		return ""
+	return ""
+
 var _room: TextureRect = null
 var _front: TextureRect = null
 var _tint: ColorRect = null
@@ -64,25 +101,22 @@ func setup(background: CanvasItem, companion_stage: CanvasItem, weather: String 
 	set_weather(weather)
 
 func set_weather(kind: String) -> void:
-	_use_outside_picture(kind)
-	var mat := _background.material as ShaderMaterial
-	match kind:
-		"rain":
-			if mat != null:
-				mat.set_shader_parameter("intensity", 0.8)
-				mat.set_shader_parameter("overcast", 0.62)
-			if _tint != null:
-				_tint.color = Color(0.44, 0.50, 0.66, 0.10)
-			if _dust != null:
-				_dust.modulate.a = 0.3
-		_:  # "clear"
-			if mat != null:
-				mat.set_shader_parameter("intensity", 0.0)
-				mat.set_shader_parameter("overcast", 0.0)
-			if _tint != null:
-				_tint.color = Color(0, 0, 0, 0)
-			if _dust != null:
-				_dust.modulate.a = 0.55
+	for d in view_defs():
+		if d["key"] != kind:
+			continue
+		var path := view_texture_path(kind)
+		if not path.is_empty() and _background is TextureRect:
+			(_background as TextureRect).texture = load(path)
+		var mat := _background.material as ShaderMaterial
+		if mat != null:
+			mat.set_shader_parameter("intensity", d["rain"])
+			mat.set_shader_parameter("overcast", d["overcast"])
+		if _tint != null:
+			_tint.color = d["tint"]
+		if _dust != null:
+			_dust.modulate.a = d["dust"]
+		return
+	push_warning("ambient_effects: unknown view '%s'" % kind)
 
 # Swap the Background node's texture for the dedicated outside picture. Done at
 # runtime rather than in the .tscn so the scene still previews the original

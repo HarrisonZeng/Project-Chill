@@ -16,10 +16,22 @@ signal weather_picked(kind: String)
 signal stance_picked(kind: String)
 signal type_mode_toggled(on: bool)
 
-const WEATHERS := ["rain", "clear", "night"]
 const STANCES := ["at_player", "at_work"]
 
+# Only offer views whose picture is actually present, so a missing asset drops
+# that option from the cycle instead of showing the player a blank window.
+static func available_views() -> Array:
+	var out: Array = []
+	var amb := preload("res://scripts/core/ambient_effects.gd")
+	for d in amb.view_defs():
+		if not amb.view_texture_path(str(d["key"])).is_empty():
+			out.append(str(d["key"]))
+	if out.is_empty():
+		out.append("rain")
+	return out
+
 var _main: Node = null
+var _views: Array = []
 var _weather := "rain"
 var _stance := "at_player"
 var _type_on := false
@@ -38,7 +50,8 @@ var _chrome_toggle: Button = null
 
 func setup(main: Node, weather: String, stance: String) -> void:
 	_main = main
-	_weather = weather if weather in WEATHERS else "rain"
+	_views = available_views()
+	_weather = weather if weather in _views else String(_views[0])
 	_stance = stance if stance in STANCES else "at_player"
 	_build_settings_rows()
 	_build_type_toggle()
@@ -82,8 +95,8 @@ func _build_settings_rows() -> void:
 		p.offset_bottom += 164.0
 
 func _on_view_pressed() -> void:
-	var i := WEATHERS.find(_weather)
-	_weather = WEATHERS[(i + 1) % WEATHERS.size()]
+	var i := _views.find(_weather)
+	_weather = String(_views[(i + 1) % _views.size()])
 	_refresh_labels()
 	weather_picked.emit(_weather)
 
@@ -194,11 +207,15 @@ func _set_visible(path: String, on: bool) -> void:
 func _refresh_labels() -> void:
 	var zh: bool = _main.get("ui_language") == "zh"
 	if _view_button != null:
-		var view_name: String = {
+		var names := {
 			"rain": "雨天" if zh else "Rain",
 			"clear": "晴天" if zh else "Clear",
+			"sunset": "黄昏" if zh else "Sunset",
 			"night": "夜晚" if zh else "Night",
-		}[_weather]
+			"seaside": "海边" if zh else "Seaside",
+			"treetops": "树梢" if zh else "Treetops",
+		}
+		var view_name: String = str(names.get(_weather, _weather))
 		_view_button.text = ("窗外：%s" % view_name) if zh else ("Window: %s" % view_name)
 	if _stance_button != null:
 		var stance_name: String = {

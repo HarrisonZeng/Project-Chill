@@ -1758,7 +1758,9 @@ func _load_persistent_state() -> void:
 	if ui_language != "zh":
 		ui_language = "en"
 	window_weather = str(data.get("window_weather", "rain"))
-	if not window_weather in ["rain", "clear", "night"]:
+	# view_options is the authority on which views have art; an unknown or
+	# no-longer-available key falls back to the first one that does.
+	if not window_weather in preload("res://scripts/core/view_options.gd").available_views():
 		window_weather = "rain"
 	yua_stance = str(data.get("yua_stance", "at_player"))
 	if not yua_stance in ["at_player", "at_work"]:
