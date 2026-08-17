@@ -111,7 +111,25 @@ func _report(opts: Dictionary) -> void:
 	if not _shot_dir.is_empty() and _shot_count == 0:
 		await shot("final")
 
+	await _drain_audio()
 	quit(1 if failed > 0 else 0)
+
+
+## The audio server only releases a stopped playback on its next mix tick. Quit
+## in the same frame as a player is still going and that tick never comes, so
+## Godot reports the playback as leaked at exit — an ERROR on stderr, which
+## boot mode reads as a failure. Stop every player, then give the mixer a
+## couple of frames to notice before quitting. Cosmetic in a real exit; not
+## cosmetic for a check that greps stderr.
+func _drain_audio() -> void:
+	if root == null:
+		return
+	# Stop unconditionally: a one-shot that has finished reports playing=false
+	# while its playback can still be awaiting the mixer's removal pass.
+	for n in root.find_children("*", "AudioStreamPlayer", true, false):
+		n.stop()
+		n.stream = null
+	await frames(6)
 
 
 func _mount_game() -> bool:

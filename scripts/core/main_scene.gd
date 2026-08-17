@@ -143,6 +143,7 @@ var yua_stance: String = "at_player"
 var type_mode_active: bool = false
 var ambient_effects: Node = null
 var view_options: Node = null
+var companion_face: Node = null
 
 # Privacy / AI on-off backend flag. Settings UI flips it via set_ai_features_enabled.
 # When false, dialogue_router makes no AI/network calls at all. Default on (mock).
@@ -376,6 +377,14 @@ func _setup_view_options() -> void:
 	view_options.weather_picked.connect(_on_weather_picked)
 	view_options.stance_picked.connect(_on_stance_picked)
 	view_options.type_mode_toggled.connect(_on_type_mode_toggled)
+	# Blink + expressions on top of the portrait. Built here, after the stance
+	# is known, so the first blink already uses the right face.
+	var portrait := get_node_or_null("CompanionStage/CompanionView/Portrait")
+	if portrait is TextureRect:
+		companion_face = preload("res://scripts/core/companion_face.gd").new()
+		companion_face.name = "CompanionFace"
+		add_child(companion_face)
+		companion_face.setup(portrait as TextureRect)
 	_apply_yua_stance()
 
 func _on_weather_picked(kind: String) -> void:
@@ -399,6 +408,8 @@ func _apply_yua_stance() -> void:
 	if not ResourceLoader.exists(path):
 		return
 	(portrait as TextureRect).texture = load(path)
+	if companion_face != null:
+		companion_face.set_stance(yua_stance)
 
 func _on_type_mode_toggled(on: bool) -> void:
 	type_mode_active = on
@@ -1000,6 +1011,9 @@ func _on_character_clicked() -> void:
 	# A click that opens talk is a light interaction: remembered + ambient warmth,
 	# never story progress. (Clicks during focus go to the reactive pool above.)
 	_note_meaningful_interaction()
+	# She looks up and smiles at being addressed — the visible half of that warmth.
+	if companion_face != null:
+		companion_face.show_expression("smile", 2.5)
 
 	# If a line is still typing, reveal it fully first — don't act on the click yet.
 	# (Prevents a click from skipping past a terminal payoff line into a re-engage.)
@@ -1578,12 +1592,22 @@ func _update_focus_timer() -> void:
 		focus_time_left = 0.0
 		focus_running = false
 		completed_focus_sessions += 1
+		_play_focus_chime()
 		_apply_focus_completion_progress()
 		_show_focus_complete_node()
 		_refresh_focus_controls()
 		_save_persistent_state()
 
 	_update_timer_label()
+
+# The one deliberate UI sound in the game. A focus session is 15–60 minutes of
+# not looking at the screen; without an audible end the player misses both the
+# session ending and the episode beat that follows it. Everything else stays
+# silent by design — this is a focus app, not a toy. Lives with the rain in
+# ambient_effects so all sound has one owner and one teardown.
+func _play_focus_chime() -> void:
+	if ambient_effects != null and ambient_effects.has_method("play_focus_chime"):
+		ambient_effects.play_focus_chime()
 
 func _show_focus_complete_node() -> void:
 	# Focus is the only driver of story beats. The gate picks the eligible authored

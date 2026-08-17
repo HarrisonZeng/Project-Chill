@@ -97,6 +97,7 @@ func setup(background: CanvasItem, companion_stage: CanvasItem, weather: String 
 	_front = _add_layer(root, "DeskFront", FRONT_TEX, stage_idx + 1)
 	_build_tint(root)
 	_build_dust(root)
+	_build_rain_audio()
 	_place_layers()
 	set_weather(weather)
 
@@ -115,8 +116,100 @@ func set_weather(kind: String) -> void:
 			_tint.color = d["tint"]
 		if _dust != null:
 			_dust.modulate.a = d["dust"]
+		_set_rain_audio(float(d["rain"]))
 		return
 	push_warning("ambient_effects: unknown view '%s'" % kind)
+
+# ── rain audio ───────────────────────────────────────────────────────────────
+# Follows the same per-view "rain" amount that drives the drops on the glass, so
+# the sound and the picture can never disagree. Fades rather than cuts, and
+# stops the player entirely once silent so it costs nothing on dry days.
+const RAIN_LOOP := "res://assets/audio/rain_loop.wav"
+const RAIN_DB_AT_FULL := -16.0   # sits under the music, never over it
+var _rain_player: AudioStreamPlayer = null
+var _rain_tween: Tween = null
+# Ambient sound waits for the player's first click. Browsers refuse to play
+# audio before a user gesture, so on the web this is the only way it can start
+# cleanly; on desktop it means the room fades in with the first touch rather
+# than blaring on boot. It also keeps an untouched boot silent, which the check
+# harness relies on.
+var _audio_unlocked := false
+var _rain_wanted := 0.0
+
+func _input(event: InputEvent) -> void:
+	if _audio_unlocked:
+		return
+	var is_click: bool = event is InputEventMouseButton and event.pressed
+	var is_key: bool = event is InputEventKey and event.pressed
+	if is_click or is_key:
+		_audio_unlocked = true
+		set_process_input(false)
+		_set_rain_audio(_rain_wanted)
+
+func _build_rain_audio() -> void:
+	if not ResourceLoader.exists(RAIN_LOOP):
+		return
+	_rain_player = AudioStreamPlayer.new()
+	_rain_player.name = "RainAmbience"
+	_rain_player.stream = load(RAIN_LOOP)
+	_rain_player.volume_db = -80.0
+	_rain_player.bus = "Master"
+	add_child(_rain_player)
+
+# ── focus chime ──────────────────────────────────────────────────────────────
+const FOCUS_CHIME := "res://assets/audio/focus_chime.wav"
+var _chime_player: AudioStreamPlayer = null
+
+var _chime_stream: AudioStream = null
+
+func play_focus_chime() -> void:
+	if _chime_player == null:
+		if not ResourceLoader.exists(FOCUS_CHIME):
+			return
+		_chime_stream = load(FOCUS_CHIME)
+		_chime_player = AudioStreamPlayer.new()
+		_chime_player.name = "FocusChime"
+		_chime_player.volume_db = -6.0
+		_chime_player.finished.connect(_on_chime_finished)
+		add_child(_chime_player)
+	# Attach the stream per play and detach when done: a finished one-shot
+	# otherwise keeps its playback registered until the player is freed, which
+	# shows up as a leaked AudioStreamPlayback at exit.
+	_chime_player.stream = _chime_stream
+	_chime_player.play()
+
+func _on_chime_finished() -> void:
+	if is_instance_valid(_chime_player):
+		_chime_player.stream = null
+
+# A player still playing when the tree is torn down keeps its playback alive in
+# the audio server past exit, which the headless harness reports as a leak.
+# Stop everything on the way out.
+func _exit_tree() -> void:
+	if _rain_tween != null and _rain_tween.is_valid():
+		_rain_tween.kill()
+	for p in [_rain_player, _chime_player]:
+		if is_instance_valid(p):
+			p.stop()
+			p.stream = null
+
+func _set_rain_audio(amount: float) -> void:
+	_rain_wanted = amount
+	if _rain_player == null or not _audio_unlocked:
+		return
+	if _rain_tween != null and _rain_tween.is_valid():
+		_rain_tween.kill()
+	if amount <= 0.01:
+		_rain_tween = create_tween()
+		_rain_tween.tween_property(_rain_player, "volume_db", -80.0, 1.2)
+		_rain_tween.tween_callback(_rain_player.stop)
+		return
+	if not _rain_player.playing:
+		_rain_player.volume_db = -80.0
+		_rain_player.play()
+	var target := RAIN_DB_AT_FULL + linear_to_db(clampf(amount, 0.05, 1.0))
+	_rain_tween = create_tween()
+	_rain_tween.tween_property(_rain_player, "volume_db", target, 1.5)
 
 # Swap the Background node's texture for the dedicated outside picture. Done at
 # runtime rather than in the .tscn so the scene still previews the original
