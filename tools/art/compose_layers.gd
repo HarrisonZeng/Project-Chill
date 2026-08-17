@@ -77,6 +77,40 @@ func _init() -> void:
 		print("keyed -> ", out_p)
 		quit(0)
 		return
+	if mode == "keep":
+		# Keep only pixels inside any of the given rects (x,y,w,h;x,y,w,h;...),
+		# clear everything else. For trimming a front layer down to just what is
+		# nearer the camera than the character.
+		var in_k := ""
+		var out_k := ""
+		var rects_s := ""
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--in="):
+				in_k = a.substr(5)
+			elif a.begins_with("--out="):
+				out_k = a.substr(6)
+			elif a.begins_with("--rects="):
+				rects_s = a.substr(8)
+		var rects: Array[Rect2i] = []
+		for part in rects_s.split(";"):
+			var v := part.split(",")
+			if v.size() == 4:
+				rects.append(Rect2i(int(v[0]), int(v[1]), int(v[2]), int(v[3])))
+		var imk := Image.load_from_file(in_k)
+		imk.convert(Image.FORMAT_RGBA8)
+		for y in range(imk.get_height()):
+			for x in range(imk.get_width()):
+				var inside := false
+				for r in rects:
+					if r.has_point(Vector2i(x, y)):
+						inside = true
+						break
+				if not inside:
+					imk.set_pixel(x, y, Color(0, 0, 0, 0))
+		imk.save_png(out_k)
+		print("kept %d rects -> %s" % [rects.size(), out_k])
+		quit(0)
+		return
 	if mode == "cutx":
 		# Keep only content left of a column, clear the rest. Used to test which
 		# desk objects need to occlude Yua: anything her hands rest ON must be
