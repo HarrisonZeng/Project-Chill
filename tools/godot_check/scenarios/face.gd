@@ -32,3 +32,20 @@ func run(g) -> void:
 		g.check("blink layer matches portrait rect",
 			blink.get_global_rect() == portrait.get_global_rect(),
 			"blink %s vs portrait %s" % [blink.get_global_rect(), portrait.get_global_rect()])
+	# The hands overlay lives above the desk, outside CompanionView, so its rect
+	# is synced by hand — that is the one that can drift.
+	var hands = game.get_node_or_null("HandsLayer")
+	if hands != null and portrait != null:
+		g.check("hands layer matches portrait rect",
+			hands.get_global_rect() == portrait.get_global_rect(),
+			"hands %s vs portrait %s" % [hands.get_global_rect(), portrait.get_global_rect()])
+		g.check("hands layer stretch matches portrait",
+			hands.expand_mode == portrait.expand_mode and hands.stretch_mode == portrait.stretch_mode)
+		# With the desk hidden, the overlay must coincide with her real arms —
+		# photograph it so a mismatch is visible, not just numeric.
+		var desk = game.get_node_or_null("DeskFront")
+		if desk != null:
+			desk.visible = false
+			await g.frames(2)
+			await g.shot("hands-over-arms-no-desk")
+			desk.visible = true

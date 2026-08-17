@@ -384,7 +384,19 @@ func _setup_view_options() -> void:
 		companion_face = preload("res://scripts/core/companion_face.gd").new()
 		companion_face.name = "CompanionFace"
 		add_child(companion_face)
-		companion_face.setup(portrait as TextureRect)
+		# Hands go directly above the desk layer, which ambient_effects placed
+		# right after the companion stage.
+		var desk := get_node_or_null("DeskFront")
+		var above_idx: int = desk.get_index() + 1 if desk != null else -1
+		companion_face.setup(portrait as TextureRect, self if desk != null else null, above_idx)
+		# Yua and her hands are lit like the room (night = cool, sunset = warm).
+		if ambient_effects != null and ambient_effects.has_method("register_lit_like_room"):
+			ambient_effects.register_lit_like_room(companion_stage)
+			var hands = companion_face.hands_layer()
+			if hands != null:
+				ambient_effects.register_lit_like_room(hands)
+			# Re-apply so the registration takes effect on the starting view.
+			ambient_effects.set_weather(window_weather)
 	_apply_yua_stance()
 
 func _on_weather_picked(kind: String) -> void:

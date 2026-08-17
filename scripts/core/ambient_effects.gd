@@ -37,21 +37,43 @@ const OUTSIDE_BY_WEATHER := {
 # room should respond to it — rain on the glass, a colour cast, how much the
 # dust catches the light. `alt` is the older filename, so a view still resolves
 # if the newer painted set has not been generated yet.
+# Per view: the painting outside, the rain/overcast on the glass, a whole-frame
+# tint, dust density, which ROOM lighting to use ("day" art or the lamp-lit
+# "night" repaint), and a modulate for Yua so she is lit like the room she is
+# in rather than in flat daylight against a night window.
 static func view_defs() -> Array:
 	return [
 		{"key": "rain", "tex": "view_city_rain.png", "alt": "outside_rain.png",
-			"rain": 0.8, "overcast": 0.62, "tint": Color(0.44, 0.50, 0.66, 0.10), "dust": 0.30},
+			"rain": 0.8, "overcast": 0.62, "tint": Color(0.44, 0.50, 0.66, 0.10), "dust": 0.30,
+			"room": "day", "yua": Color(0.93, 0.95, 1.0)},
 		{"key": "clear", "tex": "view_city_day.png", "alt": "outside_day.png",
-			"rain": 0.0, "overcast": 0.0, "tint": Color(0, 0, 0, 0), "dust": 0.55},
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0, 0, 0, 0), "dust": 0.55,
+			"room": "day", "yua": Color.WHITE},
 		{"key": "sunset", "tex": "view_city_sunset.png", "alt": "",
-			"rain": 0.0, "overcast": 0.0, "tint": Color(0.85, 0.55, 0.30, 0.12), "dust": 0.70},
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0.85, 0.55, 0.30, 0.12), "dust": 0.70,
+			"room": "day", "yua": Color(1.0, 0.94, 0.86)},
 		{"key": "night", "tex": "view_city_night.png", "alt": "outside_night.png",
-			"rain": 0.0, "overcast": 0.0, "tint": Color(0.20, 0.26, 0.48, 0.26), "dust": 0.22},
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0.20, 0.26, 0.48, 0.10), "dust": 0.22,
+			"room": "night", "yua": Color(0.80, 0.84, 0.98)},
 		{"key": "seaside", "tex": "view_seaside.png", "alt": "",
-			"rain": 0.0, "overcast": 0.0, "tint": Color(0.55, 0.72, 0.80, 0.07), "dust": 0.50},
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0.55, 0.72, 0.80, 0.07), "dust": 0.50,
+			"room": "day", "yua": Color.WHITE},
 		{"key": "treetops", "tex": "view_treetops.png", "alt": "",
-			"rain": 0.0, "overcast": 0.0, "tint": Color(0.40, 0.60, 0.35, 0.10), "dust": 0.45},
+			"rain": 0.0, "overcast": 0.0, "tint": Color(0.40, 0.60, 0.35, 0.10), "dust": 0.45,
+			"room": "day", "yua": Color(0.96, 1.0, 0.94)},
 	]
+
+# Room art per lighting state. The night files are Codex EDITS of the day
+# master (glass mask identical, desk mask within 1%), so swapping them moves
+# nothing — only the light changes.
+const ROOM_TEX_BY_LIGHT := {
+	"day": ["res://assets/art/backgrounds/room_layer.png", "res://assets/art/backgrounds/desk_front.png"],
+	"night": ["res://assets/art/backgrounds/room_layer_night.png", "res://assets/art/backgrounds/desk_front_night.png"],
+}
+var _room_light := ""
+# Everything that should be lit like the room: the companion stage and the
+# hands overlay above the desk. Registered by main_scene once they exist.
+var _lit_like_room: Array = []
 
 ## Path for a view, preferring the newer painting and falling back to the older
 ## one. Empty when neither exists, which is how callers know to skip the view.
@@ -116,9 +138,32 @@ func set_weather(kind: String) -> void:
 			_tint.color = d["tint"]
 		if _dust != null:
 			_dust.modulate.a = d["dust"]
+		_set_room_light(str(d["room"]))
+		for n in _lit_like_room:
+			if is_instance_valid(n) and n is CanvasItem:
+				(n as CanvasItem).modulate = d["yua"]
 		_set_rain_audio(float(d["rain"]))
 		return
 	push_warning("ambient_effects: unknown view '%s'" % kind)
+
+func register_lit_like_room(node: CanvasItem) -> void:
+	if node != null and not _lit_like_room.has(node):
+		_lit_like_room.append(node)
+
+func _set_room_light(light: String) -> void:
+	if light == _room_light:
+		return
+	if not ROOM_TEX_BY_LIGHT.has(light):
+		return
+	var paths: Array = ROOM_TEX_BY_LIGHT[light]
+	# Only switch if both files exist; otherwise stay on whatever is showing.
+	if not (ResourceLoader.exists(paths[0]) and ResourceLoader.exists(paths[1])):
+		return
+	if is_instance_valid(_room):
+		_room.texture = load(paths[0])
+	if is_instance_valid(_front):
+		_front.texture = load(paths[1])
+	_room_light = light
 
 # ── rain audio ───────────────────────────────────────────────────────────────
 # Follows the same per-view "rain" amount that drives the drops on the glass, so

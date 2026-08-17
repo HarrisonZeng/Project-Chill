@@ -74,6 +74,42 @@ func _compare(a_path: String, b_path: String) -> void:
 		"ALIGNED EDIT" if mean < 0.04 else ("close" if mean < 0.10 else "REGENERATED, not aligned")
 	])
 
+# For a RELIGHT, colour is supposed to change, so --compare says nothing
+# useful. What must not change is geometry — and the keyed mask is geometry.
+# Reports the fraction of pixels whose magenta/not-magenta status differs
+# between two keyed files. Same room => ~0%.
+#   --maskdiff=<a>|<b>
+func _maskdiff(spec: String) -> void:
+	var parts := spec.split("|")
+	var a := Image.load_from_file(parts[0])
+	var b := Image.load_from_file(parts[1])
+	if a == null or b == null:
+		push_error("load failed")
+		return
+	a.convert(Image.FORMAT_RGBA8)
+	b.convert(Image.FORMAT_RGBA8)
+	if a.get_size() != b.get_size():
+		print("SIZE MISMATCH %s vs %s" % [a.get_size(), b.get_size()])
+		return
+	var differ := 0
+	var n := 0
+	var y := 0
+	while y < a.get_height():
+		var x := 0
+		while x < a.get_width():
+			var ca := a.get_pixel(x, y)
+			var cb := b.get_pixel(x, y)
+			var ma: bool = ((ca.r + ca.b) * 0.5 - ca.g) >= 0.30
+			var mb: bool = ((cb.r + cb.b) * 0.5 - cb.g) >= 0.30
+			if ma != mb:
+				differ += 1
+			n += 1
+			x += 2
+		y += 2
+	var pct := 100.0 * float(differ) / float(n)
+	print("mask differs on %.2f%% of pixels  ->  %s" % [
+		pct, "SAME GEOMETRY" if pct < 0.5 else ("close" if pct < 2.0 else "DIFFERENT GEOMETRY")])
+
 # Crop a region and scale it up, to inspect an edge or artifact closely.
 #   --crop=<src>|<out>|x,y,w,h
 func _crop(spec: String) -> void:
@@ -146,6 +182,10 @@ func _init() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--crop="):
 			_crop(a.substr(7))
+			quit(0)
+			return
+		elif a.begins_with("--maskdiff="):
+			_maskdiff(a.substr(11))
 			quit(0)
 			return
 		elif a.begins_with("--bbox="):

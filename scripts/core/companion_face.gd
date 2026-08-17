@@ -27,11 +27,30 @@ var _rng := RandomNumberGenerator.new()
 var _expr_tween: Tween = null
 var _blinking := false
 
-func setup(portrait: TextureRect) -> void:
+# Her forearms and hands, drawn ABOVE the desk. The desk layer sits in front of
+# her (so it hides her lap); this puts her hands back on top of the keyboard.
+# It is a cut of the same character image (measured 0.0000 against it), so it
+# lands on the portrait exactly — the only thing that differs is where it sits
+# in the tree, which has to be after DeskFront rather than inside CompanionView.
+var _hands_layer: TextureRect = null
+
+func setup(portrait: TextureRect, above_desk_parent: Node = null, above_desk_index: int = -1) -> void:
 	_portrait = portrait
 	_rng.randomize()
 	_blink_layer = _make_overlay("BlinkLayer")
 	_expr_layer = _make_overlay("ExpressionLayer")
+	if above_desk_parent != null:
+		_hands_layer = TextureRect.new()
+		_hands_layer.name = "HandsLayer"
+		_hands_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_hands_layer.expand_mode = _portrait.expand_mode
+		_hands_layer.stretch_mode = _portrait.stretch_mode
+		above_desk_parent.add_child(_hands_layer)
+		if above_desk_index >= 0:
+			above_desk_parent.move_child(_hands_layer, mini(above_desk_index, above_desk_parent.get_child_count() - 1))
+		# Match the portrait's on-screen rect now and whenever layout changes.
+		_portrait.item_rect_changed.connect(_sync_hands_rect)
+		_sync_hands_rect.call_deferred()
 	_blink_timer = Timer.new()
 	_blink_timer.one_shot = true
 	_blink_timer.timeout.connect(_on_blink_timer)
@@ -46,6 +65,18 @@ func set_stance(stance: String) -> void:
 	_blink_layer.texture = _variant_for("blink")
 	_blink_layer.modulate.a = 0.0
 	_expr_layer.modulate.a = 0.0
+	if _hands_layer != null:
+		_hands_layer.texture = _variant_for("hands")
+
+func hands_layer() -> CanvasItem:
+	return _hands_layer
+
+func _sync_hands_rect() -> void:
+	if _hands_layer == null or not is_instance_valid(_portrait):
+		return
+	var r := _portrait.get_global_rect()
+	_hands_layer.global_position = r.position
+	_hands_layer.size = r.size
 
 func blink_now() -> void:
 	if _blinking or _blink_layer.texture == null:
