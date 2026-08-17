@@ -16,8 +16,9 @@ Legend: ✅ done · 🔧 in progress · ⬜ not started · 🅾 owner decides/ac
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| A1 | Room repainted with a real layout: one desk, open floor behind her, chair under her, sill not counter, single camera height | 🔧 | `room_master.png` done and looks right; Codex still cutting `desk_front_keyed`. Claude wires + re-checks Yua's seat position when it lands. **🅾 Owner: look at the new room once live and say if the layout reads.** |
-| A2 | Room lighting follows the view outside — no daylight rays at night | ⬜ | Blocked on A1 (a relight of the old room would be thrown away). Plan: Codex *edits* the new master into a lamp-lit night version (room + desk layers, magenta-keyed); sunset = runtime warm tint on the day art; rain = existing overcast grade. Verify alignment by comparing the keyed masks, not colour. |
+| A1 | Room repainted with a real layout: one desk, open floor behind her, chair under her, sill not counter, single camera height | ✅ live | Master + two aligned edits (0.0000 / 0.026). Yua reseated in the chair. **🅾 Owner: look at the new room and say if the layout reads.** |
+| A1b | Hands-over-desk overlay so the full desk can hide her lap while her hands stay on the keyboard | 🔧 Codex running | `yua_hands_keyed` + `yua_at_work_hands_keyed`, edits of the character files. When they land: key, add a HandsLayer above DeskFront in `companion_face.gd`, swap `desk_front` to the full cut. |
+| A2 | Room lighting follows the view outside — no daylight rays at night | 🔧 Codex running | `room_master_night` + its glass-keyed and desk-keyed edits, from the NEW master. Wire: `night` view → night room/desk textures; sunset = warm tint on day art; rain = overcast grade. Verify by comparing keyed masks. |
 | A3 | Six painted window views (day/night/rain/sunset/seaside/treetops), warm, hand-painted, low-rise | ✅ | Live. 2.1 MB total after lossy import. `views` scenario photographs each through the window. |
 | A4 | Rain on the glass follows the view; dust motes; no layer motion (was shimmering) | ✅ | Motion must only ever move the *outside* layer — room and desk share pixels. |
 | A5 | Legs-under-desk / chair as its own layer | ⏸ | Not meaningful for the demo; the new room already seats her correctly. |
