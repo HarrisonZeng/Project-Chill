@@ -60,6 +60,10 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 
 ## Active Tasks
 
+- **[ART/SOUND — live checklist]** `docs/Demo_Art_Checklist.md` holds every non-text item for the
+  demo (room, Yua, sound, intro, UI, voice plan) with status and the open owner decisions. Read it
+  first when doing anything visual or audio; tick items there, not here.
+
 - **DIRECTION FINAL (8/13 evening).** 主职 = 书咖 (轻小说书店×咖啡角, placeholder 灯塔书咖);
   副业 = 水族馆 (小七/企鹅/Hina kept); B1 seaside; C1 fantasy/轻小说; opening D confirmed with
   explicit co-work-app framing; EP0 name-AI-reaction confirmed; 勇哥360° meme as a swappable
@@ -119,6 +123,78 @@ either. What still does: feel, pacing, animation, audio.
 
 ## Session Log
 
+- **2026-08-17 (Ep2 CANON + style profile):** Round 7 verdict: merge option 2 (clear logic) ×
+  option 5 (cuter, more anime-girl) — both Claude's. Merged canon in
+  `Opening_and_Script_Directions.md` + decisions artifact (Ep2 card). Per owner request, taste
+  log gained a **positive style profile** derived from actual picks (logic before flourish;
+  cute = self-mockery + 理直气壮 + self-answered questions; metaphors childlike/lived-in not
+  literary — 翻书/船打哈欠/纸边翘 beat 隔着雾按键/晾衣绳; two-sentence beats: state then
+  release; concrete callbacks; ending = her next step + player's freedom). Private note: owner
+  has picked the same writer's drafts in every round since grounding — proposed promoting it to
+  primary drafter with others as challengers; awaiting owner. Context pack advanced to Ep3
+  (theme: 坐不住 — she confesses her distractibility; relationship +half step).
+- **2026-08-17 (Ep0 + Ep1 CANON):** Owner picked Ep0 option 5 and Ep1 option 5 (both Claude's).
+  Root-cause admitted for the 封口费/目击者 spread: Claude wrote it in round 4, then mis-recorded
+  it in the taste log as an owner-liked direction → all writers iterated on it. Retracted with an
+  explicit note; new vetoes: 保密梗, 「明天再来」-style scheduling (Yua never arranges the
+  player's time), 装傻过头. Context pack 铁律 #6 added. Ep1 beat 4 rewritten to close in the
+  present («好，我接着写我的了…你想再来一段就再来，想歇就歇»). Canon text in
+  `Opening_and_Script_Directions.md` and the decisions artifact (new ✅ 定稿 section; old V1/V2
+  demoted to archive). NEXT: write Ep0-full + Ep1 into `scripted_nodes.json` v10 with new node
+  IDs, name-reaction engine hook, task-notebook display, 15/30/60 chips; then arena round 7 = Ep2.
+- **2026-08-17 (arena round 6 — structural fix):** Owner round-5 verdicts exposed the real
+  bug: writers saw setting facts but not the STORY — hence 存档/建角色 non-sequiturs and Ep1
+  jumping to shop anecdotes with someone she met 30 min ago. Fixes: context_pack.md rewritten as
+  「到目前为止发生了什么」(canon opening verbatim + her exact emotional state + relationship
+  state = zero mutual knowledge) with five 铁律; briefs now carry LOCKED beat order (Ep0: name →
+  tools discovered together, not toured → 15/30/60 push; Ep1: talk about the session FIRST →
+  branches → life leaks only via "你刚才在忙什么", one sentence, no shop events); zh_arena.py
+  task text tells writers order is a contract; taste log +3 vetoes. Round 6 published: Ep0 ×6,
+  Ep1 ×5 (DeepSeek returned one). Answer key kept private in
+  `tools/zh_arena_out/round6_key.md` per owner ("don't want to know").
+- **2026-08-17 (arena round 5 + grounding fix):** Owner round-4 verdicts: MiniMax benched as
+  writer (stays for runtime/polish); Ep0's naming ask / transition / ending all vetoed as awkward
+  or not-cute; Ep1 beat-1 玄学 line + 汇报 framing vetoed; Claude's 爱心变企鹅 tone canonized as
+  non-main-plot benchmark. ROOT-CAUSE FIX for DeepSeek's non-native output: briefs never included
+  the actual project — built `tools/zh_arena_out/context_pack.md` (game, world, canon opening,
+  relationship state) + `docs/Yua_Taste_Log.md` (owner's accumulated vetoes/likes — every writer
+  must read; updated each round) + `--extra` flag in zh_arena.py. Grounded DeepSeek immediately
+  went native (收银机叮那声响得我耳朵发烫 / 绿萝排班表 excuse). Round 5 published: Ep0 back-half
+  and Ep1, SIX options each (2 per writer: DeepSeek/Codex/Claude), blind, shuffled. Awaiting picks
+  → stitch into scripted_nodes.json v10.
+- **2026-08-17 (arena round 4):** Owner round-3 verdicts: Ep0 content A (Claude) minus the mic
+  test (cut — game has no voice; Type_Mode_Design.md's EP0 free-line beat is dead), needs smooth
+  work transition + task-notebook guide woven in + Yua's own visible-but-mysterious task
+  (「继续写那个东西」= writing-line seed); B/C判定跑题. Ep1 redirected: happy not angry (chill
+  game), hard length caps (≤2 sentences/beat, event ≤3). Round 4 published: Ep0 revision as
+  direct-approval item + four NEW happy Ep1s (辣条奶奶 / 请带我回家便签 / 自动贩卖机荐书卡 /
+  爱心变企鹅), labels reshuffled (A=MiniMax B=Codex C=DeepSeek D=Claude). Next: owner verdicts →
+  write Ep0+Ep1 canon into scripted_nodes.json v10 → round 5 Ep2.
+- **2026-08-16 (arena round 3, new format):** Owner round-2 verdicts absorbed (labels now ABCD;
+  whole-EP vs whole-EP comparison; each writer must INVENT content, not re-phrase; 3a↔3b logic
+  fixed by making beat 2 plant both hooks; continuity fix — she's a FIRST-TIME app user, all
+  veteran-talk banned; M2-her tested and skipped: perfect guardrails but stage-direction habit +
+  can't do meta-tasks). Round 3 ran BOTH missing scenes: Ep0 back half (naming→mic→first timer)
+  and full Ep1 rewrites — 4 complete versions each, all-different 怒点 (公放剧透 / 冰美式毁书腰 /
+  荐书卡当杯垫 / 试读本只到第三章). Published as whole-EP blind page, labels reshuffled
+  (answer key: A=Claude B=DeepSeek C=Codex D=MiniMax). Awaiting owner verdicts → then stitch
+  Ep0+Ep1 canon INTO scripted_nodes.json v10, then round 4 = Ep2. Owner picked per-line (1A 2B 3A+D 4A 5B 6B-modified).
+  Stitched opening now canon in `Opening_and_Script_Directions.md` + decisions artifact. Key changes
+  from verdict notes: game = penguin-style MOBA with recognizable MOBA slang (打野/别送/摆烂/重开 —
+  no real game named; 小七-as-jungler becomes a post-aquarium easter egg); 小七→队友 in line 2;
+  confession logic simplified (motive→evidence→病情自诊); **「同桌」 banned as non-native — app copy
+  and all lines now use 搭子**. PROCESS FIX per owner: arena task rewritten — contestants are
+  编剧不是翻译, free to restructure narrative/beats/jokes; only scene function + persona + placeholders
+  are fixed. Applies from round 2.
+- **2026-08-14 (writing arena):** DeepSeek key registered (User env `DEEPSEEK_API_KEY`; API
+  exposes `deepseek-v4-pro` + `-flash`). Style guide gained a 目标线 section: bar = better than
+  CWYL, cuter, native, in-situation 梗 only, anime-girl feel, "would the player screenshot this?"
+  Built `tools/zh_arena.py` — ONE shared brief (guide+scene+lines) written to disk; MiniMax-M3 and
+  DeepSeek-V4-Pro get the identical prompt string; Codex (via MCP, gpt-5.4 — default terra model
+  needs newer CLI) reads the brief file locally; Claude writes its entry in-session. Round 1 run
+  on opening-D's 6 lines; blind 甲乙丙丁 comparison published:
+  https://claude.ai/code/artifact/92c804dd-4a84-9b86-f1c3f3d0e23e (answer key collapsed at
+  bottom). Owner picks per-line winners → stitched into the final script. Flow repeats per episode.
 - **2026-08-14 (Chinese quality pipeline):** Owner flagged persistent awkwardness in my Chinese.
   Built the systemic fix: `docs/Chinese_Style_Guide.md` (checkable contract — 翻译腔 blacklist,
   rhythm caps, Yua's five techniques, doc rules incl. "explain every proper noun on first use")
