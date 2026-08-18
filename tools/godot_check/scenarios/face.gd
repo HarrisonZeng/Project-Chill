@@ -49,3 +49,14 @@ func run(g) -> void:
 			await g.frames(2)
 			await g.shot("hands-over-arms-no-desk")
 			desk.visible = true
+
+	# The other stance is a different pose with its own hands cut. Switch to it
+	# the way Settings does, photograph it, and confirm a hands texture is set
+	# — a missing one would leave her hands under the desk.
+	var start_stance = game.get("yua_stance")
+	game._on_stance_picked("at_work")
+	await g.frames(3)
+	await g.shot("at-work-stance")
+	if hands != null:
+		g.check("at_work stance has its own hands texture", hands.texture != null)
+	game._on_stance_picked(start_stance)
