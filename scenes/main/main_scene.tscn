@@ -166,9 +166,9 @@ grow_vertical = 2
 [node name="CompanionView" parent="CompanionStage" unique_id=1098388039 instance=ExtResource("2_mw3ov")]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.565
+anchor_left = 0.68
 anchor_top = 0.56
-anchor_right = 0.565
+anchor_right = 0.68
 anchor_bottom = 0.56
 offset_left = -250.0
 offset_top = -330.0
@@ -442,20 +442,13 @@ toggle_mode = true
 button_group = SubResource("ButtonGroup_duration")
 text = "15"
 
-[node name="Chip25" type="Button" parent="OverlayLayer/HUD/FocusCard/Col/Chips" unique_id=38625551]
+[node name="Chip30" type="Button" parent="OverlayLayer/HUD/FocusCard/Col/Chips" unique_id=38625551]
 layout_mode = 2
 theme_type_variation = &"ChipButton"
 toggle_mode = true
 button_pressed = true
 button_group = SubResource("ButtonGroup_duration")
-text = "25"
-
-[node name="Chip45" type="Button" parent="OverlayLayer/HUD/FocusCard/Col/Chips" unique_id=1210072515]
-layout_mode = 2
-theme_type_variation = &"ChipButton"
-toggle_mode = true
-button_group = SubResource("ButtonGroup_duration")
-text = "45"
+text = "30"
 
 [node name="Chip60" type="Button" parent="OverlayLayer/HUD/FocusCard/Col/Chips" unique_id=698322601]
 layout_mode = 2
