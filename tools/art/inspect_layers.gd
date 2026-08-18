@@ -188,6 +188,68 @@ func _init() -> void:
 			_maskdiff(a.substr(11))
 			quit(0)
 			return
+		elif a.begins_with("--rectcover="):
+			# --rectcover=<keyed file>|x0,y0,x1,y1;x0,y0,x1,y1;...
+			# For a keyed layer: % magenta inside each rect, and how many magenta
+			# pixels lie OUTSIDE all rects (should be zero for a glass mask).
+			var rc := a.substr(12).split("|")
+			var im2 := Image.load_from_file(rc[0])
+			im2.convert(Image.FORMAT_RGBA8)
+			var rects: Array = []
+			for part in rc[1].split(";"):
+				var v := part.split(",")
+				if v.size() == 4:
+					rects.append(Rect2i(int(v[0]), int(v[1]), int(v[2]) - int(v[0]) + 1, int(v[3]) - int(v[1]) + 1))
+			var inside_mag: Array = []
+			var inside_tot: Array = []
+			for r in rects:
+				inside_mag.append(0)
+				inside_tot.append(0)
+			var outside_mag := 0
+			for y in range(im2.get_height()):
+				for x in range(im2.get_width()):
+					var c := im2.get_pixel(x, y)
+					var mag: bool = ((c.r + c.b) * 0.5 - c.g) >= 0.30
+					var hit := -1
+					for i in range(rects.size()):
+						if rects[i].has_point(Vector2i(x, y)):
+							hit = i
+							break
+					if hit >= 0:
+						inside_tot[hit] += 1
+						if mag:
+							inside_mag[hit] += 1
+					elif mag:
+						outside_mag += 1
+			for i in range(rects.size()):
+				print("rect %d: %.1f%% magenta" % [i + 1, 100.0 * float(inside_mag[i]) / maxf(1.0, float(inside_tot[i]))])
+			print("magenta OUTSIDE all rects: %d px" % outside_mag)
+			quit(0)
+			return
+		elif a.begins_with("--rowprobe="):
+			# --rowprobe=<file>|<y>|<x0>|<x1>  prints runs of near-white vs not
+			# along one row, to find window mullions and frame edges exactly.
+			var pr := a.substr(11).split("|")
+			var im := Image.load_from_file(pr[0])
+			im.convert(Image.FORMAT_RGBA8)
+			var yy := int(pr[1])
+			var x0 := int(pr[2])
+			var x1 := int(pr[3])
+			var run_white := false
+			var run_start := x0
+			var out := ""
+			for x in range(x0, x1 + 1):
+				var c := im.get_pixel(x, yy)
+				var white: bool = c.r > 0.86 and c.g > 0.86 and c.b > 0.86
+				if x == x0:
+					run_white = white
+				elif white != run_white or x == x1:
+					out += "%s %d-%d  " % ["W" if run_white else "g", run_start, x - 1]
+					run_white = white
+					run_start = x
+			print("y=%d: %s" % [yy, out])
+			quit(0)
+			return
 		elif a.begins_with("--bbox="):
 			_bbox(a.substr(7))
 			quit(0)

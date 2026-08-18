@@ -77,6 +77,43 @@ func _init() -> void:
 		print("keyed -> ", out_p)
 		quit(0)
 		return
+	if mode == "applymask":
+		# Reuse a magenta-keyed DAY layer as the alpha for a relit master:
+		# --mode=applymask --mask=<day keyed png> --in=<night master> --out=<alpha png>
+		# The relit master is pixel-aligned with the day one, so the day cut is
+		# the correct cut for it too — no second cutting pass, no drift.
+		var mask_p := ""
+		var in_m := ""
+		var out_m := ""
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--mask="):
+				mask_p = a.substr(7)
+			elif a.begins_with("--in="):
+				in_m = a.substr(5)
+			elif a.begins_with("--out="):
+				out_m = a.substr(6)
+		var mask := Image.load_from_file(mask_p)
+		var src := Image.load_from_file(in_m)
+		if mask == null or src == null:
+			push_error("applymask: cannot load inputs")
+			quit(1)
+			return
+		mask.convert(Image.FORMAT_RGBA8)
+		src.convert(Image.FORMAT_RGBA8)
+		if mask.get_size() != src.get_size():
+			push_error("applymask: size mismatch %s vs %s" % [mask.get_size(), src.get_size()])
+			quit(1)
+			return
+		key_magenta(mask)  # now mask.a is the alpha we want
+		for y in range(src.get_height()):
+			for x in range(src.get_width()):
+				var s := src.get_pixel(x, y)
+				var m := mask.get_pixel(x, y)
+				src.set_pixel(x, y, Color(s.r, s.g, s.b, m.a))
+		src.save_png(out_m)
+		print("applied mask -> ", out_m)
+		quit(0)
+		return
 	if mode == "keep":
 		# Keep only pixels inside any of the given rects (x,y,w,h;x,y,w,h;...),
 		# clear everything else. For trimming a front layer down to just what is
