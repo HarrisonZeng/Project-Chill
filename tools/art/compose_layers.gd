@@ -34,6 +34,23 @@ const INGEST := [
 	["exec-5e112835-5927-45fe-8038-f4987e41fde8.png", "room_layer.png", true],
 ]
 
+# Inside a protect rect, decide per pixel whether it belongs to the object in
+# front of the glass (daisy petals / centres / stems / leaves) or to the view
+# behind it. Only the object survives; sky and foliage between the petals are
+# keyed like the rest of the pane, so the outside view shows through there.
+static func is_protected_pixel(c: Color) -> bool:
+	# Protected unless the pixel is clearly the blurred background foliage behind
+	# the bouquet: light, yellowish green. Stems and leaves are darker and redder-
+	# poor (r < 0.55); petals are near-white (b high); centres are orange (r high).
+	var is_bg := c.g > 0.60 and c.g >= c.r and c.r > 0.55 and c.b < 0.62 and c.g < 0.93 and not (c.r > 0.85 and c.b < 0.42)
+	# Teal-grey tree blur (bluer than the foliage, greyer than a leaf).
+	var is_bg2 := c.b >= 0.50 and c.g > c.r + 0.05 and absf(c.g - c.b) < 0.22 and c.r < 0.80 and c.r > 0.30
+	# Neutral grey-green shadow blur, well below petal brightness.
+	var mn := minf(c.r, minf(c.g, c.b))
+	var mx := maxf(c.r, maxf(c.g, c.b))
+	var is_bg3 := mn > 0.42 and mx < 0.74 and c.g >= c.r - 0.03 and (mx - mn) < 0.16
+	return not (is_bg or is_bg2 or is_bg3)
+
 func _ingest(dir_path: String) -> void:
 	var out_dir := ProjectSettings.globalize_path("res://assets/art/backgrounds/")
 	for row in INGEST:
@@ -57,6 +74,57 @@ func _init() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--mode="):
 			mode = a.substr(7)
+	if mode == "panes":
+		# Glass cut from measured geometry: paint magenta inside the pane rects,
+		# except inside protect rects (objects standing in front of the glass,
+		# e.g. the daisy bouquet). Deterministic and re-runnable, unlike a
+		# generated mask. --rects=x,y,w,h;... --protect=x,y,w,h;...
+		var in_g := ""
+		var out_g := ""
+		var rects_g := ""
+		var prot_g := ""
+		var smart_g := false
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--in="):
+				in_g = a.substr(5)
+			elif a.begins_with("--out="):
+				out_g = a.substr(6)
+			elif a.begins_with("--rects="):
+				rects_g = a.substr(8)
+			elif a.begins_with("--protect="):
+				prot_g = a.substr(10)
+			elif a == "--smart":
+				smart_g = true
+		var pane_list: Array[Rect2i] = []
+		for part in rects_g.split(";"):
+			var v := part.split(",")
+			if v.size() == 4:
+				pane_list.append(Rect2i(int(v[0]), int(v[1]), int(v[2]), int(v[3])))
+		var prot_list: Array[Rect2i] = []
+		for part in prot_g.split(";"):
+			var v := part.split(",")
+			if v.size() == 4:
+				prot_list.append(Rect2i(int(v[0]), int(v[1]), int(v[2]), int(v[3])))
+		var img_g := Image.load_from_file(in_g)
+		img_g.convert(Image.FORMAT_RGBA8)
+		var painted := 0
+		for r in pane_list:
+			for y in range(r.position.y, r.end.y):
+				for x in range(r.position.x, r.end.x):
+					var skip := false
+					for pr in prot_list:
+						if pr.has_point(Vector2i(x, y)):
+							skip = true
+							break
+					if skip and smart_g and not is_protected_pixel(img_g.get_pixel(x, y)):
+						skip = false
+					if not skip:
+						img_g.set_pixel(x, y, Color(1, 0, 1, 1))
+						painted += 1
+		img_g.save_png(out_g)
+		print("panes: painted %d px magenta over %d rects (%d protected) -> %s" % [painted, pane_list.size(), prot_list.size(), out_g])
+		quit(0)
+		return
 	if mode == "key":
 		# Convert one magenta-backed layer to a real alpha PNG in place.
 		var in_p := ""
