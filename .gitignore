@@ -1,6 +1,7 @@
 # Multi-session live claim files (see SESSIONS.md) — local coordination only
 .sessions/
 .claude/
+.codex/
 
 # Godot 4+ specific ignores
 .godot/
@@ -9,6 +10,7 @@ assets/bgm/*.mp3
 artifacts/
 tmp/
 tools/python_libs/
+tools/zh_arena_out/
 
 # Screenshots produced by tools/godot_check (regenerate with -Mode shot)
 tools/godot_check/shots/

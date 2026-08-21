@@ -318,9 +318,18 @@ func _request_chat_completion(payload: Dictionary, api_key: String, endpoint_url
 	var message: Dictionary = choices[0].get("message", {})
 	var content: String = str(message.get("content", ""))
 	content = _strip_reasoning(content)
+	# An empty reply is a FAILURE, not a success carrying operator English. Saying
+	# success here let FALLBACK_REPLY through as if Yua had spoken it; the router
+	# now substitutes an in-fiction line instead.
 	if content.is_empty():
 		last_error = "response_empty"
-		content = FALLBACK_REPLY
+		return {
+			"text": "",
+			"success": false,
+			"provider": provider_name,
+			"error": last_error,
+			"fallback_used": true
+		}
 
 	return {
 		"text": content,
@@ -330,15 +339,31 @@ func _request_chat_completion(payload: Dictionary, api_key: String, endpoint_url
 	}
 
 # MiniMax M-series (and other reasoning models) return their chain-of-thought
-# inline as <think>...</think> before the reply. Strip it so it never reaches
-# the dialogue box. Unclosed <think> (truncated response) drops everything.
+# inline before the reply. Strip it so it never reaches the dialogue box.
+#
+# The opening tag is often part of the chat template and is NOT echoed back, so
+# the payload frequently looks like "<reasoning...></think>实际回复" — guarding on
+# "<think>" alone let that whole chain-of-thought through as Yua's line. Anything
+# before the LAST closing tag is therefore treated as reasoning, whether or not a
+# matching opening tag was sent, and variants/casing are covered.
 func _strip_reasoning(content: String) -> String:
-	if not content.contains("<think>"):
-		return content.strip_edges()
-	var regex := RegEx.new()
-	if regex.compile("(?s)<think>.*?</think>") == OK:
-		content = regex.sub(content, "", true)
-	var open_idx := content.find("<think>")
-	if open_idx != -1:
-		content = content.substr(0, open_idx)
+	var close_regex := RegEx.new()
+	if close_regex.compile("(?i)</\\s*(think|thinking|reasoning|thought)\\s*>") == OK:
+		var closes: Array = close_regex.search_all(content)
+		if not closes.is_empty():
+			var last_close: RegExMatch = closes[closes.size() - 1]
+			content = content.substr(last_close.get_end())
+
+	# Any complete block that remains (reply first, reasoning after).
+	var pair_regex := RegEx.new()
+	if pair_regex.compile("(?is)<\\s*(think|thinking|reasoning|thought)\\s*>.*?</\\s*\\1\\s*>") == OK:
+		content = pair_regex.sub(content, "", true)
+
+	# An unclosed opening tag means the rest is truncated reasoning — cut it.
+	var open_regex := RegEx.new()
+	if open_regex.compile("(?i)<\\s*(think|thinking|reasoning|thought)\\s*>") == OK:
+		var opened: RegExMatch = open_regex.search(content)
+		if opened != null:
+			content = content.substr(0, opened.get_start())
+
 	return content.strip_edges()

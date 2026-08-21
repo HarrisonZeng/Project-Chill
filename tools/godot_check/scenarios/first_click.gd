@@ -12,6 +12,19 @@ func run(g) -> void:
 	g.check("intro plays through to a terminal node", landing != "ep00_01",
 		"intro never advanced past its first node")
 
+	# Script v10 canon: the intro ENDS by picking a duration that starts focus
+	# immediately («选完就得开始了»). play_forward() takes the last choice (60 min),
+	# so we land inside a running session. Stop it — the idle-click regression is
+	# about the settled, non-focus state.
+	if g.game.focus_running:
+		g.game._on_stop_focus_pressed()
+		await g.settle()
+		g.check("intro's duration pick started a focus session (v10 canon)", true)
+		# Stopping opens the guilt-free ABORT_001 dialogue; play it out (it ends
+		# on a terminal / rest node) so we test clicks against a settled state.
+		await g.play_forward()
+		await g.settle()
+
 	# The regression: clicking her after the intro settles used to replay Ep0 or
 	# re-greet. Expected behaviour is a short presence line and nothing else.
 	var lines: Array = []

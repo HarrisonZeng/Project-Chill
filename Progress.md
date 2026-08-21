@@ -60,6 +60,19 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 
 ## Active Tasks
 
+- **[OWNER — decides] How should free typing and the authored script hand off to each other?**
+  This is the one reported dialogue bug NOT fixed on 2026-08-19, because it is a design question,
+  not a defect. Today: Type Mode is always on, typed text goes to the AI from wherever the player
+  is standing, and there is no notion of "returning to the story" — the scripted position is just
+  whatever node was last shown. Since the old Type Mode toggle was removed, `current_ai_mode_id`
+  and the `AI_MODE_*` choice ids may now be dead code (no node in the current script uses them).
+  Options, in plain language: **(a)** free chat is a side conversation that always drops back to
+  where she left off; **(b)** free chat simply continues from wherever it is and the next focus
+  session pulls the story forward (simplest, closest to today's behaviour); **(c)** she gently
+  steers back after a few turns. Claude recommends **(b)** — it matches "focus is the only thing
+  that moves the story" and lets us delete the dead mode machinery. See
+  `docs/Dialogue_Flow_Map.md` §6.
+
 - **[ART/SOUND — live checklist]** `docs/Demo_Art_Checklist.md` holds every non-text item for the
   demo (room, Yua, sound, intro, UI, voice plan) with status and the open owner decisions. Read it
   first when doing anything visual or audio; tick items there, not here.
@@ -90,6 +103,26 @@ _None._
 
 ## User Godot Checks Pending
 
+**v10 script is live — Ep0/Ep1/Ep2 canon in the game (2026-08-19).** Harness 66/66 green.
+Owner playtest (~15 min, F5 in Godot):
+
+1. Debug bar **Reset Save** → close → F5 → click Yua. Expect the new cold open: MOBA lines
+   («上啊上啊——打野呢？！»), «重开», then **click through «（点击接通）»**, her panic +
+   confession + 「重新读档」. ⬜ Does the pacing of the beats feel right? Too many clicks?
+2. Name ask («请问怎么称呼？») → **type a nickname in the input box** → «{name}。好，这就算认识了». ⬜
+   (AI 取名反应 not yet wired — that's a Type-Mode-Design.md §1 task; today it goes straight
+   to the acknowledgment.)
+3. Tools beat → try **both** «我也写一句» (type a task → «嗯，收到。『…』那，选个时长») and
+   «先不写了» → the 15/30/60 pick. **Picking starts focus immediately** — confirm no extra
+   "开始" step. ⬜
+4. Let a session finish (custom chip → 1 min, or debug 3-sec) → **Ep1** with three choices;
+   try «你刚才在忙什么？» → «在忙……本子上那个『东西』…啊，说多了。就这样！» → 收尾. ⬜
+5. Second completed session → **Ep2**: pick «要有点声音» → «你听» → the sea/horn/leaves beat →
+   «啊啊啊这么文艺的句子…当我没说！你什么都没听见！» ⬜ **This is the money beat — does it
+   read cute on screen, in rhythm, at your typewriter speed?**
+6. HUD chips now 15/30/60 (default 30). ⬜
+7. Screenshot anything that looks off. Known/expected: UI labels still English until B4/B5.
+
 **Checks 1–4 no longer need you.** `tools/godot_check/` now runs the real game headless and
 verifies them automatically (~8s):
 
@@ -102,17 +135,19 @@ powershell -File "tools/godot_check/check.ps1"
 | 1. EP0 must not restart, no greeting spam | `first_click` | ✅ 8/8 |
 | 2. Focus-click cooldown gives "……" | `focus_click` | ✅ 8/8 |
 | 3. Ep1 then **Ep2** (flags survive a restart) | `episodes` | ✅ 5/5 |
-| 4. Typed reply: no chips, no "回到按钮" wording | `type_mode` | ⚠️ 7/8 — see below |
+| 4. Typed reply: no chips, no "回到按钮" wording | `type_mode` | ✅ 8/8 |
+| 5. Ep0 never replays (incl. relaunch + debug jump) | `ep0_once` | ✅ 4/4 |
+| 6. No English/system text in Yua's dialogue box | `text_sources` | ✅ 13/13 |
 
 Each was proven to fail before it passed: removing `ep01_seen` from `ep01_01` makes `episodes`
 report `expected 'ep02_01', got 'ep01_01'`, i.e. the exact original bug.
 
-**Check 4 found a real leak.** `dialogue_router.gd:10-11` still returns English UI-speak on the
-two non-happy paths — `AI_FALLBACK_TEXT` ("…continue with the buttons.") when a configured
-provider call fails, and `AI_DISABLED_TEXT` ("Type Mode is off right now, so let's keep to the
-buttons…") when AI is switched off in settings. The 2026-08-09 fix only replaced the *empty*
-reply case in `_handle_ai_route`, so these two survived. Needs two in-fiction Mandarin lines in
-Yua's voice — **[OWNER] to word them**, then Claude swaps them in and `type_mode` goes green.
+**Check 4 is now green (2026-08-19).** The English UI-speak had two separate causes, not one.
+The constants in `dialogue_router.gd` were already rewritten to Mandarin, but the *guard* that
+selects them compared the failed reply against `"AI provider is not available."` — a string that
+exists nowhere in the codebase — so `ai_dialogue_service.FALLBACK_REPLY` ("Mm. I can't reach the
+AI right now…") passed straight through on every provider failure. A failed call now always
+speaks Yua's line. See `docs/Dialogue_Flow_Map.md` §4.2 for the full list.
 
 Claude can now also *see* the game without you. `check.ps1 -Mode shot -Node ep03_01 -Sessions 3`
 jumps to any beat, opens a real window for ~2s, and saves PNGs to `tools/godot_check/shots/`
@@ -123,6 +158,82 @@ either. What still does: feel, pacing, animation, audio.
 
 ## Session Log
 
+- **2026-08-20 (round-8 verdict + two owner proposals):** Owner: round 8 read non-native across the
+  board; root cause = my brief instructed "beat 1 callbacks the previous ep" → everyone wrote meta-
+  commentary openers («请记一功») — now a taste-log veto + a process rule (self-check the brief
+  first). **Blind testing dropped by owner request** — options now labeled by model. Ep3 assembled
+  from owner's picks: beat 1 (海啊树啊风啊, de-meta'd), beat 2 (椅子→躺), beat 3 REWRITTEN as a
+  motive question «你呢，也是因为一个人专心不了才来的嘛？» with branches [对的……]/[也不是啦，就是
+  有人一起更有效率些]/type; two response options per branch + two endings drafted, published for
+  pick. **「那个东西」 vetoed** as a recurring referent → proposal 「我的小项目」 (Ep0–2 will be
+  swept once approved). **Living notebook** (owner idea): Yua's visible to-do list with daily
+  chores that get crossed off on real-day return + one-line mention at greeting — designed in
+  `docs/Yua_Notebook_Design.md` (pools, engine, UI, taste constraints, 3 owner decisions).
+
+- **2026-08-20 (Ep0–2 IN GAME + name reaction + Ep3 arena):**
+  - `scripted_nodes.json` → **v10**: Ep0 (开局翻车 → 取名 → 工具一起摸索 → 15/30/60), Ep1, Ep2 canon
+    written as nodes (v9 backed up at `tools/zh_arena_out/scripted_nodes_v9_backup.json`). New engine
+    actions `ACTION_GO_15/30/60` set duration AND start focus immediately (canon «选完就得开始了»).
+    HUD chips now 15/30/60 (Chip25→Chip30, Chip45 removed), default 30 min. TASK_INPUT_002 /
+    FOCUS_READY_001 route to the GO actions.
+  - **AI name reaction wired**: `AI_MODE_NAME_REACT` added to ai_modes.json (3-way: real/net/整活,
+    anti-template wording). Live-probed: MiniMax-M3 10/10 correct incl. recognizing 千早爱音=MyGO and
+    夜雨声烦=全职高手; M2.7-highspeed rejected (invented lore, not faster). Latency 4–17s → design
+    changed from 1.5s-timeout to: show «{name}……» beat, await up to 12s, else scripted fallback
+    (`_scripted_name_reaction`, script-aware: CJK ≥4 chars or digits/spaces/>12 latin = net-name).
+    New harness scenario `name_react` (10/10). Full suite: 13 suites ALL OK.
+  - Ep3 arena round 8 published (6 options: 倒水擦桌 / 椅子躺下 / 整理桌面 / 笔按颜色 / 只是看一眼).
+    Key private in `tools/zh_arena_out/round8_key.md`.
+
+
+- **2026-08-19 (dialogue flow map + bug hunt):** Mapped the dialogue decision tree as-built
+  (`docs/Dialogue_Flow_Map.md`, with a mermaid diagram + click-priority table) and fixed the
+  four flow bugs the owner reported. **Critical context: the whole godot_check suite was GREEN
+  the entire time the game was misbehaving** — every bug lived in a path no scenario walked, so
+  two new scenarios were written to fail first: `ep0_once` and `text_sources`.
+  ① **Ep0 replay** — "has the intro been seen" had TWO sources of truth (`has_seen_intro` save
+  field + `intro_seen` story flag). `_note_meaningful_interaction()` saved *before* the field
+  flipped, then `ep00_close`'s `set_flags` saved again with the stale value, producing a profile
+  that said seen-and-not-seen at once. New `_intro_already_seen()` reconciles both at every entry
+  point; the flip persists immediately; the debug jumper moves both together and marks the
+  session opener spent (it previously restarted Ep0 mid-session).
+  ② **Operator English spoken as Yua** — `dialogue_router.gd` compared the failed reply against
+  `"AI provider is not available."`, a string that exists NOWHERE in the codebase, so the real
+  `FALLBACK_REPLY` English reached the dialogue box on all 8 provider-failure paths. Failures now
+  always use the in-fiction line. Also: empty replies were tagged `success:true` (now `false`);
+  `_strip_reasoning` only caught the *opening* `<think>` tag while MiniMax echoes only the closing
+  one (now strips to the last closing tag, case + variants); four English memory follow-ups and the
+  English `Dialogue error:` strings are now Mandarin in her voice (real ids go to `push_warning`).
+  ③ **Stale text** — deleted `FOCUS_{COMPLETE,START,STOP,SET}_LINE` (English, several in Yua's
+  *first person*, shown in the status strip right under her line), `DEFAULT_RETURN_CHOICE_TEXT`
+  (injected an English chip pointing at `greeting_01`, a node id that does not exist), and three
+  dead `*_PLACEHOLDER_TEXT` constants. Status text is now neutral via `_ui_text("status_*")`.
+  Also fixed an infinite "Back to safety" loop and bogus missing-node warnings on every UI refresh.
+  ④ **AI↔scripted transition** — NOT fixed; needs an owner decision (see Active Tasks).
+  Suite now 13 scenarios, all green. `Architecture_Overview.md` corrected (it wrongly claimed
+  `_register_node` still drops `set_flags`).
+
+- **2026-08-19 (SCRIPT v10 IN GAME):** Ep0/Ep1/Ep2 canon written into `scripted_nodes.json`
+  (v9 backed up to `tools/zh_arena_out/scripted_nodes_v9_backup.json`). New Ep0 chain: ep00_01–05
+  (MOBA cold open → 接通 → confession → 读档) → ep00_name (name_input tag, engine hook intact)
+  → ep00_named → ep00_tools (task-notebook beat; «我也写一句» routes to TASK_INPUT_001) →
+  ep00_close (15/30/60, sets intro_seen). Ep1: ep01_01 → a/b/c → ep01_end. Ep2: ep02_01 →
+  a/b/AI → ep02_listen (文艺→破功) → ep02_end. Engine: new `ACTION_GO_15/30/60` = set duration
+  AND start focus (canon «选完就得开始了»); `_capture_focus_task` peer-toned + routes to GO_*;
+  default duration 30 min; HUD chips 15/30/60 (Chip25→Chip30, Chip45 removed). Also fixed the
+  long-standing `dialogue_router.gd` English UI-speak (three in-fiction Mandarin lines).
+  Harness: `first_click` scenario updated for v10 (intro now auto-starts focus; stop + play
+  through ABORT_001 before idle-click checks) — **66/66 green, first fully clean board.**
+  Shot of ep02_listen verified visually. Owner playtest steps in "User Godot Checks Pending".
+  NOT yet: AI name-reaction hook (Type_Mode_Design §1), Yua's notebook line shown on HUD, B4/B5.
+
+- **2026-08-17 (Ep2 CANON v2 — owner's 文艺→破功 invention):** Owner overrode the 2+5 merge:
+  keep option 5 as body, but beat 4 = option 1's literary sea/horn lines (last line changed to
+  a sound image: leaves «像有人在很远的地方翻书»), THEN she punctures it herself («啊啊啊这么文艺
+  的句子脑子里想想还好，在你面前说出来就有点尴尬……当我没说！»). This is now a named house
+  device in the taste log (item 7: 抒情 2–4 句 → 破功 1–2 句, ~every 3 eps max) and profile item
+  3 was rewritten: literary imagery is ALLOWED if it pays the 尴尬税. Canon updated in doc,
+  context pack, decisions artifact. Context pack already at Ep3.
 - **2026-08-17 (Ep2 CANON + style profile):** Round 7 verdict: merge option 2 (clear logic) ×
   option 5 (cuter, more anime-girl) — both Claude's. Merged canon in
   `Opening_and_Script_Directions.md` + decisions artifact (Ep2 card). Per owner request, taste

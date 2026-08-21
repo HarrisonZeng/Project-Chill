@@ -6,9 +6,14 @@ var ai_service: Node = null
 # backend flag itself lives here so the guarantee is enforced at the routing
 # boundary, not just in the UI. Defaults to allowed (mock provider is harmless).
 var ai_allowed: bool = true
-const SCRIPTED_FALLBACK_TEXT := "Let's stay with the scripted choices for now."
-const AI_FALLBACK_TEXT := "Mm. I can't reach the AI right now, so let's keep things simple and continue with the buttons."
-const AI_DISABLED_TEXT := "Type Mode is off right now, so let's keep to the buttons. You can turn it back on in settings."
+# All three are IN-FICTION lines in Yua's voice — she never names UI (buttons /
+# settings / Type Mode) and never says she is an AI. Rationale in
+# docs/Yua_Taste_Log.md (汇报/UI-speak vetoes) and Type_Mode_Design.md §0.
+const SCRIPTED_FALLBACK_TEXT := "嗯，我在。你先忙，我这边也接着写。"
+# Provider call failed: treat it as the call connection hiccuping.
+const AI_FALLBACK_TEXT := "唔……刚才这边卡了一下，没听清。\n\n再说一遍？"
+# AI switched off in settings: she is simply absorbed in her own work.
+const AI_DISABLED_TEXT := "……嗯？抱歉，我这段写得正入神。\n\n你先忙你的，我一会儿抬头。"
 
 func set_ai_service(service: Node) -> void:
 	ai_service = service
@@ -56,23 +61,39 @@ func route_player_text_async(player_text: String, ai_mode_enabled: bool, persona
 			"mode_id": mode_id
 		})
 
+		# A failed call NEVER speaks the provider's own words. The service returns
+		# English operator text on every failure path, and it used to reach the
+		# dialogue box because this compared against a string that exists nowhere
+		# in the codebase. Yua always covers a failure in her own voice; the raw
+		# provider text is kept under "error_text" for diagnostics only.
 		if not bool(reply.get("success", false)):
-			var fallback_text: String = str(reply.get("text", ""))
-			if fallback_text.is_empty() or fallback_text == "AI provider is not available.":
-				fallback_text = AI_FALLBACK_TEXT
 			return {
 				"mode": "ai_fallback",
-				"text": fallback_text,
+				"text": AI_FALLBACK_TEXT,
 				"success": false,
 				"fallback_used": true,
 				"provider": str(reply.get("provider", "none")),
-				"error": str(reply.get("error", "provider_failed"))
+				"error": str(reply.get("error", "provider_failed")),
+				"error_text": str(reply.get("text", ""))
+			}
+
+		# A "successful" empty reply is still a failure — say something in-voice
+		# rather than typing out a blank line.
+		var reply_text: String = str(reply.get("text", "")).strip_edges()
+		if reply_text.is_empty():
+			return {
+				"mode": "ai_fallback",
+				"text": AI_FALLBACK_TEXT,
+				"success": false,
+				"fallback_used": true,
+				"provider": str(reply.get("provider", "unknown")),
+				"error": "response_empty"
 			}
 
 		return {
 			"mode": "ai",
-			"text": str(reply.get("text", "")),
-			"success": bool(reply.get("success", false)),
+			"text": reply_text,
+			"success": true,
 			"fallback_used": bool(reply.get("fallback_used", false)),
 			"provider": str(reply.get("provider", "unknown"))
 		}

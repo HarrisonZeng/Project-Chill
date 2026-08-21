@@ -1,24 +1,129 @@
 {
-  "_doc": "Co-presence-first script, slow burn. Ep0 = intro (intro_node). Ep1-Ep14 reveal one-per-completed-focus via EPISODE_START_NODES (epNN_01). Each episode: Yua opens (a few beats) -> in-character player choices (reflective/topical, NEVER session-management) -> Yua's branched reply (a few beats) -> terminal (settle back to co-presence; player runs as many focus sessions as they like via the timer UI, Yua never 'ends' a session). Type input = a choice whose next is an AI_MODE_* id (flips Type Mode on, stores message to memory). {focus_minutes} in ep01_01 choice 1 is an ENGINE token: substitute with the just-completed focus length in minutes (fallback: strip it). Functional nodes (idle, TASK_INPUT_*, FOCUS_*, ABORT_*, return_*, greeting_*, EXIT_*) preserved. ENGINE: episodes are now flag-guarded (seen_flag + optional unlock.total_focus_seconds_min); see _pacing_doc. DEMO_SCRIPT_VERSION is 9.",
+  "_doc": "Co-presence-first script, slow burn. Ep0 = intro (intro_node). Ep1-Ep14 reveal one-per-completed-focus via EPISODE_START_NODES (epNN_01). Each episode: Yua opens (a few beats) -> in-character player choices (reflective/topical, NEVER session-management) -> Yua's branched reply (a few beats) -> terminal (settle back to co-presence; player runs as many focus sessions as they like via the timer UI, Yua never 'ends' a session). Type input = a choice whose next is an AI_MODE_* id (flips Type Mode on, stores message to memory). {focus_minutes} in ep01_01 choice 1 is an ENGINE token: substitute with the just-completed focus length in minutes (fallback: strip it). Functional nodes (idle, TASK_INPUT_*, FOCUS_*, ABORT_*, return_*, greeting_*, EXIT_*) preserved. ENGINE: episodes are now flag-guarded (seen_flag + optional unlock.total_focus_seconds_min); see _pacing_doc. DEMO_SCRIPT_VERSION is 10 (Ep0-Ep2 rewritten to 2026-08-17 canon: opening D 开局翻车 + 书咖 world; ACTION_GO_15/30/60 start focus immediately).",
   "fallback_id": "idle",
   "intro_node": "ep00_01",
-  "demo_script_version": 9,
+  "demo_script_version": 10,
   "_pacing_doc": "Episodes are flag-guarded: each fires once when completed_focus_count >= session_gate AND its unlock is satisfied AND its seen_flag is not yet set (lowest unmet gate first). The matching epNN_01 node carries set_flags:[\"epNN_seen\"]. Casual chats are count-only; writing/relationship beats add unlock.total_focus_seconds_min so short (3s test) sessions can't speed-run intimacy — real 15-45min sessions clear these naturally. TUNE pacing here: raise/lower total_focus_seconds_min (in seconds) per beat. When no episode is eligible, the engine falls back to FOCUS_DONE_REPEAT.",
   "episodes": [
-    { "id": "ep01", "label": "Ep 1 · 第一段", "start_node": "ep01_01", "session_gate": 1, "seen_flag": "ep01_seen" },
-    { "id": "ep02", "label": "Ep 2 · 放点什么", "start_node": "ep02_01", "session_gate": 2, "seen_flag": "ep02_seen" },
-    { "id": "ep03", "label": "Ep 3 · 坐不住", "start_node": "ep03_01", "session_gate": 3, "seen_flag": "ep03_seen" },
-    { "id": "ep04", "label": "Ep 4 · 换换脑子", "start_node": "ep04_01", "session_gate": 4, "seen_flag": "ep04_seen" },
-    { "id": "ep05", "label": "Ep 5 · 我也写点东西", "start_node": "ep05_01", "session_gate": 5, "seen_flag": "ep05_seen", "unlock": { "total_focus_seconds_min": 1500 } },
-    { "id": "ep06", "label": "Ep 6 · 写不动", "start_node": "ep06_01", "session_gate": 6, "seen_flag": "ep06_seen", "unlock": { "total_focus_seconds_min": 2400 } },
-    { "id": "ep07", "label": "Ep 7 · 喜欢的词", "start_node": "ep07_01", "session_gate": 7, "seen_flag": "ep07_seen" },
-    { "id": "ep08", "label": "Ep 8 · 灵感", "start_node": "ep08_01", "session_gate": 8, "seen_flag": "ep08_seen", "unlock": { "total_focus_seconds_min": 3600 } },
-    { "id": "ep09", "label": "Ep 9 · 拖延", "start_node": "ep09_01", "session_gate": 9, "seen_flag": "ep09_seen" },
-    { "id": "ep10", "label": "Ep 10 · 习惯你在", "start_node": "ep10_01", "session_gate": 10, "seen_flag": "ep10_seen", "unlock": { "total_focus_seconds_min": 5400 } },
-    { "id": "ep11", "label": "Ep 11 · 划掉那一下", "start_node": "ep11_01", "session_gate": 11, "seen_flag": "ep11_seen" },
-    { "id": "ep12", "label": "Ep 12 · 敢读回去", "start_node": "ep12_01", "session_gate": 12, "seen_flag": "ep12_seen", "unlock": { "total_focus_seconds_min": 7200 } },
-    { "id": "ep13", "label": "Ep 13 · 记得你", "start_node": "ep13_01", "session_gate": 13, "seen_flag": "ep13_seen", "unlock": { "total_focus_seconds_min": 9000 } },
-    { "id": "ep14", "label": "Ep 14 · 固定搭子", "start_node": "ep14_01", "session_gate": 14, "seen_flag": "ep14_seen", "unlock": { "total_focus_seconds_min": 10800 } }
+    {
+      "id": "ep01",
+      "label": "Ep 1 · 第一段（定稿）",
+      "start_node": "ep01_01",
+      "session_gate": 1,
+      "seen_flag": "ep01_seen"
+    },
+    {
+      "id": "ep02",
+      "label": "Ep 2 · 你听（定稿）",
+      "start_node": "ep02_01",
+      "session_gate": 2,
+      "seen_flag": "ep02_seen"
+    },
+    {
+      "id": "ep03",
+      "label": "Ep 3 · 坐不住",
+      "start_node": "ep03_01",
+      "session_gate": 3,
+      "seen_flag": "ep03_seen"
+    },
+    {
+      "id": "ep04",
+      "label": "Ep 4 · 换换脑子",
+      "start_node": "ep04_01",
+      "session_gate": 4,
+      "seen_flag": "ep04_seen"
+    },
+    {
+      "id": "ep05",
+      "label": "Ep 5 · 我也写点东西",
+      "start_node": "ep05_01",
+      "session_gate": 5,
+      "seen_flag": "ep05_seen",
+      "unlock": {
+        "total_focus_seconds_min": 1500
+      }
+    },
+    {
+      "id": "ep06",
+      "label": "Ep 6 · 写不动",
+      "start_node": "ep06_01",
+      "session_gate": 6,
+      "seen_flag": "ep06_seen",
+      "unlock": {
+        "total_focus_seconds_min": 2400
+      }
+    },
+    {
+      "id": "ep07",
+      "label": "Ep 7 · 喜欢的词",
+      "start_node": "ep07_01",
+      "session_gate": 7,
+      "seen_flag": "ep07_seen"
+    },
+    {
+      "id": "ep08",
+      "label": "Ep 8 · 灵感",
+      "start_node": "ep08_01",
+      "session_gate": 8,
+      "seen_flag": "ep08_seen",
+      "unlock": {
+        "total_focus_seconds_min": 3600
+      }
+    },
+    {
+      "id": "ep09",
+      "label": "Ep 9 · 拖延",
+      "start_node": "ep09_01",
+      "session_gate": 9,
+      "seen_flag": "ep09_seen"
+    },
+    {
+      "id": "ep10",
+      "label": "Ep 10 · 习惯你在",
+      "start_node": "ep10_01",
+      "session_gate": 10,
+      "seen_flag": "ep10_seen",
+      "unlock": {
+        "total_focus_seconds_min": 5400
+      }
+    },
+    {
+      "id": "ep11",
+      "label": "Ep 11 · 划掉那一下",
+      "start_node": "ep11_01",
+      "session_gate": 11,
+      "seen_flag": "ep11_seen"
+    },
+    {
+      "id": "ep12",
+      "label": "Ep 12 · 敢读回去",
+      "start_node": "ep12_01",
+      "session_gate": 12,
+      "seen_flag": "ep12_seen",
+      "unlock": {
+        "total_focus_seconds_min": 7200
+      }
+    },
+    {
+      "id": "ep13",
+      "label": "Ep 13 · 记得你",
+      "start_node": "ep13_01",
+      "session_gate": 13,
+      "seen_flag": "ep13_seen",
+      "unlock": {
+        "total_focus_seconds_min": 9000
+      }
+    },
+    {
+      "id": "ep14",
+      "label": "Ep 14 · 固定搭子",
+      "start_node": "ep14_01",
+      "session_gate": 14,
+      "seen_flag": "ep14_seen",
+      "unlock": {
+        "total_focus_seconds_min": 10800
+      }
+    }
   ],
   "nodes": [
     {
@@ -26,141 +131,299 @@
       "line": "（她在忙自己的事。想说话，点一下她。）",
       "choices": []
     },
-
     {
       "id": "ep00_01",
-      "line": "……这个灯亮着，是连上了吧。\n\n还是说……还在转？",
+      "speaker": "yua",
+      "line": "上啊上啊——打野呢？！打野人呢？！——哎别送啊——\n\n……完了。",
       "choices": [
-        { "text": "……", "next": "ep00_02" }
+        {
+          "text": "……",
+          "next": "ep00_02"
+        }
+      ],
+      "tags": [
+        "intro"
       ]
     },
     {
       "id": "ep00_02",
-      "line": "诶？——啊，连上了。\n\n不好意思，我刚才一直在盯那个麦克风图标……没注意你这边已经通了。",
+      "speaker": "yua",
+      "line": "……重开。这把不算，刚才是队友先摆烂的。",
       "choices": [
-        { "text": "继续", "next": "ep00_03" }
+        {
+          "text": "（点击接通）",
+          "next": "ep00_03"
+        }
+      ],
+      "tags": [
+        "intro"
       ]
     },
     {
       "id": "ep00_03",
-      "line": "这个 app 我也刚用没多久。\n\n朋友说它会帮你连一个人，然后就这么开着，各干各的。\n\n说比一个人闷头搞要容易一些。\n\n……真连上了，还是有点紧张。",
+      "speaker": "yua",
+      "line": "——诶？！你什么时候连进来的？！\n\n……你、你好，我叫 Yua。我刚刚在……学习。",
       "choices": [
-        { "text": "继续", "next": "ep00_features" }
+        {
+          "text": "……",
+          "next": "ep00_04"
+        }
+      ],
+      "tags": [
+        "intro"
       ]
     },
     {
-      "id": "ep00_features",
-      "line": "对了——我刚才等的时候无聊，把能点的都点了一遍。\n\n右上那个是计时的。想专注的话就开一段，时间自己挑，到了它会提醒你。\n\n旁边还能记一两件要做的事。懒得写直接开计时也可以。\n\n背景音乐也有，不喜欢随时关就行。\n\n……差不多就这些了。反正用着用着就懂了。",
+      "id": "ep00_04",
+      "speaker": "yua",
+      "line": "好吧，我招。刚才在打游戏。\n\n……其实我下这个 app，就是因为一个人根本学不进去。你看，配对才等了两分钟，就成这样了。病情你都亲眼看到了。",
       "choices": [
-        { "text": "继续", "next": "ep00_nervous" }
+        {
+          "text": "继续",
+          "next": "ep00_05"
+        }
+      ],
+      "tags": [
+        "intro"
       ]
     },
     {
-      "id": "ep00_nervous",
-      "line": "诶，说起来——\n\n我以为对着不认识的人会一直紧张，但好像……也没有想的那么难受。\n\n你呢？",
+      "id": "ep00_05",
+      "speaker": "yua",
+      "line": "所以这软件让两个人坐一块儿，真的是天才设计——专治我这种的。有人看着，就不好意思摸鱼了。……理论上。\n\n咳。刚才的存档删掉，我们重新读档。——你好，我叫 Yua。请多关照。",
       "choices": [
-        { "text": "嗯，还行", "next": "ep00_nervous_ok" },
-        { "text": "有点紧张", "next": "ep00_nervous_tense" }
-      ]
-    },
-    {
-      "id": "ep00_nervous_ok",
-      "line": "那就好。我也松了口气。\n\n……那，先认识一下？",
-      "choices": [
-        { "text": "继续", "next": "ep00_name" }
-      ]
-    },
-    {
-      "id": "ep00_nervous_tense",
-      "line": "没事，才刚开始嘛，慢慢来。\n\n……先认识一下？",
-      "choices": [
-        { "text": "继续", "next": "ep00_name" }
+        {
+          "text": "继续",
+          "next": "ep00_name"
+        }
+      ],
+      "tags": [
+        "intro"
       ]
     },
     {
       "id": "ep00_name",
-      "line": "我叫 Yua。\n\n你呢？怎么喊你？\n\n（随便取一个，叫什么都行。）",
-      "choices": [
-        { "text": "（取好了）", "next": "ep00_close" }
-      ],
       "speaker": "yua",
-      "tags": ["intro", "name_input"]
+      "line": "咳。为了证明我其实是个靠谱的人——先来正式一点的：请问怎么称呼？\n\n（在下面输入一个称呼就行，网名真名都收。）",
+      "choices": [
+        {
+          "text": "（取好了）",
+          "next": "ep00_named"
+        }
+      ],
+      "tags": [
+        "intro",
+        "name_input"
+      ]
+    },
+    {
+      "id": "ep00_named",
+      "speaker": "yua",
+      "line": "{name}。好，这就算认识了。比刚才那种认识方式正常多了。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep00_tools"
+        }
+      ],
+      "tags": [
+        "intro"
+      ]
+    },
+    {
+      "id": "ep00_tools",
+      "speaker": "yua",
+      "line": "然后……这个 app 我也就比你早开两分钟。哦，右上角有个计时器。这儿还有个小本子——啊，可以记事。\n\n那我写一个：『继续写那个东西』。这个不解释。你也随手来一句？不来也行。",
+      "choices": [
+        {
+          "text": "我也写一句",
+          "next": "TASK_INPUT_001"
+        },
+        {
+          "text": "先不写了",
+          "next": "ep00_close"
+        }
+      ],
+      "tags": [
+        "intro",
+        "co_presence"
+      ]
     },
     {
       "id": "ep00_close",
-      "line": "{name}——好，记住了。\n\n那，试试计时器吧？\n\n你定个时长，我这边也开了。好了，各做各的，开始！",
-      "choices": [],
-      "set_flags": ["intro_seen"],
       "speaker": "yua",
-      "tags": ["intro", "co_presence"]
+      "line": "行了，选吧：15、30，还是 60。\n\n先说好，选完就得开始了——我这次真的不打游戏了。真的。……你按啊。",
+      "choices": [
+        {
+          "text": "15 分钟",
+          "next": "ACTION_GO_15"
+        },
+        {
+          "text": "30 分钟",
+          "next": "ACTION_GO_30"
+        },
+        {
+          "text": "60 分钟",
+          "next": "ACTION_GO_60"
+        }
+      ],
+      "tags": [
+        "intro",
+        "co_presence"
+      ],
+      "set_flags": [
+        "intro_seen"
+      ]
     },
-
     {
       "id": "ep01_01",
-      "set_flags": ["ep01_seen"],
-      "line": "……响了。\n\n我刚好改到一个能停的地方。今天运气不错。\n\n你先歇口气，{name}——刚才那一段，你感觉怎么样？",
-      "choices": [
-        { "text": "很充实，这 {focus_minutes} 分钟值了！", "next": "ep01_a" },
-        { "text": "还行吧，普普通通", "next": "ep01_b" },
-        { "text": "有点分神，没太坐住……", "next": "ep01_c" }
-      ],
       "speaker": "yua",
-      "tags": ["episode", "co_presence"]
+      "line": "叮——好，铃替我们收工了。\n\n刚才那段，比我想的过得快。\n\n说实话，我中间偷偷看了三次剩多久。但看完就把眼睛拽回来了，这个 app 有一点用，承认。",
+      "choices": [
+        {
+          "text": "我坐住了",
+          "next": "ep01_a"
+        },
+        {
+          "text": "我没太坐住……",
+          "next": "ep01_b"
+        },
+        {
+          "text": "你刚才在忙什么？",
+          "next": "ep01_c"
+        }
+      ],
+      "tags": [
+        "episode",
+        "co_presence"
+      ],
+      "set_flags": [
+        "ep01_seen"
+      ]
     },
     {
       "id": "ep01_a",
-      "line": "那就好。\n\n其实刚才我还想，第一次就这么安静，会不会尴尬。\n\n结果不会。有你在那边，不用硬找话，反而更自在。\n\n……挺好的。先歇着吧，不急。",
-      "choices": []
+      "speaker": "yua",
+      "line": "诶？你一次都没看？\n\n……好，我记下了。你是定力担当，我是那个看时间的。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep01_end"
+        }
+      ]
     },
     {
       "id": "ep01_b",
-      "line": "普通好啊。又不是每段都得轰轰烈烈。\n\n能坐下来本身就算数了。\n\n……你先歇着。想再来一段的话，我在这边。",
-      "choices": []
+      "speaker": "yua",
+      "line": "一样一样。\n\n我们两个第一次能坐完，就已经比开场的我强一百倍了。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep01_end"
+        }
+      ]
     },
     {
       "id": "ep01_c",
-      "line": "正常。谁还不走神啊。\n\n刚才我也对着窗外发了好一会儿呆，咱俩谁也别说谁。\n\n这段不用打分——你来了，坐下来了，就够了。\n\n下段想试再开，不想也没关系。",
+      "speaker": "yua",
+      "line": "在忙……本子上那个『东西』。\n\n白天在书店打工，晚上写点自己的——啊，说多了。就这样！",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep01_end"
+        }
+      ]
+    },
+    {
+      "id": "ep01_end",
+      "speaker": "yua",
+      "line": "好，我接着写我的了。\n\n你想再来一段就再来，想歇就歇——反正我这回真的不开游戏。真的。",
       "choices": []
     },
-
     {
       "id": "ep02_01",
-      "set_flags": ["ep02_seen"],
-      "line": "对了，问个事——\n\n你做事的时候放东西吗？音乐，或者打开个什么当背景声。\n\n我一个人的话，老开着电台。其实也没在听，就图屋里有人声。\n\n你呢？",
-      "choices": [
-        { "text": "我也爱放点音乐", "next": "ep02_a" },
-        { "text": "我得绝对安静", "next": "ep02_b" },
-        { "text": "看心情，随缘", "next": "ep02_c" }
-      ],
       "speaker": "yua",
-      "tags": ["episode"]
+      "line": "叮——收工。\n\n这段我居然忘了看时间。你说这算好事还是坏事？不用真答，我猜是好事。\n\n诶，忽然想问：你干活的时候要不要有点声音？还是得绝对安静？随口问的，不用认真。",
+      "choices": [
+        {
+          "text": "要有点声音",
+          "next": "ep02_a"
+        },
+        {
+          "text": "必须绝对安静",
+          "next": "ep02_b"
+        },
+        {
+          "text": "我说说我的（自己写）",
+          "next": "AI_MODE_BREAK_CHAT"
+        }
+      ],
+      "tags": [
+        "episode"
+      ],
+      "set_flags": [
+        "ep02_seen"
+      ]
     },
     {
       "id": "ep02_a",
-      "line": "哈，一样。\n\n不过我那电台有个毛病——碰到好笑的我能直接笑忘正事。\n\n（笑）所以还是现在这样好。你在那边安安静静的，我反而能老实做事。",
-      "choices": []
+      "speaker": "yua",
+      "line": "懂懂懂。人一安静下来，脑子就开始放自己的 BGM。\n\n我这边不用开——你听。",
+      "choices": [
+        {
+          "text": "……",
+          "next": "ep02_listen"
+        }
+      ]
     },
     {
       "id": "ep02_b",
-      "line": "安静派。我懂。\n\n就是那种——风扇声都觉得吵，非得全静下来才钻得进去，对吧？\n\n行，那我小声点。\n\n……其实这种安静里有人在，挺踏实的。",
-      "choices": []
+      "speaker": "yua",
+      "line": "厉害。我要是全安静，五分钟就会开始数天花板。\n\n不过我这边也用不着放。你听。",
+      "choices": [
+        {
+          "text": "……",
+          "next": "ep02_listen"
+        }
+      ]
     },
     {
-      "id": "ep02_c",
-      "line": "随缘——那挺好。\n\n今天就看着来吧。\n\n反正有人陪着，怎么都行。",
+      "id": "ep02_listen",
+      "speaker": "yua",
+      "line": "你听。\n\n海贴着窗边慢慢蹭。\n\n轮渡汽笛一天只响四回，远远顶过来的时候，整间屋子都会跟着顿一下。\n\n风一过，院子里那棵树的叶子会沙沙响一阵，像有人在很远的地方翻书。\n\n……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说！你什么都没听见！",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep02_end"
+        }
+      ]
+    },
+    {
+      "id": "ep02_end",
+      "speaker": "yua",
+      "line": "总之，我这边的白噪音是免费的，就是不能关。\n\n行了，我回去写那个『东西』。你继续你的。",
       "choices": []
     },
-
     {
       "id": "ep03_01",
-      "set_flags": ["ep03_seen"],
+      "set_flags": [
+        "ep03_seen"
+      ],
       "line": "我跟你说——我超容易走神。\n\n本来坐下要好好干的，一抬头半小时没了，什么也没做，净在发呆。\n\n所以才来试这个。旁边有人，哪怕隔着屏幕不出声，好像就没那么容易飘。\n\n你呢？坐得住吗？",
       "choices": [
-        { "text": "我也坐不住", "next": "ep03_a" },
-        { "text": "我还行，能坐住", "next": "ep03_b" }
+        {
+          "text": "我也坐不住",
+          "next": "ep03_a"
+        },
+        {
+          "text": "我还行，能坐住",
+          "next": "ep03_b"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode"]
+      "tags": [
+        "episode"
+      ]
     },
     {
       "id": "ep03_a",
@@ -172,18 +435,30 @@
       "line": "真好。有点羡慕。\n\n那我蹭蹭你的定力——说不定能传染。\n\n……别嫌我赖啊。",
       "choices": []
     },
-
     {
       "id": "ep04_01",
-      "set_flags": ["ep04_seen"],
+      "set_flags": [
+        "ep04_seen"
+      ],
       "line": "你卡住的时候都怎么办？\n\n我是一卡就坐不住。非得起来搞点别的——泡杯热的，发呆，甚至擦桌子。明明它根本就不脏。\n\n转一圈回来，有时候那个堵住的地方自己就松了。\n\n你呢？有没什么奇怪的招？",
       "choices": [
-        { "text": "我说说我的办法（自己写）", "next": "AI_MODE_BREAK_CHAT" },
-        { "text": "我也是起来晃一圈", "next": "ep04_a" },
-        { "text": "硬扛，扛过去就好了", "next": "ep04_b" }
+        {
+          "text": "我说说我的办法（自己写）",
+          "next": "AI_MODE_BREAK_CHAT"
+        },
+        {
+          "text": "我也是起来晃一圈",
+          "next": "ep04_a"
+        },
+        {
+          "text": "硬扛，扛过去就好了",
+          "next": "ep04_b"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode"]
+      "tags": [
+        "episode"
+      ]
     },
     {
       "id": "ep04_a",
@@ -195,17 +470,28 @@
       "line": "硬扛派……厉害。\n\n我不行，一扛就开始怀疑人生。\n\n不过你这样也好，认准了就闷头冲。\n\n我在旁边陪你——真扛不住了，喊我。",
       "choices": []
     },
-
     {
       "id": "ep05_01",
       "line": "刚才你专注的时候，我也没闲着——\n\n其实我会写点东西。自己写着玩的。\n\n不是什么正经玩意。写两行删一行，文件名都起得乱七八糟。\n\n……好像还没跟你说过。说出来怪不好意思的。",
       "choices": [
-        { "text": "写的是什么？", "next": "ep05_a" },
-        { "text": "挺好的，慢慢写", "next": "ep05_b" }
+        {
+          "text": "写的是什么？",
+          "next": "ep05_a"
+        },
+        {
+          "text": "挺好的，慢慢写",
+          "next": "ep05_b"
+        }
       ],
-      "set_flags": ["writing_disclosed", "ep05_seen"],
+      "set_flags": [
+        "writing_disclosed",
+        "ep05_seen"
+      ],
       "speaker": "yua",
-      "tags": ["episode", "writing"]
+      "tags": [
+        "episode",
+        "writing"
+      ]
     },
     {
       "id": "ep05_a",
@@ -217,17 +503,27 @@
       "line": "嗯……被你轻飘飘一句「慢慢写」，我反而松了口气。\n\n对，不急。\n\n反正有人在旁边，一行一行，总能往前挪。",
       "choices": []
     },
-
     {
       "id": "ep06_01",
-      "set_flags": ["ep06_seen"],
+      "set_flags": [
+        "ep06_seen"
+      ],
       "line": "今天那点东西，又卡死了。\n\n明明昨天还挺顺的，今天对着它一个字都不想动，光想跑。\n\n你做事情会不会也这样——越是想做好、越在意的东西，反而越难动手？",
       "choices": [
-        { "text": "会，太懂了", "next": "ep06_a" },
-        { "text": "别跟它较劲，先放着", "next": "ep06_b" }
+        {
+          "text": "会，太懂了",
+          "next": "ep06_a"
+        },
+        {
+          "text": "别跟它较劲，先放着",
+          "next": "ep06_b"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode", "writing"]
+      "tags": [
+        "episode",
+        "writing"
+      ]
     },
     {
       "id": "ep06_a",
@@ -239,34 +535,53 @@
       "line": "……你说得对。\n\n我老想着「今天必须搞定」，越逼越完蛋。\n\n放着吧。明天再看，说不定就没那么吓人了。\n\n谢啦。被你一说，这口气总算松了。",
       "choices": []
     },
-
     {
       "id": "ep07_01",
-      "set_flags": ["ep07_seen"],
+      "set_flags": [
+        "ep07_seen"
+      ],
       "line": "跟你说个我的怪癖——\n\n有些词我老爱在嘴里反复念。也不为什么，就是念着顺，心里舒服。\n\n比如「余白」……「松弛」……念着念着，整个人都慢下来了。\n\n你有没有那种——也没什么用，但就是莫名喜欢的词？",
       "choices": [
-        { "text": "有，我告诉你一个（自己写）", "next": "AI_MODE_BREAK_CHAT" },
-        { "text": "没想过，但好像挺有意思", "next": "ep07_a" }
+        {
+          "text": "有，我告诉你一个（自己写）",
+          "next": "AI_MODE_BREAK_CHAT"
+        },
+        {
+          "text": "没想过，但好像挺有意思",
+          "next": "ep07_a"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode"]
+      "tags": [
+        "episode"
+      ]
     },
     {
       "id": "ep07_a",
       "line": "那下次你留意一下——\n\n哪个词从嘴里冒出来，心里咯噔了一下，就记着。\n\n想到了丢给我。我喜欢收集这种。\n\n……好了，不耽误你了。继续。",
       "choices": []
     },
-
     {
       "id": "ep08_01",
-      "set_flags": ["ep08_seen"],
+      "set_flags": [
+        "ep08_seen"
+      ],
       "line": "诶，跟你说件怪事。\n\n刚才你在专注，我也在写——忽然脑子里蹦出来一句，还挺好的，我自己都愣了一下。\n\n说来怪：一个人空想死活憋不出来，旁边有人安安静静做事，它自己就来了。\n\n……所以今天这句，算你一半功劳。",
       "choices": [
-        { "text": "那你可得请客", "next": "ep08_a" },
-        { "text": "我啥也没做啊", "next": "ep08_b" }
+        {
+          "text": "那你可得请客",
+          "next": "ep08_a"
+        },
+        {
+          "text": "我啥也没做啊",
+          "next": "ep08_b"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode", "writing"]
+      "tags": [
+        "episode",
+        "writing"
+      ]
     },
     {
       "id": "ep08_a",
@@ -278,17 +593,26 @@
       "line": "你就是「什么也没做」地坐在那儿——这才是关键。\n\n那种有人在的安静，比什么灵感咒语都管用。\n\n……总之谢了。这句我留着啦。",
       "choices": []
     },
-
     {
       "id": "ep09_01",
-      "set_flags": ["ep09_seen"],
+      "set_flags": [
+        "ep09_seen"
+      ],
       "line": "跟你老实交代——昨天一整天，我什么都没干。\n\n说好要做的全堆着。越堆越不敢看，越不敢看越堆。\n\n明明很闲，心里却坠着块石头。你懂这种感觉吗？",
       "choices": [
-        { "text": "太懂了，天天如此", "next": "ep09_a" },
-        { "text": "我还好，不太拖", "next": "ep09_b" }
+        {
+          "text": "太懂了，天天如此",
+          "next": "ep09_a"
+        },
+        {
+          "text": "我还好，不太拖",
+          "next": "ep09_b"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode"]
+      "tags": [
+        "episode"
+      ]
     },
     {
       "id": "ep09_a",
@@ -300,17 +624,27 @@
       "line": "不拖延的人……我得好好观察一下。\n\n那今天向你看齐。少废话，先动起来。\n\n……你坐好别动，让我沾沾你这股劲儿。",
       "choices": []
     },
-
     {
       "id": "ep10_01",
-      "set_flags": ["ep10_seen"],
+      "set_flags": [
+        "ep10_seen"
+      ],
       "line": "说起来……我好像有点习惯你在了。\n\n以前最怕被人看着做事，浑身不自在，手都不知道放哪。\n\n现在倒好——你在那边做你的，我这边反而踏实。\n\n大概是你从来不盯着我，也不催我。就是在，但不会打扰。这个距离对我刚刚好。",
       "choices": [
-        { "text": "我也习惯有你在了", "next": "ep10_a" },
-        { "text": "那就多来陪你坐坐", "next": "ep10_b" }
+        {
+          "text": "我也习惯有你在了",
+          "next": "ep10_a"
+        },
+        {
+          "text": "那就多来陪你坐坐",
+          "next": "ep10_b"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode", "co_presence"]
+      "tags": [
+        "episode",
+        "co_presence"
+      ]
     },
     {
       "id": "ep10_a",
@@ -322,34 +656,53 @@
       "line": "哈，那我记下了。\n\n不用特意，你忙你的。顺路来坐就行。\n\n反正这个位置，给你留着。",
       "choices": []
     },
-
     {
       "id": "ep11_01",
-      "set_flags": ["ep11_seen"],
+      "set_flags": [
+        "ep11_seen"
+      ],
       "line": "问你——把一件拖了好久的事终于划掉的那一下，你懂那种感觉吗？\n\n也不是什么大事。就是心里咔地松了一小块。\n\n我今天划掉了一件。小小的，不起眼的。\n\n……就是突然很想跟谁说一声。你刚好在。",
       "choices": [
-        { "text": "我最近也划掉过（自己写）", "next": "AI_MODE_BREAK_CHAT" },
-        { "text": "替你高兴", "next": "ep11_a" }
+        {
+          "text": "我最近也划掉过（自己写）",
+          "next": "AI_MODE_BREAK_CHAT"
+        },
+        {
+          "text": "替你高兴",
+          "next": "ep11_a"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode"]
+      "tags": [
+        "episode"
+      ]
     },
     {
       "id": "ep11_a",
       "line": "嘿嘿，谢啦。\n\n这种小事说出来，高兴好像就翻了个倍。\n\n趁这股劲儿——咱再去划掉一件。你也是。",
       "choices": []
     },
-
     {
       "id": "ep12_01",
-      "set_flags": ["ep12_seen"],
+      "set_flags": [
+        "ep12_seen"
+      ],
       "line": "今天干了件平时不敢干的事——\n\n把之前写的从头到尾读了一遍。\n\n以前读两行就脸红，恨不得当场删光，假装没写过。\n\n今天……居然一句句读完了。也不是说写得多好，就是——没跑。",
       "choices": [
-        { "text": "这就是进步啊", "next": "ep12_a" },
-        { "text": "能读完已经很勇敢了", "next": "ep12_b" }
+        {
+          "text": "这就是进步啊",
+          "next": "ep12_a"
+        },
+        {
+          "text": "能读完已经很勇敢了",
+          "next": "ep12_b"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode", "writing"]
+      "tags": [
+        "episode",
+        "writing"
+      ]
     },
     {
       "id": "ep12_a",
@@ -361,65 +714,108 @@
       "line": "勇敢……用在读自己写的东西上，听着是有点好笑。\n\n不过你说对了——对我来说，还真需要一点勇气。\n\n（小声）旁边有人的时候，这点勇气好像好凑一点。",
       "choices": []
     },
-
     {
       "id": "ep13_01",
-      "set_flags": ["ep13_seen"],
+      "set_flags": [
+        "ep13_seen"
+      ],
       "line": "说起来，{name}——我们好像有固定节奏了。\n\n也不是什么大事。就是你来了，各自安静一会儿，偶尔聊两句。\n\n当搭子当久了，慢慢就熟了。这种小小的熟悉感，我还挺喜欢的。\n\n你最近怎么样？想说就说，我听着。你说的我都会记着。",
       "choices": [
-        { "text": "那我跟你说说近况（自己写）", "next": "AI_MODE_BREAK_CHAT" },
-        { "text": "有你这么个搭子，挺好的", "next": "ep13_a" }
+        {
+          "text": "那我跟你说说近况（自己写）",
+          "next": "AI_MODE_BREAK_CHAT"
+        },
+        {
+          "text": "有你这么个搭子，挺好的",
+          "next": "ep13_a"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode", "memory"]
+      "tags": [
+        "episode",
+        "memory"
+      ]
     },
     {
       "id": "ep13_a",
       "line": "……嗯。\n\n不用刻意维持，但又确实在——这种关系挺难得的。\n\n往后你想说什么就说。不勉强。你愿意我才听。\n\n就这么待着，挺好。",
       "choices": []
     },
-
     {
       "id": "ep14_01",
-      "set_flags": ["ep14_seen"],
+      "set_flags": [
+        "ep14_seen"
+      ],
       "line": "诶，你有没有发现——不知不觉，我们这样坐了好多回了。\n\n刚开始我还会偷偷想，自己是不是太尴尬、太僵了。\n\n现在看到你亮起来，就很自然地文档摆好、水杯放好。开始。\n\n（笑）你大概已经是我的固定安静席位了……这说法是不是有点怪？",
       "choices": [
-        { "text": "多关照（自己写）", "next": "AI_MODE_BREAK_CHAT" },
-        { "text": "我也喜欢这种固定的安静", "next": "ep14_a" }
+        {
+          "text": "多关照（自己写）",
+          "next": "AI_MODE_BREAK_CHAT"
+        },
+        {
+          "text": "我也喜欢这种固定的安静",
+          "next": "ep14_a"
+        }
       ],
       "speaker": "yua",
-      "tags": ["episode", "co_presence"]
+      "tags": [
+        "episode",
+        "co_presence"
+      ]
     },
     {
       "id": "ep14_a",
       "line": "那就先不改名了。\n\n你忙你的，我忙我的——偶尔抬头，知道对方还在，就够了。\n\n这样的搭子，不吵、不黏，但一直都在。挺好。",
       "choices": []
     },
-
     {
       "id": "TASK_INPUT_001",
       "line": "想给这段定个小目标也可以。\n\n在下面写一句就行。不写也完全没关系。",
       "choices": [
-        { "text": "先用示例任务体验", "next": "ACTION_DEMO_TASK" },
-        { "text": "帮我把它说小一点", "next": "AI_MODE_TASK_CLARIFY" }
+        {
+          "text": "先用示例任务体验",
+          "next": "ACTION_DEMO_TASK"
+        },
+        {
+          "text": "帮我把它说小一点",
+          "next": "AI_MODE_TASK_CLARIFY"
+        }
       ]
     },
     {
       "id": "TASK_INPUT_002",
-      "line": "嗯，收到。\n\n时间你自己挑。不用挑最长的，坐得住就行。",
+      "line": "嗯，收到。\n\n那，选个时长——选完就开始了。",
       "choices": [
-        { "text": "3 秒试玩", "next": "ACTION_SET_TIMER_1" },
-        { "text": "15 分钟", "next": "ACTION_SET_TIMER_15" },
-        { "text": "25 分钟", "next": "ACTION_SET_TIMER_25" },
-        { "text": "45 分钟", "next": "ACTION_SET_TIMER_45" }
+        {
+          "text": "15 分钟",
+          "next": "ACTION_GO_15"
+        },
+        {
+          "text": "30 分钟",
+          "next": "ACTION_GO_30"
+        },
+        {
+          "text": "60 分钟",
+          "next": "ACTION_GO_60"
+        }
       ]
     },
     {
       "id": "FOCUS_READY_001",
       "line": "好。\n\n准备好了就开始。不急。",
       "choices": [
-        { "text": "开始", "next": "ACTION_START_FOCUS" },
-        { "text": "换一个", "next": "TASK_INPUT_001" }
+        {
+          "text": "15 分钟",
+          "next": "ACTION_GO_15"
+        },
+        {
+          "text": "30 分钟",
+          "next": "ACTION_GO_30"
+        },
+        {
+          "text": "60 分钟",
+          "next": "ACTION_GO_60"
+        }
       ]
     },
     {
@@ -427,14 +823,22 @@
       "line": "那我也开了。\n\n……你做你的，不用管我。\n\n中途想看我一眼也行——不过我大概会一直盯着屏幕。",
       "choices": []
     },
-
     {
       "id": "FOCUS_DONE_REPEAT",
       "line": "又一段，收工。\n\n我们俩又往前挪了一点点——这种一起慢慢推的感觉，我怎么都不腻。\n\n你刚才那段，自己感觉怎么样？",
       "choices": [
-        { "text": "挺充实的", "next": "FOCUS_DONE_a" },
-        { "text": "还可以吧", "next": "FOCUS_DONE_b" },
-        { "text": "有点没坐住", "next": "FOCUS_DONE_c" }
+        {
+          "text": "挺充实的",
+          "next": "FOCUS_DONE_a"
+        },
+        {
+          "text": "还可以吧",
+          "next": "FOCUS_DONE_b"
+        },
+        {
+          "text": "有点没坐住",
+          "next": "FOCUS_DONE_c"
+        }
       ]
     },
     {
@@ -452,24 +856,34 @@
       "line": "没事，谁还没坐不住的时候。我也常这样。\n\n人在就已经比躲着强了。下段想试再试，不急。",
       "choices": []
     },
-
     {
       "id": "ABORT_001",
       "line": "停啦？\n\n没事。\n\n计时器停了就停了。不用想太多。",
       "choices": [
-        { "text": "先坐一会儿", "next": "ABORT_REST" },
-        { "text": "今天先离开", "next": "EXIT_ABORT" }
+        {
+          "text": "先坐一会儿",
+          "next": "ABORT_REST"
+        },
+        {
+          "text": "今天先离开",
+          "next": "EXIT_ABORT"
+        }
       ]
     },
     {
       "id": "ABORT_REST",
       "line": "嗯，先放着。\n\n想说会儿也行，想静一静也行。\n\n我都在这边。",
       "choices": [
-        { "text": "说会儿话", "next": "AI_MODE_BREAK_CHAT" },
-        { "text": "先离开", "next": "EXIT_ABORT" }
+        {
+          "text": "说会儿话",
+          "next": "AI_MODE_BREAK_CHAT"
+        },
+        {
+          "text": "先离开",
+          "next": "EXIT_ABORT"
+        }
       ]
     },
-
     {
       "id": "return_open_short",
       "line": "诶，又是你。\n\n……这次我没那么手忙脚乱了。\n\n你随意，我继续。",
@@ -480,7 +894,6 @@
       "line": "诶，来了。\n\n……我刚打开文档，正要开始。",
       "choices": []
     },
-
     {
       "id": "greeting_morning_01",
       "line": "早。\n\n这个点能坐下来，已经不容易了。",
@@ -541,13 +954,11 @@
       "line": "晚上好。\n\n别熬太狠。做一小段就好。",
       "choices": []
     },
-
     {
       "id": "quiet_end_01",
       "line": "嗯，那就先这样静一会儿。\n\n我在这边，不吵你。",
       "choices": []
     },
-
     {
       "id": "EXIT_001",
       "line": "好，先这样。\n\n……下次还是我在这里。\n\n嗯。下次。",

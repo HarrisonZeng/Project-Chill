@@ -79,14 +79,20 @@ func get_metadata(key: String, default_value = null):
 		return default_value
 	return metadata[key]
 
+# A broken transition is a bug, but the player must never be shown developer
+# English in Yua's voice. She covers it as a dropped moment in the call; the real
+# ids go to the console for us. `internal_return` makes the recovery choice skip
+# transition validation — without it the error node fails validation against
+# itself and the player is stuck clicking the same error forever.
 func make_transition_error_node(from_id: String, next_id: String) -> Dictionary:
+	push_warning("[dialogue] invalid transition '%s' -> '%s'" % [from_id, next_id])
 	var fallback := _resolve_fallback_id()
 	var choices: Array = []
 	if fallback != "":
-		choices.append({"text": "Back to safety", "next": fallback})
+		choices.append({"text": "嗯", "next": fallback, "internal_return": true})
 	return {
 		"id": "_error_transition",
-		"line": "Dialogue error: cannot go from '%s' to '%s'. Returning to a safe node." % [from_id, next_id],
+		"line": "……抱歉，我刚走神了。\n\n我们说到哪儿了？",
 		"choices": choices
 	}
 
@@ -202,13 +208,14 @@ func _choice_exists(from_id: String, next_id: String) -> bool:
 	return false
 
 func _make_missing_node(node_id: String) -> Dictionary:
+	push_warning("[dialogue] missing node '%s'" % node_id)
 	var fallback := _resolve_fallback_id()
 	var choices: Array = []
 	if fallback != "":
-		choices.append({"text": "Back to safety", "next": fallback})
+		choices.append({"text": "嗯", "next": fallback, "internal_return": true})
 	return {
 		"id": "_missing_node",
-		"line": "Dialogue error: missing node '%s'. Returning to a safe node." % node_id,
+		"line": "……抱歉，我刚走神了。\n\n我们说到哪儿了？",
 		"choices": choices
 	}
 

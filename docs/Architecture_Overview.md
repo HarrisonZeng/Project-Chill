@@ -72,9 +72,11 @@ Domain logic with clean boundaries, instantiated by `main_scene` in `_ready`:
 - **`dialogue_router.gd`** — decides scripted vs AI per turn; always returns a
   safe fallback so the loop never stalls.
 - **`scripted_dialogue_manager.gd`** — loads `data/dialogue/scripted_nodes.json`.
-  Known gap: `_register_node` keeps only `id`/`line`/`choices` and drops
-  `unlock`/`set_flags`/`tags`/`speaker`, so JSON-driven milestone metadata is
-  not yet honored (see the progression spec).
+  `_register_node` keeps `id`/`line`/`choices`/`speaker`/`tags`/`set_flags`/`unlock`,
+  so JSON-driven milestone metadata **is** honored. (This entry previously
+  described the old bug where `set_flags` was dropped; that was fixed 2026-08-09
+  and the wording was corrected 2026-08-19.) Note `_sanitize_choices` strips
+  `internal_return`, so that key only survives on choices synthesized in code.
 - **`bgm_manager.gd` / `voice_manager.gd`** — leaf audio nodes; called via
   duck-typed `has_method` checks.
 

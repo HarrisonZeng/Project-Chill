@@ -1,21 +1,19 @@
 extends Control
 
-const FOCUS_DURATION_SECONDS: float = 25.0 * 60.0
+const FOCUS_DURATION_SECONDS: float = 30.0 * 60.0  # canon chips 15/30/60
 # Save now lives in one profile owned by memory_manager
 # (user://data/saves/player_profile.json). main_scene reads/writes via it.
 const LOOP_VIDEO_PATH := "res://assets/video/yua_idle_loop.ogv"
-const FOCUS_COMPLETE_LINE := "Focus block complete. Nice work."
 const PERSONA_PATH := "res://data/dialogue/yua_system_prompt.txt"
 const WORLD_PATH := "res://data/dialogue/yua_world.txt"
 const RUNTIME_RULES_PATH := "res://data/dialogue/yua_runtime_rules.txt"
 const DEFAULT_MODE_CONTEXT := "Scene type: short return-after-task check-in\nReply briefly in 1-3 sentences\nYua should sound gently curious and reserved\nThis is a small side conversation and should return to the main flow soon"
-const INPUT_PLACEHOLDER_TEXT := "Type a reply"
-const TYPE_INPUT_PLACEHOLDER_TEXT := "Type your reply in your own words"
-const TIMER_INPUT_PLACEHOLDER_TEXT := "15"
-const FOCUS_START_LINE := "Focus timer started. Let's keep it gentle."
-const FOCUS_STOP_LINE := "Focus timer paused. We can breathe for a moment."
-const FOCUS_SET_LINE := "Timer set. I'll keep you company for that block."
-const DEFAULT_RETURN_CHOICE_TEXT := "Stay a little longer."
+# Removed 2026-08-19: FOCUS_COMPLETE_LINE / FOCUS_START_LINE / FOCUS_STOP_LINE /
+# FOCUS_SET_LINE / DEFAULT_RETURN_CHOICE_TEXT and the three *_PLACEHOLDER_TEXT
+# constants. They were English, several were written in Yua's first person, and
+# the status strip sits directly under the dialogue box — so they read as Yua
+# speaking English. Status text now comes from _ui_text("status_*") and is
+# neutral in both languages; placeholders are resolved in _ui_text already.
 # These three are loaded from scripted_nodes.json at runtime so adding a new
 # episode is JSON-only — no .gd edit needed. The values below are fallback
 # defaults used only if the JSON is missing the metadata block.
@@ -524,6 +522,19 @@ func _ui_text(key: String) -> String:
 			return _zh([21024, 38500, 20219, 21153]) if zh else "Delete task"
 		"resize_tasks":
 			return _zh([25302, 21160, 35843, 25972, 20219, 21153, 26694, 22823, 23567]) if zh else "Drag to resize tasks"
+		# Status-strip text. Deliberately NEUTRAL and third-person: it renders in
+		# the strip directly under the dialogue box, so anything written in the
+		# first person reads as Yua speaking English.
+		"status_timer_set":
+			return "计时已设定" if zh else "Timer set"
+		"status_timer_paused":
+			return "计时已暂停" if zh else "Timer paused"
+		"status_focus_complete":
+			return "这一段结束了" if zh else "Focus block complete"
+		"status_thinking":
+			return "正在回复……" if zh else "Replying..."
+		"status_enter_minutes":
+			return "先填一个分钟数" if zh else "Enter a number of minutes first."
 		_:
 			return key
 
@@ -594,7 +605,7 @@ func _on_focus_custom_chip_pressed() -> void:
 func _on_focus_custom_apply_pressed() -> void:
 	var minutes := _parse_minutes_input()
 	if minutes <= 0:
-		_show_system_status("Enter a number of minutes first.")
+		_show_system_status(_ui_text("status_enter_minutes"))
 		return
 	if focus_custom_row != null:
 		focus_custom_row.visible = false
@@ -611,7 +622,7 @@ func _set_focus_duration_minutes(minutes: int) -> void:
 	_update_timer_label()
 	_refresh_focus_controls()
 	_highlight_duration_chip(minutes)
-	_show_system_status("%s Timer set to %d minutes." % [FOCUS_SET_LINE, minutes])
+	_show_system_status("%s · %d min" % [_ui_text("status_timer_set"), minutes])
 	_save_persistent_state()
 
 func _highlight_duration_chip(minutes: int) -> void:
@@ -638,7 +649,9 @@ func _show_node(node_id: String) -> void:
 
 func _show_node_data(node_data: Dictionary) -> void:
 	if node_data.is_empty():
-		_set_dialogue_text("Dialogue error: missing node data.")
+		# Never developer English in her voice — log it, cover it in-fiction.
+		push_warning("[dialogue] empty node data for '%s'" % current_node_id)
+		_set_dialogue_text("……抱歉，我刚走神了。\n\n我们说到哪儿了？")
 		_render_choices([])
 		return
 
@@ -661,11 +674,9 @@ func _get_display_choices(node_data: Dictionary) -> Array:
 	if current_node_id.begins_with("EXIT_") or current_node_id == "FOCUS_START_001":
 		return []
 
-	if scripted_dialogue_manager != null and scripted_dialogue_manager.has_dialogue_node("greeting_01"):
-		return [
-			{"text": DEFAULT_RETURN_CHOICE_TEXT, "next": "greeting_01", "internal_return": true}
-		]
-
+	# A terminal node genuinely ends the exchange; clicking Yua re-opens things via
+	# _on_character_clicked. (There used to be an injected English "Stay a little
+	# longer." chip pointing at a node id that does not exist in the script.)
 	return []
 
 func _build_follow_up_choices(follow_up_tag: String) -> Array:
@@ -704,15 +715,15 @@ func _get_follow_up_topic_node_id(follow_up_tag: String) -> String:
 func _get_follow_up_choice_text(follow_up_tag: String) -> String:
 	match follow_up_tag:
 		"ask_about_school":
-			return "Talk about school"
+			return "说说学校"
 		"ask_about_exam":
-			return "Talk about the exam"
+			return "说说考试"
 		"ask_about_sleep":
-			return "Talk about rest"
+			return "说说休息"
 		"ask_about_work":
-			return "Talk about work"
+			return "说说工作"
 		_:
-			return "Talk about it"
+			return "聊两句"
 
 func _render_choices(choices: Array) -> void:
 	current_choice_payloads = choices.duplicate(true)
@@ -1052,8 +1063,9 @@ func _on_character_clicked() -> void:
 		_conversation_opened_this_session = true
 		var start_id := _resolve_start_node_id()
 		if start_id == "idle" or not scripted_dialogue_manager.has_dialogue_node(start_id):
-			# Never fall back into the intro for a returning player.
-			if not has_seen_intro and scripted_dialogue_manager.has_dialogue_node(intro_node_id):
+			# Never fall back into the intro for a returning player. Checks BOTH
+			# sources of truth (see _intro_already_seen).
+			if not _intro_already_seen() and scripted_dialogue_manager.has_dialogue_node(intro_node_id):
 				start_id = intro_node_id
 			else:
 				start_id = "return_open_01"
@@ -1166,6 +1178,12 @@ func _apply_node_flags(node_data: Dictionary) -> void:
 func _current_node_has_tag(tag: String) -> bool:
 	if scripted_dialogue_manager == null:
 		return false
+	# Ask only about nodes that exist. get_dialogue_node() synthesizes an error
+	# node for an unknown id, so querying a tag during boot (before the JSON is
+	# loaded) or on a state id like "idle" manufactured a bogus missing-node
+	# warning on every UI refresh.
+	if not scripted_dialogue_manager.has_dialogue_node(current_node_id):
+		return false
 	var node_data: Dictionary = scripted_dialogue_manager.get_dialogue_node(current_node_id)
 	var tags: Array = node_data.get("tags", [])
 	return tags.has(tag)
@@ -1201,8 +1219,88 @@ func _capture_player_nickname(nickname: String) -> void:
 	if not choices.is_empty() and typeof(choices[0]) == TYPE_DICTIONARY:
 		next_id = str((choices[0] as Dictionary).get("next", ""))
 	if next_id.is_empty() or not scripted_dialogue_manager.has_dialogue_node(next_id):
-		next_id = "ep00_close" if scripted_dialogue_manager.has_dialogue_node("ep00_close") else _safe_node_id()
-	_show_node(next_id)
+		next_id = "ep00_named" if scripted_dialogue_manager.has_dialogue_node("ep00_named") else _safe_node_id()
+	# Ep0 name reaction (owner spec, 2026-08-20): she reacts to the name itself —
+	# real name / net name / 整活名 — via AI_MODE_NAME_REACT, then the scripted
+	# ep00_named line follows. AI is slow (4–15s on M3), so we show an in-fiction
+	# "reading your name" beat first and never block; on failure/disabled we use a
+	# heuristic scripted reaction so the moment always lands.
+	_play_name_reaction_then(clean, next_id)
+
+# --- Ep0 name reaction -------------------------------------------------------
+const NAME_REACT_TIMEOUT_SECONDS := 12.0
+var _name_react_token: int = 0
+
+func _play_name_reaction_then(nickname: String, next_id: String) -> void:
+	_name_react_token += 1
+	var my_token := _name_react_token
+	_enter_scripted_mode()
+	current_node_id = "ep00_name_react"
+	_set_dialogue_text("%s……" % nickname)
+	_set_status_message("")
+	_render_choices([])
+
+	var reaction := ""
+	var ai_ok := false
+	if ai_features_enabled and dialogue_router != null and dialogue_router.has_method("route_player_text_async"):
+		var packet := _build_context_packet("AI_MODE_NAME_REACT")
+		var route: Dictionary = await _await_with_timeout(
+			dialogue_router.route_player_text_async(nickname, true, persona_text, packet, runtime_rules_text, "AI_MODE_NAME_REACT"),
+			NAME_REACT_TIMEOUT_SECONDS)
+		if my_token != _name_react_token:
+			return  # superseded (player reset mid-await)
+		if bool(route.get("success", false)) and not bool(route.get("fallback_used", false)):
+			reaction = str(route.get("text", "")).strip_edges()
+			ai_ok = not reaction.is_empty()
+	if not ai_ok:
+		reaction = _scripted_name_reaction(nickname)
+
+	_set_dialogue_text(reaction)
+	_set_status_message("")
+	_render_choices([{"text": "继续", "next": next_id, "internal_return": true}])
+	_play_voice_for_line("name_react", reaction)
+
+# Awaits a coroutine but gives up after `seconds`; returns {} on timeout.
+func _await_with_timeout(coro, seconds: float) -> Dictionary:
+	var done := [false]
+	var result := [{}]
+	var runner := func() -> void:
+		var r = await coro
+		result[0] = r if typeof(r) == TYPE_DICTIONARY else {}
+		done[0] = true
+	runner.call()
+	var elapsed := 0.0
+	while not done[0] and elapsed < seconds:
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+	return result[0] if done[0] else {}
+
+# Heuristic fallback buckets (mirror the AI brief): 整活 / net-name / real-name.
+func _scripted_name_reaction(nickname: String) -> String:
+	var n := nickname
+	var playful_markers := ["帅哥", "美女", "爸爸", "妈妈", "爷", "大人", "无敌", "超级", "大魔王", "本人", "至尊", "皇", "神"]
+	for m in playful_markers:
+		if n.contains(m):
+			return "……行，很有气势。我尽量绷住认真喊。"
+	var has_digit := false
+	var cjk_count := 0
+	for ch in n:
+		if ch >= "0" and ch <= "9":
+			has_digit = true
+		var code := ch.unicode_at(0)
+		if code >= 0x4E00 and code <= 0x9FFF:
+			cjk_count += 1
+	# CJK names: real names are 2–3 characters; 4+ reads as a net/character name.
+	# Latin names: a single word up to ~12 letters is plausibly real (Harrison,
+	# Alexandra); digits, spaces, or longer strings read as handles.
+	var looks_like_handle := has_digit
+	if cjk_count > 0:
+		looks_like_handle = looks_like_handle or cjk_count >= 4
+	else:
+		looks_like_handle = looks_like_handle or n.length() > 12 or n.contains(" ") or n.contains("_")
+	if looks_like_handle:
+		return "这是网名吧？……感觉像从哪部作品里来的。"
+	return "%s……哦？是本名？挺好记的。" % n
 
 # Relationship progress is advanced ONLY here (on a completed focus). Monotonic.
 func _apply_focus_completion_progress() -> void:
@@ -1270,8 +1368,29 @@ func _handle_special_choice(next_node_id: String) -> bool:
 		"ACTION_QUICK_FOCUS":
 			_start_quick_focus_from_script()
 			return true
+		# Script v10 canon (Ep0 «行了，选吧：15、30，还是 60。先说好，选完就得开始了»):
+		# picking a duration from dialogue starts the session immediately — no
+		# extra "开始专注" confirmation node in between.
+		"ACTION_GO_15":
+			_go_focus_minutes(15)
+			return true
+		"ACTION_GO_30":
+			_go_focus_minutes(30)
+			return true
+		"ACTION_GO_60":
+			_go_focus_minutes(60)
+			return true
 		_:
 			return false
+
+func _go_focus_minutes(minutes: int) -> void:
+	focus_duration_seconds = float(minutes) * 60.0
+	focus_time_left = focus_duration_seconds
+	focus_running = false
+	focus_last_tick_ms = 0
+	_highlight_duration_chip(minutes)
+	_save_persistent_state()
+	_start_focus_from_script()
 
 func _set_focus_seconds_from_script(seconds: float, yua_line: String) -> void:
 	focus_duration_seconds = maxf(seconds, 1.0)
@@ -1284,7 +1403,7 @@ func _set_focus_seconds_from_script(seconds: float, yua_line: String) -> void:
 	_save_persistent_state()
 	current_node_id = "FOCUS_READY_001"
 	_set_dialogue_text("%s\n\n%s" % [yua_line, "准备好了就开始。"])
-	_set_status_message("Timer set to %s." % _format_time_label(focus_time_left))
+	_set_status_message("%s · %s" % [_ui_text("status_timer_set"), _format_time_label(focus_time_left)])
 	_render_choices([
 		{"text": "开始专注", "next": "ACTION_START_FOCUS"},
 		{"text": "换个任务", "next": "TASK_INPUT_001"}
@@ -1302,7 +1421,7 @@ func _set_focus_minutes_from_script(minutes: int, yua_line: String) -> void:
 	_save_persistent_state()
 	current_node_id = "FOCUS_READY_001"
 	_set_dialogue_text("%s\n\n%s" % [yua_line, "准备好了就开始。"])
-	_set_status_message("Timer set to %d minute%s." % [minutes, "" if minutes == 1 else "s"])
+	_set_status_message("%s · %d min" % [_ui_text("status_timer_set"), minutes])
 	_render_choices([
 		{"text": "开始专注", "next": "ACTION_START_FOCUS"},
 		{"text": "换个任务", "next": "TASK_INPUT_001"}
@@ -1320,7 +1439,7 @@ func _start_focus_from_script() -> void:
 	_update_timer_label()
 	_refresh_focus_controls()
 	_show_node("FOCUS_START_001")
-	_set_status_message("Focus started. %s left." % _format_time_label(focus_time_left))
+	_set_status_message(_format_time_label(focus_time_left))
 	_save_persistent_state()
 
 func _start_quick_focus_from_script() -> void:
@@ -1398,7 +1517,7 @@ func _handle_player_text(raw_text: String) -> void:
 	# Type Mode is always on: any other typed line routes to the AI. (The old
 	# AIModeToggle checkbox was removed from the UI; there is no "off" state.)
 	_note_meaningful_interaction()
-	_set_status_message("Yua is thinking...")
+	_set_status_message(_ui_text("status_thinking"))
 	memory_manager.process_player_message(text)
 	var mode_id := current_ai_mode_id if not current_ai_mode_id.is_empty() else current_node_id
 	var context_packet := _build_context_packet(mode_id)
@@ -1421,17 +1540,20 @@ func _capture_focus_task(task_text: String) -> void:
 	tasks_ui.add_todo_item(current_focus_task)
 	tasks_ui.refresh_controls()
 	current_node_id = "TASK_INPUT_002"
-	_set_dialogue_text("……好。\n\n“%s”。\n\n不是很大，但很实际。这种任务我最喜欢，完成了有感觉。\n\n选个时长吧。" % current_focus_task)
-	_set_status_message("Task captured.")
+	# Peer, not coach: receive the task lightly, no commentary on its content.
+	# In the intro this beat lands right after her own «继续写那个东西», so keep
+	# her line short and hand straight to the canonical 15/30/60 (start-now) pick.
+	_set_dialogue_text("嗯，收到。『%s』。\n\n那，选个时长——选完就开始了。" % current_focus_task)
+	_set_status_message("")
 	var duration_choices: Array = []
 	if _debug_timeline_enabled():
 		# Dev-only shortcut: real players should not be able to clear a focus
 		# session in three seconds and speed-run the episodes.
 		duration_choices.append({"text": "3 秒试玩", "next": "ACTION_SET_TIMER_1"})
 	duration_choices.append_array([
-		{"text": "15 分钟", "next": "ACTION_SET_TIMER_15"},
-		{"text": "25 分钟", "next": "ACTION_SET_TIMER_25"},
-		{"text": "45 分钟", "next": "ACTION_SET_TIMER_45"}
+		{"text": "15 分钟", "next": "ACTION_GO_15"},
+		{"text": "30 分钟", "next": "ACTION_GO_30"},
+		{"text": "60 分钟", "next": "ACTION_GO_60"}
 	])
 	_render_choices(duration_choices)
 	_play_voice_for_line("task_captured", dialogue_text.text)
@@ -1551,7 +1673,7 @@ func _on_stop_focus_pressed() -> void:
 	if was_running and scripted_dialogue_manager.has_dialogue_node("ABORT_001"):
 		_show_node("ABORT_001")
 	else:
-		_show_system_status(FOCUS_STOP_LINE)
+		_show_system_status(_ui_text("status_timer_paused"))
 	_save_persistent_state()
 
 func _update_timer_label() -> void:
@@ -1634,12 +1756,26 @@ func _show_focus_complete_node() -> void:
 	if scripted_dialogue_manager.has_dialogue_node("FOCUS_DONE_REPEAT"):
 		_show_node("FOCUS_DONE_REPEAT")
 		return
-	_show_system_status(FOCUS_COMPLETE_LINE)
+	_show_system_status(_ui_text("status_focus_complete"))
 
 func _safe_node_id() -> String:
 	if scripted_dialogue_manager != null and scripted_dialogue_manager.has_dialogue_node(current_node_id):
 		return current_node_id
 	return "idle"
+
+# Whether the intro has been seen, according to EITHER source of truth: the
+# `has_seen_intro` save field or the `intro_seen` story flag that ep00_close
+# writes. They are written at different moments by different code paths, so a
+# save can legitimately carry one without the other; trusting only the boolean
+# is what replayed Ep0 for players who had already finished it.
+# `_build_progression_state` reconciles them the same way.
+func _intro_already_seen() -> bool:
+	if has_seen_intro:
+		return true
+	if memory_manager != null and memory_manager.has_method("get_story_flags"):
+		var flags: Dictionary = memory_manager.call("get_story_flags")
+		return bool(flags.get("intro_seen", false))
+	return false
 
 func _resolve_start_node_id() -> String:
 	if scripted_dialogue_manager == null:
@@ -1648,11 +1784,17 @@ func _resolve_start_node_id() -> String:
 	# The intro can only ever play for a player who has never seen it. A script
 	# version bump no longer force-replays it (that caused "EP0 restarts" reports);
 	# use the debug bar (Ep 0 + Reset Save) to re-watch it during development.
-	if not has_seen_intro and scripted_dialogue_manager.has_dialogue_node(intro_node_id):
+	if not _intro_already_seen() and scripted_dialogue_manager.has_dialogue_node(intro_node_id):
 		demo_script_version_seen = demo_script_version
 		has_seen_intro = true
+		# Persist immediately. This used to be an in-memory flip only, so a later
+		# save triggered by ep00_close's set_flags wrote the profile back with
+		# has_seen_intro still false — a save that said "intro seen" (story flag)
+		# and "intro not seen" (this field) at once, replaying Ep0 next launch.
+		_save_persistent_state()
 		return intro_node_id
 	demo_script_version_seen = demo_script_version
+	has_seen_intro = true
 
 	if has_seen_intro and _should_use_short_return_node() and scripted_dialogue_manager.has_dialogue_node("return_open_short"):
 		return "return_open_short"
@@ -2046,6 +2188,14 @@ func _debug_timeline_jump(node_id: String, session_count: int) -> void:
 		_refresh_focus_controls()
 	completed_focus_sessions = session_count
 	has_seen_intro = node_id != intro_node_id
+	# Jumping to Ep0 clears intro_seen so it can be re-watched, but BOTH sources
+	# of truth must move together or _intro_already_seen() still reports true.
+	if memory_manager != null and memory_manager.has_method("set_story_flag"):
+		memory_manager.call("set_story_flag", "intro_seen", has_seen_intro)
+	# This shows a node without going through _on_character_clicked, so the
+	# session's opener must be marked spent — otherwise the next Yua click
+	# re-resolves an opener and restarts the intro mid-session.
+	_conversation_opened_this_session = true
 	_enter_scripted_mode()
 	_show_node(node_id)
 	_set_status_message("DEBUG: jumped to %s (sessions=%d)" % [node_id, session_count])
