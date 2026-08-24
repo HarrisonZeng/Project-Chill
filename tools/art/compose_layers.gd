@@ -145,6 +145,41 @@ func _init() -> void:
 		print("keyed -> ", out_p)
 		quit(0)
 		return
+	if mode == "alphacopy":
+		# Night layer from a relit master + an ALPHA day layer (no magenta):
+		# --mode=alphacopy --alpha=<day alpha png> --in=<night master> --out=<png>
+		# RGB comes from the relit master, alpha from the day cut. Both are
+		# pixel-aligned by construction, so the day cut is correct for night.
+		var al_p := ""
+		var in_a := ""
+		var out_a := ""
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--alpha="):
+				al_p = a.substr(8)
+			elif a.begins_with("--in="):
+				in_a = a.substr(5)
+			elif a.begins_with("--out="):
+				out_a = a.substr(6)
+		var al := Image.load_from_file(al_p)
+		var srca := Image.load_from_file(in_a)
+		if al == null or srca == null:
+			push_error("alphacopy: cannot load inputs")
+			quit(1)
+			return
+		al.convert(Image.FORMAT_RGBA8)
+		srca.convert(Image.FORMAT_RGBA8)
+		if al.get_size() != srca.get_size():
+			push_error("alphacopy: size mismatch %s vs %s" % [al.get_size(), srca.get_size()])
+			quit(1)
+			return
+		for y in range(srca.get_height()):
+			for x in range(srca.get_width()):
+				var s := srca.get_pixel(x, y)
+				srca.set_pixel(x, y, Color(s.r, s.g, s.b, al.get_pixel(x, y).a))
+		srca.save_png(out_a)
+		print("alphacopy -> ", out_a)
+		quit(0)
+		return
 	if mode == "applymask":
 		# Reuse a magenta-keyed DAY layer as the alpha for a relit master:
 		# --mode=applymask --mask=<day keyed png> --in=<night master> --out=<alpha png>

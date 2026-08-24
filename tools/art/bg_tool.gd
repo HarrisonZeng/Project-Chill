@@ -22,18 +22,32 @@ const OUT_DIR := "res://assets/art/backgrounds/"
 # rectangle. Curtains and the white frame are deliberately NOT included — they
 # belong to the room layer, in front of the weather.
 static func _panes() -> Array:
+	# Open-U room (room_master v7): four panes across the top, glass from the
+	# image top edge down to the counter, sill sloping slightly left-high.
+	# Sheer curtains take over left of x~252 and right of x~997.
 	return [
-		# NOTE: the strip left of x=300 is glass too, but the sheer curtain hangs
-		# in front of it. The curtain belongs to the room layer, so that strip is
-		# deliberately not cut out — otherwise the curtain disappears there.
-		# centre-left pane
-		PackedVector2Array([Vector2(318, 0), Vector2(455, 0), Vector2(455, 487), Vector2(318, 473)]),
-		# centre pane
-		PackedVector2Array([Vector2(474, 0), Vector2(736, 0), Vector2(736, 505), Vector2(474, 490)]),
-		# right pane of the main run
-		PackedVector2Array([Vector2(755, 0), Vector2(944, 0), Vector2(944, 495), Vector2(755, 505)]),
-		# last sliver before the sheer curtain takes over on the right
-		PackedVector2Array([Vector2(962, 0), Vector2(1002, 0), Vector2(1002, 462), Vector2(962, 470)]),
+		PackedVector2Array([Vector2(252, 0), Vector2(426, 0), Vector2(426, 470), Vector2(252, 475)]),
+		PackedVector2Array([Vector2(455, 0), Vector2(640, 0), Vector2(640, 460), Vector2(455, 468)]),
+		PackedVector2Array([Vector2(668, 0), Vector2(845, 0), Vector2(845, 448), Vector2(668, 458)]),
+		PackedVector2Array([Vector2(872, 0), Vector2(997, 0), Vector2(997, 435), Vector2(872, 445)]),
+	]
+
+# Things standing in FRONT of the glass. Subtracted from the pane cut so they
+# stay in the room layer instead of turning into holes that show the weather.
+static func _protects() -> Array:
+	return [
+		# monitor's upper corner reaches into pane 1
+		PackedVector2Array([Vector2(95, 318), Vector2(400, 288), Vector2(405, 480), Vector2(95, 480)]),
+		# daisy bouquet + vase
+		PackedVector2Array([Vector2(318, 300), Vector2(340, 260), Vector2(452, 262), Vector2(470, 330), Vector2(462, 480), Vector2(325, 480)]),
+		# round timer clock
+		PackedVector2Array([Vector2(418, 388), Vector2(536, 388), Vector2(536, 480), Vector2(418, 480)]),
+		# dinosaur plush on its stand (moved to the counter in v7)
+		PackedVector2Array([Vector2(546, 352), Vector2(664, 352), Vector2(664, 480), Vector2(546, 480)]),
+		# square succulent planter
+		PackedVector2Array([Vector2(666, 356), Vector2(747, 356), Vector2(747, 480), Vector2(666, 480)]),
+		# armchair headrest rises past the sill into panes 3-4
+		PackedVector2Array([Vector2(786, 386), Vector2(1020, 386), Vector2(1020, 480), Vector2(786, 480)]),
 	]
 
 func _init() -> void:
@@ -307,17 +321,21 @@ func _blur_rgb(im: Image) -> void:
 # onto a photo and one sitting in the room. Same pixels as the room layer, so
 # the seam is invisible.
 static func _foreground() -> Array:
+	# Open-U room: what sits between the camera and someone in the armchair.
+	# Interior sloppiness is invisible (identical pixels stack); only the edges
+	# that can touch her matter — armrest tops, the desk's far edge, the
+	# monitor's right edge.
 	return [
-		# monitor and its stand, far left
-		PackedVector2Array([Vector2(0, 220), Vector2(315, 238), Vector2(338, 700), Vector2(0, 712)]),
-		# dinosaur plush on its wooden coaster
-		PackedVector2Array([Vector2(118, 636), Vector2(316, 648), Vector2(316, 918), Vector2(118, 908)]),
-		# potted plant, bottom-left corner
-		PackedVector2Array([Vector2(0, 742), Vector2(152, 758), Vector2(152, 1024), Vector2(0, 1024)]),
-		# desk mat, keyboard and mouse — her forearms pass behind these
-		PackedVector2Array([Vector2(292, 700), Vector2(918, 668), Vector2(946, 1024), Vector2(292, 1024)]),
-		# chair cushion and the near arm of the L-shaped desk
-		PackedVector2Array([Vector2(1030, 600), Vector2(1536, 620), Vector2(1536, 1024), Vector2(1030, 1024)]),
+		# monitor + stand, down to the desk surface
+		PackedVector2Array([Vector2(95, 288), Vector2(400, 282), Vector2(405, 720), Vector2(95, 730)]),
+		# front-left desk slab: mat, keyboard, mouse, plush, plant
+		PackedVector2Array([Vector2(0, 552), Vector2(398, 610), Vector2(672, 928), Vector2(540, 1024), Vector2(0, 1024)]),
+		# The armchair is deliberately NOT here. Her torso sits against the
+		# backrest and her arm lies over the left armrest, so the chair must
+		# render behind her; a front-layer chair drew its cushion across her
+		# chest. Her seated art covers the seat area itself.
+		# right return's near edge
+		PackedVector2Array([Vector2(1018, 565), Vector2(1536, 600), Vector2(1536, 1024), Vector2(1018, 1024)]),
 	]
 
 func _write_layers(img: Image) -> void:
@@ -332,10 +350,19 @@ func _write_layers(img: Image) -> void:
 			for oy in [0.25, 0.75]:
 				for ox in [0.25, 0.75]:
 					var pt := Vector2(float(x) + ox, float(y) + oy)
+					var in_pane := false
 					for poly in _panes():
 						if Geometry2D.is_point_in_polygon(pt, poly):
-							hits += 1.0
+							in_pane = true
 							break
+					if in_pane:
+						# Objects in front of the glass win over the pane cut.
+						for prot in _protects():
+							if Geometry2D.is_point_in_polygon(pt, prot):
+								in_pane = false
+								break
+					if in_pane:
+						hits += 1.0
 			var a := hits / 4.0
 			mask.set_pixel(x, y, Color(a, a, a, 1.0))
 	# Soften by one pixel so the room layer's cut edge never reads as a hard
