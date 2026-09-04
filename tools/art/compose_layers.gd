@@ -145,6 +145,220 @@ func _init() -> void:
 		print("keyed -> ", out_p)
 		quit(0)
 		return
+	if mode == "flatten":
+		# Composite an alpha PNG over flat magenta so an image model can see the
+		# subject (it cannot read alpha) and hand it back keyable.
+		# --mode=flatten --in=<png> --out=<png>
+		var in_f := ""
+		var out_f := ""
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--in="):
+				in_f = a.substr(5)
+			elif a.begins_with("--out="):
+				out_f = a.substr(6)
+		var imf := Image.load_from_file(in_f)
+		imf.convert(Image.FORMAT_RGBA8)
+		for y in range(imf.get_height()):
+			for x in range(imf.get_width()):
+				var c := imf.get_pixel(x, y)
+				imf.set_pixel(x, y, Color(
+					c.r * c.a + (1.0 - c.a),
+					c.g * c.a,
+					c.b * c.a + (1.0 - c.a), 1.0))
+		imf.save_png(out_f)
+		print("flattened on magenta -> ", out_f)
+		quit(0)
+		return
+	if mode == "patch":
+		# Fill a region of BASE from DONOR with a feathered seam. Inside the rect,
+		# where base is transparent the donor wins outright; where base is opaque
+		# it blends toward the donor by closeness to the hole (a blurred copy of
+		# the hole mask gives that distance cheaply). With --force the whole rect
+		# is replaced, feathered at its border — for swapping a region such as
+		# closed eyes.
+		# --mode=patch --base=<png> --donor=<png> --out=<png> --rect=x,y,w,h [--feather=16] [--force]
+		var base_p := ""
+		var donor_p := ""
+		var out_p2 := ""
+		var rect_s := ""
+		var feather := 16
+		var force := false
+		var donor_alpha := false
+		var match_tone := false
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--base="):
+				base_p = a.substr(7)
+			elif a.begins_with("--donor="):
+				donor_p = a.substr(8)
+			elif a.begins_with("--out="):
+				out_p2 = a.substr(6)
+			elif a.begins_with("--rect="):
+				rect_s = a.substr(7)
+			elif a.begins_with("--feather="):
+				feather = int(a.substr(10))
+			elif a == "--force":
+				force = true
+			elif a == "--donoralpha":
+				donor_alpha = true
+			elif a == "--match":
+				match_tone = true
+		var base := Image.load_from_file(base_p)
+		var donor := Image.load_from_file(donor_p)
+		base.convert(Image.FORMAT_RGBA8)
+		donor.convert(Image.FORMAT_RGBA8)
+		var rv := rect_s.split(",")
+		var rect := Rect2i(int(rv[0]), int(rv[1]), int(rv[2]), int(rv[3]))
+		var w := base.get_width()
+		var h := base.get_height()
+		var wm := Image.create(w, h, false, Image.FORMAT_RF)
+		for y in range(rect.position.y, rect.end.y):
+			for x in range(rect.position.x, rect.end.x):
+				if force:
+					var dxr: int = mini(x - rect.position.x, rect.end.x - 1 - x)
+					var dyr: int = mini(y - rect.position.y, rect.end.y - 1 - y)
+					var d: int = mini(dxr, dyr)
+					wm.set_pixel(x, y, Color(clampf(float(d) / float(feather), 0.0, 1.0), 0, 0, 1))
+				else:
+					wm.set_pixel(x, y, Color(1.0 if base.get_pixel(x, y).a < 0.95 else 0.0, 0, 0, 1))
+		if not force:
+			var srcw := wm.duplicate() as Image
+			for y in range(rect.position.y, rect.end.y):
+				for x in range(rect.position.x, rect.end.x):
+					var acc := 0.0
+					var n := 0.0
+					for dy in range(-feather, feather + 1, 2):
+						for dx in range(-feather, feather + 1, 2):
+							var sx: int = clampi(x + dx, 0, w - 1)
+							var sy: int = clampi(y + dy, 0, h - 1)
+							acc += srcw.get_pixel(sx, sy).r
+							n += 1.0
+					wm.set_pixel(x, y, Color(minf(1.0, (acc / n) * 1.15), 0, 0, 1))
+		# Tone match: shift the donor so its mean over the overlap (pixels opaque
+		# in BOTH, i.e. the surviving sleeve inside the rect) equals the base mean.
+		# Without this the patch reads as a lighter/darker rectangle.
+		var shift := Color(0, 0, 0, 0)
+		if match_tone:
+			var sb := Color(0, 0, 0, 0)
+			var sd := Color(0, 0, 0, 0)
+			var cnt := 0.0
+			for y in range(rect.position.y, rect.end.y):
+				for x in range(rect.position.x, rect.end.x):
+					var pb := base.get_pixel(x, y)
+					var pd := donor.get_pixel(x, y)
+					if pb.a > 0.95 and pd.a > 0.95:
+						sb += pb
+						sd += pd
+						cnt += 1.0
+			if cnt > 0.0:
+				shift = (sb / cnt) - (sd / cnt)
+				print("tone shift r%.3f g%.3f b%.3f over %d px" % [shift.r, shift.g, shift.b, int(cnt)])
+		var out := base.duplicate() as Image
+		for y in range(rect.position.y, rect.end.y):
+			for x in range(rect.position.x, rect.end.x):
+				var t := wm.get_pixel(x, y).r
+				var b := base.get_pixel(x, y)
+				var d := donor.get_pixel(x, y)
+				d = Color(clampf(d.r + shift.r, 0, 1), clampf(d.g + shift.g, 0, 1), clampf(d.b + shift.b, 0, 1), d.a)
+				if t <= 0.0:
+					if donor_alpha:
+						out.set_pixel(x, y, Color(b.r, b.g, b.b, minf(b.a, d.a)))
+					continue
+				var oa := (b.a * (1.0 - t) + d.a * t)
+				if donor_alpha:
+					oa = d.a
+				out.set_pixel(x, y, Color(
+					b.r * (1.0 - t) + d.r * t,
+					b.g * (1.0 - t) + d.g * t,
+					b.b * (1.0 - t) + d.b * t, oa))
+		out.save_png(out_p2)
+		print("patched %s from donor -> %s" % [rect, out_p2])
+		quit(0)
+		return
+	if mode == "maskfrom":
+		# New overlay = SRC pixels where the REF alpha (dilated) says so. Re-cuts
+		# the hands overlay from a different rendition of the same pose.
+		# --mode=maskfrom --src=<png> --ref=<alpha png> --out=<png> [--dilate=4]
+		var s_p := ""
+		var r_p := ""
+		var o_p := ""
+		var dil := 4
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--src="):
+				s_p = a.substr(6)
+			elif a.begins_with("--ref="):
+				r_p = a.substr(6)
+			elif a.begins_with("--out="):
+				o_p = a.substr(6)
+			elif a.begins_with("--dilate="):
+				dil = int(a.substr(9))
+		var srcm := Image.load_from_file(s_p)
+		var refm := Image.load_from_file(r_p)
+		srcm.convert(Image.FORMAT_RGBA8)
+		refm.convert(Image.FORMAT_RGBA8)
+		var w2 := srcm.get_width()
+		var h2 := srcm.get_height()
+		var outm := Image.create(w2, h2, false, Image.FORMAT_RGBA8)
+		for y in range(h2):
+			for x in range(w2):
+				var m := 0.0
+				for dy in range(-dil, dil + 1):
+					for dx in range(-dil, dil + 1):
+						var sx: int = clampi(x + dx, 0, w2 - 1)
+						var sy: int = clampi(y + dy, 0, h2 - 1)
+						m = maxf(m, refm.get_pixel(sx, sy).a)
+				var c := srcm.get_pixel(x, y)
+				outm.set_pixel(x, y, Color(c.r, c.g, c.b, c.a * m))
+		outm.save_png(o_p)
+		print("masked overlay -> ", o_p)
+		quit(0)
+		return
+	if mode == "sharpen":
+		# Unsharp mask: out = src + k * (src - blur(src)). Recovers the apparent
+		# detail that repeated image-model edits wash out. Alpha untouched; only
+		# blends opaque neighbours so edges do not pick up transparent black.
+		# --mode=sharpen --in=<png> --out=<png> [--k=0.7]
+		var in_s := ""
+		var out_s := ""
+		var k := 0.7
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--in="):
+				in_s = a.substr(5)
+			elif a.begins_with("--out="):
+				out_s = a.substr(6)
+			elif a.begins_with("--k="):
+				k = float(a.substr(4))
+		var im := Image.load_from_file(in_s)
+		im.convert(Image.FORMAT_RGBA8)
+		var w := im.get_width()
+		var h := im.get_height()
+		var out := Image.create(w, h, false, Image.FORMAT_RGBA8)
+		for y in range(h):
+			for x in range(w):
+				var c := im.get_pixel(x, y)
+				if c.a < 0.02:
+					out.set_pixel(x, y, c)
+					continue
+				var acc := Color(0, 0, 0, 0)
+				var wsum := 0.0
+				for dy in range(-2, 3):
+					for dx in range(-2, 3):
+						var sx: int = clampi(x + dx, 0, w - 1)
+						var sy: int = clampi(y + dy, 0, h - 1)
+						var n := im.get_pixel(sx, sy)
+						if n.a < 0.5:
+							continue
+						var wt := 1.0 / (1.0 + float(dx * dx + dy * dy))
+						acc += n * wt
+						wsum += wt
+				var bl := acc / maxf(wsum, 0.0001)
+				out.set_pixel(x, y, Color(
+					clampf(c.r + k * (c.r - bl.r), 0.0, 1.0),
+					clampf(c.g + k * (c.g - bl.g), 0.0, 1.0),
+					clampf(c.b + k * (c.b - bl.b), 0.0, 1.0), c.a))
+		out.save_png(out_s)
+		print("sharpened k=%.2f -> %s" % [k, out_s])
+		quit(0)
+		return
 	if mode == "alphacopy":
 		# Night layer from a relit master + an ALPHA day layer (no magenta):
 		# --mode=alphacopy --alpha=<day alpha png> --in=<night master> --out=<png>

@@ -184,6 +184,10 @@ func _init() -> void:
 			_crop(a.substr(7))
 			quit(0)
 			return
+		elif a.begins_with("--sharp="):
+			_sharp(a.substr(8))
+			quit(0)
+			return
 		elif a.begins_with("--maskdiff="):
 			_maskdiff(a.substr(11))
 			quit(0)
@@ -322,3 +326,31 @@ func _init() -> void:
 			100.0 * float(opaque) / total,
 		])
 	quit(0)
+
+# Sharpness: mean |Laplacian| of luminance over opaque pixels. Higher = more
+# fine detail. Only meaningful COMPARATIVELY (same subject, before vs after);
+# a repeatedly edited image loses detail each pass and this shows it.
+#   --sharp=<png>
+func _sharp(path: String) -> void:
+	var img := Image.load_from_file(path)
+	if img == null:
+		push_error("cannot load " + path)
+		return
+	img.convert(Image.FORMAT_RGBA8)
+	var w := img.get_width()
+	var h := img.get_height()
+	var acc := 0.0
+	var n := 0
+	var y := 1
+	while y < h - 1:
+		var x := 1
+		while x < w - 1:
+			var c := img.get_pixel(x, y)
+			if c.a > 0.9:
+				var l := c.get_luminance()
+				var lap := 4.0 * l - img.get_pixel(x - 1, y).get_luminance() - img.get_pixel(x + 1, y).get_luminance() - img.get_pixel(x, y - 1).get_luminance() - img.get_pixel(x, y + 1).get_luminance()
+				acc += absf(lap)
+				n += 1
+			x += 2
+		y += 2
+	print("%s  sharpness %.4f  (%d px)" % [path.get_file(), (acc / float(maxi(n, 1))) * 100.0, n])
