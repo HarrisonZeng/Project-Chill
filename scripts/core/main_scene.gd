@@ -396,6 +396,7 @@ func _setup_view_options() -> void:
 		if ambient_effects != null and ambient_effects.has_method("register_lit_like_room"):
 			ambient_effects.register_lit_like_room(companion_stage)
 			var hands = companion_face.hands_layer()
+	view_options.frame_picked.connect(_on_frame_picked)
 			if hands != null:
 				ambient_effects.register_lit_like_room(hands)
 			# Re-apply so the registration takes effect on the starting view.
@@ -424,6 +425,10 @@ func _apply_yua_stance() -> void:
 		return
 	(portrait as TextureRect).texture = load(path)
 	if companion_face != null:
+func _on_frame_picked(frame_name: String) -> void:
+	if companion_face != null and companion_face.has_method("preview"):
+		companion_face.preview(frame_name, 5.0)
+
 		companion_face.set_stance(yua_stance)
 
 func _on_type_mode_toggled(on: bool) -> void:

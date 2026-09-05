@@ -15,6 +15,7 @@ extends Node
 signal weather_picked(kind: String)
 signal stance_picked(kind: String)
 signal type_mode_toggled(on: bool)
+signal frame_picked(name: String)
 
 const STANCES := ["at_player", "at_work"]
 
@@ -85,6 +86,13 @@ func _build_settings_rows() -> void:
 	_stance_button.custom_minimum_size = Vector2(0, 32)
 	_stance_button.pressed.connect(_on_stance_pressed)
 	box.add_child(_stance_button)
+
+	# Frame preview: each press shows the next expression/pose for a few
+	# seconds, so the whole set can be checked without playing to trigger it.
+	_frame_button = Button.new()
+	_frame_button.custom_minimum_size = Vector2(0, 32)
+	_frame_button.pressed.connect(_on_frame_pressed)
+	box.add_child(_frame_button)
 	# The panel was sized and placed for its original three rows: it needs to be
 	# taller for the two new ones, and to start below the chat-history button,
 	# which otherwise draws on top of the first row.
@@ -92,7 +100,17 @@ func _build_settings_rows() -> void:
 	if panel is Control:
 		var p := panel as Control
 		p.offset_top += 72.0
-		p.offset_bottom += 164.0
+		p.offset_bottom += 204.0
+
+const FRAMES := ["smile", "shy", "surprised", "thinking", "rest", "focus", "sleepy",
+	"giggle", "wink", "pout", "delighted", "blink", "drink", "chin", "typing"]
+var _frame_button: Button = null
+var _frame_index := -1
+
+func _on_frame_pressed() -> void:
+	_frame_index = (_frame_index + 1) % FRAMES.size()
+	_refresh_labels()
+	frame_picked.emit(FRAMES[_frame_index])
 
 func _on_view_pressed() -> void:
 	var i := _views.find(_weather)
@@ -223,6 +241,9 @@ func _refresh_labels() -> void:
 			"at_work": "看屏幕" if zh else "At her screen",
 		}[_stance]
 		_stance_button.text = ("由亚：%s" % stance_name) if zh else ("Yua: %s" % stance_name)
+	if _frame_button != null:
+		var cur := "—" if _frame_index < 0 else String(FRAMES[_frame_index])
+		_frame_button.text = ("试一下表情：%s" % cur) if zh else ("Preview frame: %s" % cur)
 	if _type_button != null:
 		_type_button.text = ("打字" if zh else "Type") if not _type_on else ("完成" if zh else "Done")
 	if _music_toggle != null:

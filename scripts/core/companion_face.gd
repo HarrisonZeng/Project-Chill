@@ -47,6 +47,7 @@ var _hands_layer: TextureRect = null
 var _working := false
 var _type_timer: Timer = null
 var _type_frame_b := false
+var _typing_base_backup: Texture2D = null
 var _idle_timer: Timer = null
 var _pose_active := false
 var _pose_tween: Tween = null
@@ -135,6 +136,8 @@ func set_working(on: bool) -> void:
 		_type_timer.start(_rng.randf_range(0.2, 0.6))
 	else:
 		_type_timer.stop()
+		if _type_frame_b and _typing_base_backup != null and not _pose_active:
+			_portrait.texture = _typing_base_backup
 		_type_frame_b = false
 		if _hands_layer != null and not _pose_active:
 			_hands_layer.texture = _variant_for("hands")
@@ -142,14 +145,40 @@ func set_working(on: bool) -> void:
 func _on_type_timer() -> void:
 	if not _working or _pose_active or _hands_layer == null:
 		return
-	var alt := _variant_for("hands_b")
-	if alt == null:
-		return  # no second typing frame yet; hands simply stay still
+	var alt_base := _variant_for("typing_b")
+	var alt_hands := _variant_for("hands_b")
+	if alt_base == null or alt_hands == null:
+		return  # no second typing frame; hands simply stay still
 	_type_frame_b = not _type_frame_b
-	_hands_layer.texture = alt if _type_frame_b else _variant_for("hands")
-	# Typing rhythm: quick alternations in a burst, then a pause to read.
-	var burst := _rng.randf() < 0.78
-	_type_timer.start(_rng.randf_range(0.11, 0.19) if burst else _rng.randf_range(0.9, 2.2))
+	# Base and hands overlay swap TOGETHER. The overlay alone over an unchanged
+	# base showed both finger positions at once — that was the "glitchy" look.
+	if _type_frame_b:
+		_typing_base_backup = _portrait.texture
+		_portrait.texture = alt_base
+		_hands_layer.texture = alt_hands
+	else:
+		if _typing_base_backup != null:
+			_portrait.texture = _typing_base_backup
+		_hands_layer.texture = _variant_for("hands")
+	# Typing rhythm: a few alternations in a burst, then a pause to read.
+	var burst := _rng.randf() < 0.72
+	_type_timer.start(_rng.randf_range(0.16, 0.26) if burst else _rng.randf_range(1.0, 2.4))
+
+# Settings "试一下" button: show any frame by name for a few seconds so the
+# owner can flip through the set without triggering it in play.
+func preview(frame_name: String, secs: float = 5.0) -> void:
+	match frame_name:
+		"blink":
+			blink_now()
+		"typing":
+			set_working(true)
+			var tw := create_tween()
+			tw.tween_interval(secs)
+			tw.tween_callback(func(): set_working(false))
+		"drink", "chin":
+			show_pose(frame_name, secs)
+		_:
+			show_expression(frame_name, secs)
 
 func show_pose(pose_name: String, hold_seconds: float = 4.0) -> void:
 	var tex := _variant_for(pose_name)

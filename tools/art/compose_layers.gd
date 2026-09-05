@@ -312,6 +312,117 @@ func _init() -> void:
 		print("masked overlay -> ", o_p)
 		quit(0)
 		return
+	if mode == "diffmerge":
+		# Keep BASE everywhere except where DONOR genuinely differs — for a second
+		# animation frame from an image model, where the intended change (a few
+		# fingers) is buried in whole-image repaint noise. Pixels whose colour
+		# differs by more than --thresh form the change mask; it is dilated by
+		# --dilate and feathered, then donor is blended in only there. Alternating
+		# the result with the base then moves only what should move.
+		# --mode=diffmerge --base=<png> --donor=<png> --out=<png> [--rect=x,y,w,h] [--thresh=0.12] [--dilate=6]
+		var bp := ""
+		var dp := ""
+		var op := ""
+		var rs := ""
+		var thresh := 0.12
+		var dil := 6
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--base="):
+				bp = a.substr(7)
+			elif a.begins_with("--donor="):
+				dp = a.substr(8)
+			elif a.begins_with("--out="):
+				op = a.substr(6)
+			elif a.begins_with("--rect="):
+				rs = a.substr(7)
+			elif a.begins_with("--thresh="):
+				thresh = float(a.substr(9))
+			elif a.begins_with("--dilate="):
+				dil = int(a.substr(9))
+		var bi := Image.load_from_file(bp)
+		var di := Image.load_from_file(dp)
+		bi.convert(Image.FORMAT_RGBA8)
+		di.convert(Image.FORMAT_RGBA8)
+		var w := bi.get_width()
+		var h := bi.get_height()
+		var rect := Rect2i(0, 0, w, h)
+		if not rs.is_empty():
+			var rv := rs.split(",")
+			rect = Rect2i(int(rv[0]), int(rv[1]), int(rv[2]), int(rv[3]))
+		# 1. raw change mask
+		var m := Image.create(w, h, false, Image.FORMAT_RF)
+		var changed := 0
+		for y in range(rect.position.y, rect.end.y):
+			for x in range(rect.position.x, rect.end.x):
+				var b := bi.get_pixel(x, y)
+				var d := di.get_pixel(x, y)
+				var dv := absf(b.r - d.r) + absf(b.g - d.g) + absf(b.b - d.b) + absf(b.a - d.a) * 2.0
+				if dv > thresh * 3.0:
+					m.set_pixel(x, y, Color(1, 0, 0, 1))
+					changed += 1
+		# 2. dilate + feather (box blur over the dilation radius)
+		var out_m := Image.create(w, h, false, Image.FORMAT_RF)
+		for y in range(rect.position.y, rect.end.y):
+			for x in range(rect.position.x, rect.end.x):
+				var acc := 0.0
+				var n := 0.0
+				for yy in range(-dil, dil + 1, 2):
+					for xx in range(-dil, dil + 1, 2):
+						var sx: int = clampi(x + xx, 0, w - 1)
+						var sy: int = clampi(y + yy, 0, h - 1)
+						acc += m.get_pixel(sx, sy).r
+						n += 1.0
+				out_m.set_pixel(x, y, Color(minf(1.0, (acc / n) * 3.0), 0, 0, 1))
+		# 3. blend
+		var out := bi.duplicate() as Image
+		for y in range(rect.position.y, rect.end.y):
+			for x in range(rect.position.x, rect.end.x):
+				var t := out_m.get_pixel(x, y).r
+				if t <= 0.0:
+					continue
+				var b := bi.get_pixel(x, y)
+				var d := di.get_pixel(x, y)
+				out.set_pixel(x, y, Color(
+					b.r * (1.0 - t) + d.r * t,
+					b.g * (1.0 - t) + d.g * t,
+					b.b * (1.0 - t) + d.b * t,
+					b.a * (1.0 - t) + d.a * t))
+		out.save_png(op)
+		print("diffmerge: %d changed px in rect -> %s" % [changed, op])
+		quit(0)
+		return
+	if mode == "demagenta":
+		# Replace any pixel that still leans magenta (key spill that survived a
+		# graft) with the same pixel from a clean reference image.
+		# --mode=demagenta --in=<png> --ref=<png> --out=<png> [--amount=0.18]
+		var in_dm := ""
+		var ref_dm := ""
+		var out_dm := ""
+		var amt := 0.18
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--in="):
+				in_dm = a.substr(5)
+			elif a.begins_with("--ref="):
+				ref_dm = a.substr(6)
+			elif a.begins_with("--out="):
+				out_dm = a.substr(6)
+			elif a.begins_with("--amount="):
+				amt = float(a.substr(9))
+		var im_dm := Image.load_from_file(in_dm)
+		var rf_dm := Image.load_from_file(ref_dm)
+		im_dm.convert(Image.FORMAT_RGBA8)
+		rf_dm.convert(Image.FORMAT_RGBA8)
+		var fixed := 0
+		for y in range(im_dm.get_height()):
+			for x in range(im_dm.get_width()):
+				var c := im_dm.get_pixel(x, y)
+				if c.a > 0.05 and magenta_amount(c) > amt:
+					im_dm.set_pixel(x, y, rf_dm.get_pixel(x, y))
+					fixed += 1
+		im_dm.save_png(out_dm)
+		print("demagenta: replaced %d px -> %s" % [fixed, out_dm])
+		quit(0)
+		return
 	if mode == "sharpen":
 		# Unsharp mask: out = src + k * (src - blur(src)). Recovers the apparent
 		# detail that repeated image-model edits wash out. Alpha untouched; only
