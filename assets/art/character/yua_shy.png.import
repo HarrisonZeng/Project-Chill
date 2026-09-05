@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cmga4tgnbhji8"
-path="res://.godot/imported/yua_at_work_hands_keyed.png-5b8390d85dd93689c2b9d5e6be91212f.ctex"
+uid="uid://dffqb8sa3lf35"
+path="res://.godot/imported/yua_shy.png-5bb746989b10e737775e2b2532f9bae6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/yua_at_work_hands_keyed.png"
-dest_files=["res://.godot/imported/yua_at_work_hands_keyed.png-5b8390d85dd93689c2b9d5e6be91212f.ctex"]
+source_file="res://assets/art/character/yua_shy.png"
+dest_files=["res://.godot/imported/yua_shy.png-5bb746989b10e737775e2b2532f9bae6.ctex"]
 
 [params]
 

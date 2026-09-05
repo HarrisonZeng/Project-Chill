@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ce1s515imn0il"
-path="res://.godot/imported/yua_neutral_keyed.png-3fab09c10eb4c27f1b810d897194a42f.ctex"
+uid="uid://c82i8k8japd1d"
+path="res://.godot/imported/yua_at_work_smile.png-ca946694e91214b477063cc2c252cca8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/yua_neutral_keyed.png"
-dest_files=["res://.godot/imported/yua_neutral_keyed.png-3fab09c10eb4c27f1b810d897194a42f.ctex"]
+source_file="res://assets/art/character/yua_at_work_smile.png"
+dest_files=["res://.godot/imported/yua_at_work_smile.png-ca946694e91214b477063cc2c252cca8.ctex"]
 
 [params]
 

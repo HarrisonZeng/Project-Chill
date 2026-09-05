@@ -95,3 +95,5 @@ Legend: ✅ done · 🔧 in progress · ⬜ not started · 🅾 owner decides/ac
 - 🅾 D2 — pick a UI direction from the four (references + mockups coming).
 - 🅾 C1 — do the music tracks loop cleanly?
 - 🅾 E2 — pick Yua's voice from the audition (after script).
+
+> **2026-09-05 — Yua frame set rebuilt on the original face.** Every frame (neutral, blink, at-screen, smile, shy, surprised, thinking, rest) is now the crisp original with only the face region grafted from a Codex `-i` edit of that original; each measures 0.004–0.008 against the base. `*_keyed.png` files are the magenta sources for those grafts. Stances share one head, so `yua_at_work_*` are copies of the `at_player` frames with the at-screen eyes as base.
