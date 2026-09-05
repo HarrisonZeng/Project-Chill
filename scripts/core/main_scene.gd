@@ -28,7 +28,7 @@ const TASK_PANEL_LAYOUT_VERSION := 3
 # and are loaded at runtime into `reactive_lines`. Add a new pool by adding a
 # new key in that JSON — no code change needed unless a brand new trigger is added.
 
-@onready var dialogue_text: RichTextLabel = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/DialogueText
+@onready var dialogue_text: RichTextLabel = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/DialogueText
 @onready var dialogue_card: PanelContainer = $BottomPanel/DialoguePanel/DialogueCard
 @onready var response_card: Control = $BottomPanel/DialoguePanel/ResponseCard
 @onready var choice_list: Node = $BottomPanel/DialoguePanel/ResponseCard/ChoiceList
@@ -102,7 +102,8 @@ var last_seen_unix: int = 0
 # separate because _save_persistent_state overwrites last_seen_unix with "now"
 # every save, which would otherwise make return detection always read "just now".
 var previous_last_seen_unix: int = 0
-var ui_language: String = "en"
+# zh is the shipping default (ship-plan B5); EN stays available in Settings.
+var ui_language: String = "zh"
 var dialogue_typewriter_chars_per_second: float = DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND
 var chat_history: Array = []
 var suppress_settings_save: bool = false
@@ -200,6 +201,10 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_update_dialogue_typewriter(delta)
 	_update_focus_timer()
+	# Her hands type while a focus session runs. Idempotent, so driving it from
+	# here beats touching every place focus_running is set.
+	if companion_face != null:
+		companion_face.set_working(focus_running)
 	call_status.refresh(ui_language, focus_running)
 	_maybe_autosave()
 	music_bar.update_progress()
@@ -535,6 +540,8 @@ func _ui_text(key: String) -> String:
 			return "正在回复……" if zh else "Replying..."
 		"status_enter_minutes":
 			return "先填一个分钟数" if zh else "Enter a number of minutes first."
+		"history":
+			return "记录" if zh else "Log"
 		_:
 			return key
 
@@ -553,6 +560,7 @@ func _refresh_ui_language() -> void:
 	if focus_custom_apply != null: focus_custom_apply.text = UiStrings.t("focus.custom.apply", ui_language)
 	if focus_chip_custom != null: focus_chip_custom.text = UiStrings.t("focus.custom", ui_language)
 	if send_button != null: send_button.text = _ui_text("send")
+	if chat_history_button != null: chat_history_button.text = _ui_text("history")
 	if ai_mode_toggle != null: ai_mode_toggle.text = _ui_text("type_mode")
 	_refresh_input_placeholder()
 	music_bar.apply_language(ui_language)
@@ -1932,7 +1940,7 @@ func _load_persistent_state() -> void:
 	var loaded_music_paused := bool(data.get("music_paused", true))
 	var loaded_music_mode := int(data.get("music_playback_mode", 0))
 	voice_enabled = bool(data.get("voice_enabled", true))
-	ui_language = str(data.get("ui_language", "en"))
+	ui_language = str(data.get("ui_language", "zh"))
 	if ui_language != "zh":
 		ui_language = "en"
 	window_weather = str(data.get("window_weather", "rain"))

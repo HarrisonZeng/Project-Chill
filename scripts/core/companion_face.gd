@@ -34,6 +34,23 @@ var _blinking := false
 # in the tree, which has to be after DeskFront rather than inside CompanionView.
 var _hands_layer: TextureRect = null
 
+# Motion on top of the frames. Everything here is a texture swap or a fade —
+# nothing is ever moved or scaled (see the shimmer note above).
+#   set_working(on)   while true, her hands alternate between the two typing
+#                     frames in short irregular bursts, like real typing
+#   show_pose(name,s) swap the BASE drawing (and its hands cut) for a pose such
+#                     as "drink" or "chin" and swap back after s seconds. Poses
+#                     move an arm, so they cannot be additive overlays — the old
+#                     hand would still show through underneath.
+#   idle life         every 20–45 s at rest she does one small thing: glances
+#                     at her screen, out of the window, or sips her tea.
+var _working := false
+var _type_timer: Timer = null
+var _type_frame_b := false
+var _idle_timer: Timer = null
+var _pose_active := false
+var _pose_tween: Tween = null
+
 func setup(portrait: TextureRect, above_desk_parent: Node = null, above_desk_index: int = -1) -> void:
 	_portrait = portrait
 	_rng.randomize()
@@ -55,8 +72,17 @@ func setup(portrait: TextureRect, above_desk_parent: Node = null, above_desk_ind
 	_blink_timer.one_shot = true
 	_blink_timer.timeout.connect(_on_blink_timer)
 	add_child(_blink_timer)
+	_type_timer = Timer.new()
+	_type_timer.one_shot = true
+	_type_timer.timeout.connect(_on_type_timer)
+	add_child(_type_timer)
+	_idle_timer = Timer.new()
+	_idle_timer.one_shot = true
+	_idle_timer.timeout.connect(_on_idle_timer)
+	add_child(_idle_timer)
 	set_stance(_stance)
 	_schedule_blink()
+	_schedule_idle()
 
 func set_stance(stance: String) -> void:
 	_stance = stance
@@ -99,6 +125,74 @@ func show_expression(expr_name: String, hold_seconds: float = 2.5) -> void:
 	_expr_tween.tween_property(_expr_layer, "modulate:a", 1.0, 0.25)
 	_expr_tween.tween_interval(hold_seconds)
 	_expr_tween.tween_property(_expr_layer, "modulate:a", 0.0, 0.45)
+
+# ── motion ───────────────────────────────────────────────────────────────────
+func set_working(on: bool) -> void:
+	if on == _working:
+		return
+	_working = on
+	if on:
+		_type_timer.start(_rng.randf_range(0.2, 0.6))
+	else:
+		_type_timer.stop()
+		_type_frame_b = false
+		if _hands_layer != null and not _pose_active:
+			_hands_layer.texture = _variant_for("hands")
+
+func _on_type_timer() -> void:
+	if not _working or _pose_active or _hands_layer == null:
+		return
+	var alt := _variant_for("hands_b")
+	if alt == null:
+		return  # no second typing frame yet; hands simply stay still
+	_type_frame_b = not _type_frame_b
+	_hands_layer.texture = alt if _type_frame_b else _variant_for("hands")
+	# Typing rhythm: quick alternations in a burst, then a pause to read.
+	var burst := _rng.randf() < 0.78
+	_type_timer.start(_rng.randf_range(0.11, 0.19) if burst else _rng.randf_range(0.9, 2.2))
+
+func show_pose(pose_name: String, hold_seconds: float = 4.0) -> void:
+	var tex := _variant_for(pose_name)
+	if tex == null or _pose_active:
+		return
+	_pose_active = true
+	var base_tex := _portrait.texture
+	var base_hands: Texture2D = _hands_layer.texture if _hands_layer != null else null
+	_portrait.texture = tex
+	if _hands_layer != null:
+		_hands_layer.texture = _variant_for(pose_name + "_hands")
+	if _pose_tween != null and _pose_tween.is_valid():
+		_pose_tween.kill()
+	_pose_tween = create_tween()
+	_pose_tween.tween_interval(hold_seconds)
+	_pose_tween.tween_callback(func():
+		_portrait.texture = base_tex
+		if _hands_layer != null:
+			_hands_layer.texture = base_hands
+		_pose_active = false)
+
+func _schedule_idle() -> void:
+	_idle_timer.start(_rng.randf_range(20.0, 45.0))
+
+func _on_idle_timer() -> void:
+	_schedule_idle()
+	if _pose_active:
+		return
+	# Small idle actions. Each is skipped harmlessly if its art is missing.
+	var r := _rng.randf()
+	if _working:
+		# At work she mostly just glances up at the window now and then.
+		if r < 0.6:
+			show_expression("window", 3.0)
+		return
+	if r < 0.35:
+		show_expression("at_work", 4.0)   # eyes drop to the screen for a moment
+	elif r < 0.65:
+		show_expression("window", 3.5)
+	elif r < 0.85:
+		show_pose("drink", 4.5)
+	else:
+		show_pose("chin", 6.0)
 
 # ── internals ────────────────────────────────────────────────────────────────
 func _make_overlay(overlay_name: String) -> TextureRect:
