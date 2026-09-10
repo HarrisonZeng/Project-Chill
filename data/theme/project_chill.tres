@@ -1,6 +1,9 @@
 [gd_resource type="Theme" format=3 uid="uid://ba0l0y3r20gdo"]
 
 [ext_resource type="FontFile" path="res://assets/fonts/chill_kai_gb.woff2" id="1_cjk_fallback"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/journal/card_paper.png" id="tex_card"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/journal/chip_paper.png" id="tex_chip"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/journal/chip_honey.png" id="tex_chip_honey"]
 
 ; ── "Cozy journal" palette (owner pick B, 2026-09-10) ─────────────────────────
 ; Paper cards on the painted room: warm cream, soft brown ink, an olive/honey
@@ -272,6 +275,82 @@ corner_radius_bottom_left = 8
 font_names = PackedStringArray("LXGW WenKai", "Inter", "Microsoft YaHei UI", "PingFang SC", "Hiragino Sans GB", "Segoe UI", "Noto Sans CJK SC")
 fallbacks = Array[Font]([ExtResource("1_cjk_fallback")])
 
+[sub_resource type="StyleBoxTexture" id="StyleBox_card_tex"]
+content_margin_left = 18.0
+content_margin_top = 16.0
+content_margin_right = 18.0
+content_margin_bottom = 16.0
+texture = ExtResource("tex_card")
+texture_margin_left = 48.0
+texture_margin_top = 48.0
+texture_margin_right = 48.0
+texture_margin_bottom = 48.0
+expand_margin_left = 6.0
+expand_margin_top = 6.0
+expand_margin_right = 6.0
+expand_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_dialogue_tex"]
+content_margin_left = 24.0
+content_margin_top = 18.0
+content_margin_right = 24.0
+content_margin_bottom = 16.0
+texture = ExtResource("tex_card")
+texture_margin_left = 48.0
+texture_margin_top = 48.0
+texture_margin_right = 48.0
+texture_margin_bottom = 48.0
+expand_margin_left = 6.0
+expand_margin_top = 6.0
+expand_margin_right = 6.0
+expand_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_chip_tex"]
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
+texture = ExtResource("tex_chip")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+expand_margin_left = 3.0
+expand_margin_top = 3.0
+expand_margin_right = 3.0
+expand_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_chip_tex_hover"]
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
+texture = ExtResource("tex_chip")
+modulate_color = Color(0.94, 0.87, 0.74, 1)
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+expand_margin_left = 3.0
+expand_margin_top = 3.0
+expand_margin_right = 3.0
+expand_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_chip_tex_pressed"]
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
+texture = ExtResource("tex_chip_honey")
+texture_margin_left = 22.0
+texture_margin_top = 22.0
+texture_margin_right = 22.0
+texture_margin_bottom = 22.0
+expand_margin_left = 3.0
+expand_margin_top = 3.0
+expand_margin_right = 3.0
+expand_margin_bottom = 4.0
+
 [resource]
 default_font = SubResource("Font_body")
 default_font_size = 16
@@ -281,21 +360,21 @@ Button/colors/font_pressed_color = Color(0.239216, 0.164706, 0.141176, 1)
 Button/colors/icon_normal_color = Color(0.239216, 0.164706, 0.141176, 1)
 Button/colors/icon_hover_color = Color(0.239216, 0.164706, 0.141176, 1)
 Button/colors/icon_pressed_color = Color(0.239216, 0.164706, 0.141176, 1)
-Button/styles/normal = SubResource("StyleBox_chip_normal")
-Button/styles/hover = SubResource("StyleBox_chip_hover")
-Button/styles/pressed = SubResource("StyleBox_chip_pressed")
-Button/styles/focus = SubResource("StyleBox_chip_hover")
+Button/styles/normal = SubResource("StyleBox_chip_tex")
+Button/styles/hover = SubResource("StyleBox_chip_tex_hover")
+Button/styles/pressed = SubResource("StyleBox_chip_tex_pressed")
+Button/styles/focus = SubResource("StyleBox_chip_tex_hover")
 ChipButton/base_type = &"Button"
 ChipButton/colors/font_color = Color(0.239216, 0.164706, 0.141176, 0.92)
 ChipButton/colors/font_hover_color = Color(0.239216, 0.164706, 0.141176, 1)
 ChipButton/colors/font_pressed_color = Color(0.239216, 0.164706, 0.141176, 1)
 ChipButton/font_sizes/font_size = 16
-ChipButton/styles/focus = SubResource("StyleBox_chip_hover")
-ChipButton/styles/hover = SubResource("StyleBox_chip_hover")
-ChipButton/styles/normal = SubResource("StyleBox_chip_normal")
-ChipButton/styles/pressed = SubResource("StyleBox_chip_pressed")
+ChipButton/styles/focus = SubResource("StyleBox_chip_tex_hover")
+ChipButton/styles/hover = SubResource("StyleBox_chip_tex_hover")
+ChipButton/styles/normal = SubResource("StyleBox_chip_tex")
+ChipButton/styles/pressed = SubResource("StyleBox_chip_tex_pressed")
 DialogueCard/base_type = &"PanelContainer"
-DialogueCard/styles/panel = SubResource("StyleBox_dialogue_card")
+DialogueCard/styles/panel = SubResource("StyleBox_dialogue_tex")
 IconButton/base_type = &"Button"
 IconButton/colors/icon_normal_color = Color(0.239216, 0.164706, 0.141176, 1)
 IconButton/colors/icon_hover_color = Color(0.239216, 0.164706, 0.141176, 1)
@@ -325,9 +404,9 @@ Palette/colors/sage = Color(0.615686, 0.721569, 0.623529, 1)
 Palette/colors/sand = Color(0.901961, 0.811765, 0.682353, 1)
 Palette/fonts/mono = SubResource("Font_mono")
 PanelGlass/base_type = &"PanelContainer"
-PanelGlass/styles/panel = SubResource("StyleBox_panel_glass")
+PanelGlass/styles/panel = SubResource("StyleBox_card_tex")
 PanelGlassActive/base_type = &"PanelContainer"
-PanelGlassActive/styles/panel = SubResource("StyleBox_panel_glass_active")
+PanelGlassActive/styles/panel = SubResource("StyleBox_card_tex")
 PrimaryButton/base_type = &"Button"
 PrimaryButton/colors/font_color = Color(0.996078, 0.980392, 0.941176, 1)
 PrimaryButton/colors/font_hover_color = Color(0.996078, 0.980392, 0.941176, 1)

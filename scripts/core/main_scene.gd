@@ -397,6 +397,13 @@ func _setup_view_options() -> void:
 	view_options.stance_picked.connect(_on_stance_picked)
 	view_options.type_mode_toggled.connect(_on_type_mode_toggled)
 	view_options.frame_picked.connect(_on_frame_picked)
+	# Painted journal decorations (tape, sticker tag, doodles) on top of the
+	# theme's cards — see scripts/ui/journal_decor.gd. Skips any piece whose
+	# art is not there yet.
+	var decor := preload("res://scripts/ui/journal_decor.gd").new()
+	decor.name = "JournalDecor"
+	add_child(decor)
+	decor.setup(self)
 	# Blink + expressions on top of the portrait. Built here, after the stance
 	# is known, so the first blink already uses the right face.
 	var portrait := get_node_or_null("CompanionStage/CompanionView/Portrait")

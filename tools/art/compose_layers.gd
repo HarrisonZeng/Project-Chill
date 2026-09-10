@@ -423,6 +423,52 @@ func _init() -> void:
 		print("demagenta: replaced %d px -> %s" % [fixed, out_dm])
 		quit(0)
 		return
+	if mode == "autocrop":
+		# Trim an alpha PNG to its opaque bounding box plus a small pad, so a
+		# UI piece painted in the middle of a big canvas becomes a tight asset.
+		# --mode=autocrop --in=<png> --out=<png> [--pad=6] [--max=<longest side>]
+		var in_c := ""
+		var out_c := ""
+		var pad := 6
+		var max_side := 0
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--in="):
+				in_c = a.substr(5)
+			elif a.begins_with("--out="):
+				out_c = a.substr(6)
+			elif a.begins_with("--pad="):
+				pad = int(a.substr(6))
+			elif a.begins_with("--max="):
+				max_side = int(a.substr(6))
+		var im := Image.load_from_file(in_c)
+		im.convert(Image.FORMAT_RGBA8)
+		var w := im.get_width()
+		var h := im.get_height()
+		var x0 := w
+		var y0 := h
+		var x1 := -1
+		var y1 := -1
+		for y in range(h):
+			for x in range(w):
+				if im.get_pixel(x, y).a > 0.03:
+					x0 = mini(x0, x)
+					y0 = mini(y0, y)
+					x1 = maxi(x1, x)
+					y1 = maxi(y1, y)
+		if x1 < 0:
+			push_error("autocrop: image is fully transparent")
+			quit(1)
+			return
+		var r := Rect2i(maxi(0, x0 - pad), maxi(0, y0 - pad), 0, 0)
+		r.size = Vector2i(mini(w, x1 + pad + 1) - r.position.x, mini(h, y1 + pad + 1) - r.position.y)
+		var out := im.get_region(r)
+		if max_side > 0 and maxi(out.get_width(), out.get_height()) > max_side:
+			var s := float(max_side) / float(maxi(out.get_width(), out.get_height()))
+			out.resize(int(out.get_width() * s), int(out.get_height() * s), Image.INTERPOLATE_LANCZOS)
+		out.save_png(out_c)
+		print("autocrop %s -> %dx%d %s" % [r, out.get_width(), out.get_height(), out_c])
+		quit(0)
+		return
 	if mode == "sharpen":
 		# Unsharp mask: out = src + k * (src - blur(src)). Recovers the apparent
 		# detail that repeated image-model edits wash out. Alpha untouched; only
