@@ -1,0 +1,409 @@
+{
+  "model": "speech-2.8-hd",
+  "samples": [
+    {
+      "id": "zh_warm",
+      "title": "A · 温暖少女",
+      "voice_id": "Chinese (Mandarin)_Warm_Girl",
+      "language": "Chinese",
+      "text": "嗯，接通了。你那边也安静下来了？我把文档打开。今天先改这一小段。",
+      "direction": "Same text and speed: compare vocal identity.",
+      "settings": {
+        "voice_id": "Chinese (Mandarin)_Warm_Girl",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/zh_warm.mp3",
+      "fingerprint": "62fc5e43a265f39946be230f0cc74923c7c72aa2d2cb62eda1d6c8e99bdcc878"
+    },
+    {
+      "id": "zh_gentle",
+      "title": "B · 温柔学姐",
+      "voice_id": "Chinese (Mandarin)_Gentle_Senior",
+      "language": "Chinese",
+      "text": "嗯，接通了。你那边也安静下来了？我把文档打开。今天先改这一小段。",
+      "direction": "Same text and speed: compare vocal identity.",
+      "settings": {
+        "voice_id": "Chinese (Mandarin)_Gentle_Senior",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/zh_gentle.mp3",
+      "fingerprint": "1ef8490cb806e39e42fc7eb1988f4ad1592e05a814d6600019f1f9b54de05564"
+    },
+    {
+      "id": "zh_soft",
+      "title": "C · 软软女孩",
+      "voice_id": "Chinese (Mandarin)_Soft_Girl",
+      "language": "Chinese",
+      "text": "嗯，接通了。你那边也安静下来了？我把文档打开。今天先改这一小段。",
+      "direction": "Same text and speed: compare vocal identity.",
+      "settings": {
+        "voice_id": "Chinese (Mandarin)_Soft_Girl",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/zh_soft.mp3",
+      "fingerprint": "cdd1948678c4e7f2d312c51d54dd06c7c187c19cca7557348cfb564dc7e77cf5"
+    },
+    {
+      "id": "zh_young",
+      "title": "D · 少女原声",
+      "voice_id": "female-shaonv",
+      "language": "Chinese",
+      "text": "嗯，接通了。你那边也安静下来了？我把文档打开。今天先改这一小段。",
+      "direction": "Same text and speed: compare vocal identity.",
+      "settings": {
+        "voice_id": "female-shaonv",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/zh_young.mp3",
+      "fingerprint": "7c4d101e8973af60f40efac43962ec4df90306bcd7b72446617c96e1cc00a830"
+    },
+    {
+      "id": "design_close",
+      "title": "E · 原创：清亮自然",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "嗯，接通了。你那边也安静下来了？我把文档打开。今天先改这一小段。",
+      "direction": "21岁成年女性，普通话自然标准，清亮但不尖细的年轻女声，中等偏高音区，音色干净，有一点松弛的鼻腔共鸣。像安静视频通话里熟悉的同龄人，近距离正常说话，轻快温暖，语尾自然落下，偶尔带一点自嘲的笑意。不要播音腔、客服腔、幼童感、刻意撒娇、耳语、气泡音或过重气声。",
+      "path": "res://assets/audio/voice_auditions/design_close.mp3",
+      "settings": {},
+      "kind": "design_preview"
+    },
+    {
+      "id": "design_low",
+      "title": "F · 原创：温润微低",
+      "voice_id": "ttv-voice-2026090803131326-uXeIEPSd",
+      "language": "Chinese",
+      "text": "嗯，接通了。你那边也安静下来了？我把文档打开。今天先改这一小段。",
+      "direction": "成年年轻女性，约22岁，普通话，音区中等略低，温润柔和但字头清楚，声音轻而有支撑，干净近讲。内向、有主见、带一点干幽默的书店女孩，在安静的线上自习通话中聊天。自然口语节奏，放松、不拖尾、不刻意卖萌。避免成熟播音主持感、忧郁、性感耳语、过度气声及幼态高尖音。",
+      "path": "res://assets/audio/voice_auditions/design_low.mp3",
+      "settings": {},
+      "kind": "design_preview"
+    },
+    {
+      "id": "zh_calm",
+      "title": "G · 安静开工",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "我把文档打开了。<#0.35#>你忙你的，我也改两行。",
+      "direction": "Calm, normal speaking voice; a short intentional pause.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 0.96,
+        "vol": 1,
+        "pitch": 0,
+        "emotion": "calm"
+      },
+      "path": "res://assets/audio/voice_auditions/zh_calm.mp3",
+      "fingerprint": "aec5cb4cf6ee3967c87ed9bcbecb59484cde1c079129b3682f531b26735df588",
+      "audio_length": 4788,
+      "audio_sample_rate": 32000,
+      "audio_size": 78324,
+      "bitrate": 128000,
+      "word_count": 27,
+      "invisible_character_ratio": 0,
+      "usage_characters": 43,
+      "audio_format": "mp3",
+      "audio_channel": 1,
+      "usage_voice_count": 1
+    },
+    {
+      "id": "zh_tease",
+      "title": "H · 翻车后嘴硬",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "我这次真的不打游戏了。真的。<#0.3#>你按啊。",
+      "direction": "Brighter comic timing, without shouting.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1.04,
+        "vol": 1,
+        "pitch": 0,
+        "emotion": "happy"
+      },
+      "path": "res://assets/audio/voice_auditions/zh_tease.mp3",
+      "fingerprint": "f39a7898a9298a723765211f5f530909133750ee10c94093183d40b290823b93",
+      "audio_length": 4140,
+      "audio_sample_rate": 32000,
+      "audio_size": 67956,
+      "bitrate": 128000,
+      "word_count": 25,
+      "invisible_character_ratio": 0,
+      "usage_characters": 40,
+      "audio_format": "mp3",
+      "audio_channel": 1
+    },
+    {
+      "id": "zh_embarrassed",
+      "title": "I · 认真后自己破功",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "海风一吹，纸边就翘起来，像有人偷偷翻了一页。<#0.4#>啊，这句说出来有点尴尬。当我没说。",
+      "direction": "Contrast a sincere image with an embarrassed retreat.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0,
+        "emotion": "calm"
+      },
+      "path": "res://assets/audio/voice_auditions/zh_embarrassed.mp3",
+      "fingerprint": "41adfe9ad684449e05703e788799484e87e02a3b724576c6ae2ad3da392e17d7",
+      "audio_length": 9180,
+      "audio_sample_rate": 32000,
+      "audio_size": 148596,
+      "bitrate": 128000,
+      "word_count": 46,
+      "invisible_character_ratio": 0,
+      "usage_characters": 79,
+      "audio_format": "mp3",
+      "audio_channel": 1
+    },
+    {
+      "id": "en_same",
+      "title": "EN · 同一音色",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "English",
+      "text": "Oh, we're connected. I'll open my draft. You do your thing; I'll work on this paragraph.",
+      "direction": "Brief multilingual comparison; audition copy, not a script translation.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/en_same.mp3",
+      "fingerprint": "e6b65ec33a108e418492ab5b98ccbde08f539694860ab68e185b91e67fb4aea5"
+    },
+    {
+      "id": "ja_same",
+      "title": "JP · 同じ声",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Japanese",
+      "text": "あ、つながった。私も原稿を開くね。そっちはそっちの作業をどうぞ。私はこの段落を直してる。",
+      "direction": "Brief multilingual comparison; audition copy, not a script translation.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/ja_same.mp3",
+      "fingerprint": "640650e4d455b2310ad8343871199590ad3f2ad7787149b5d49b515fc1b1c7de"
+    },
+    {
+      "id": "en_native",
+      "title": "EN · English voice comparison",
+      "voice_id": "English_Graceful_Lady",
+      "language": "English",
+      "text": "Oh, we're connected. I'll open my draft. You do your thing; I'll work on this paragraph.",
+      "direction": "Brief multilingual comparison; audition copy, not a script translation.",
+      "settings": {
+        "voice_id": "English_Graceful_Lady",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/en_native.mp3",
+      "fingerprint": "c134107464d1dfe435c82d106bf310175af7afff09d8311dfd2ec75e84509f4e"
+    },
+    {
+      "id": "ja_native",
+      "title": "JP · 日本語音色比較",
+      "voice_id": "Japanese_CalmLady",
+      "language": "Japanese",
+      "text": "あ、つながった。私も原稿を開くね。そっちはそっちの作業をどうぞ。私はこの段落を直してる。",
+      "direction": "Brief multilingual comparison; audition copy, not a script translation.",
+      "settings": {
+        "voice_id": "Japanese_CalmLady",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/ja_native.mp3",
+      "fingerprint": "a6821a862bca0a800a78177856632be97e6b44c99fb2cc08b5ea9f50b7268e35"
+    },
+    {
+      "id": "game_ep00_01_0",
+      "title": "游戏片段 · ep00_01 / 1",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "上啊上啊——打野呢？！打野人呢？！——哎别送啊——",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_ep00_01_0.mp3",
+      "fingerprint": "906de93916ee86c1ee37ef8c4ed024e7839c5d0f0218f0289d1e7039093da407"
+    },
+    {
+      "id": "game_ep00_01_1",
+      "title": "游戏片段 · ep00_01 / 2",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "……完了。",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_ep00_01_1.mp3",
+      "fingerprint": "1dfe9767920db951d6952a2993139055c5e1fb410179831f33e0cbb48df923d2"
+    },
+    {
+      "id": "game_ep00_02_0",
+      "title": "游戏片段 · ep00_02 / 1",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "……重开。这把不算，刚才是队友先摆烂的。",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_ep00_02_0.mp3",
+      "fingerprint": "3b2262c4fb6991de0b34cee24ad8b08389a3d080dafa349514924b52629f891f"
+    },
+    {
+      "id": "game_ep00_03_0",
+      "title": "游戏片段 · ep00_03 / 1",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "——诶？！你什么时候连进来的？！",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_ep00_03_0.mp3",
+      "fingerprint": "c4f1c622b41f957ec6bbd74ae8fde8c3d7b6ee85b4a5079ee747a342d666c818"
+    },
+    {
+      "id": "game_ep00_03_1",
+      "title": "游戏片段 · ep00_03 / 2",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "……你、你好，我叫 Yua。我刚刚在……学习。",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_ep00_03_1.mp3",
+      "fingerprint": "fab099b1c050f9d7540fe915c96190b8ebc765176d784074792146d896fd09cc"
+    },
+    {
+      "id": "game_ep00_close_0",
+      "title": "游戏片段 · ep00_close / 1",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "行了，选吧：15、30，还是 60。",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_ep00_close_0.mp3",
+      "fingerprint": "a5ad28350f063c7eef25f89e46afac5c216797a6fa38aaa7f19169cba7d1bde3"
+    },
+    {
+      "id": "game_ep00_close_1",
+      "title": "游戏片段 · ep00_close / 2",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "先说好，选完就得开始了——我这次真的不打游戏了。真的。……你按啊。",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_ep00_close_1.mp3",
+      "fingerprint": "ce552a4108ddfe5a8fca78dbd7e9c295f329aeff38dad3bfd2647a3967d94cd9"
+    },
+    {
+      "id": "game_FOCUS_START_001_0",
+      "title": "游戏片段 · FOCUS_START_001 / 1",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "那我也开了。",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_FOCUS_START_001_0.mp3",
+      "fingerprint": "b8505bf571588bf57003ad383db3943878685a2c8acfc6d121d67dfb4398d28d"
+    },
+    {
+      "id": "game_FOCUS_START_001_1",
+      "title": "游戏片段 · FOCUS_START_001 / 2",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "……你做你的，不用管我。",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_FOCUS_START_001_1.mp3",
+      "fingerprint": "f5e692e0d8eaa740a134343b126a40490b44b977718f29cfa71de43ef622ae55"
+    },
+    {
+      "id": "game_FOCUS_START_001_2",
+      "title": "游戏片段 · FOCUS_START_001 / 3",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "language": "Chinese",
+      "text": "中途想看我一眼也行——不过我大概会一直盯着屏幕。",
+      "direction": "Actual authored beat; provisional voice until owner picks.",
+      "settings": {
+        "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+        "speed": 1,
+        "vol": 1,
+        "pitch": 0
+      },
+      "path": "res://assets/audio/voice_auditions/game_FOCUS_START_001_2.mp3",
+      "fingerprint": "64b7b71fe6dd4a98af483c5dbfcd5e189645c9f6f7be44bca13d8101854fce93"
+    }
+  ],
+  "designs": [
+    {
+      "id": "design_close",
+      "title": "E · 原创：清亮自然",
+      "prompt": "21岁成年女性，普通话自然标准，清亮但不尖细的年轻女声，中等偏高音区，音色干净，有一点松弛的鼻腔共鸣。像安静视频通话里熟悉的同龄人，近距离正常说话，轻快温暖，语尾自然落下，偶尔带一点自嘲的笑意。不要播音腔、客服腔、幼童感、刻意撒娇、耳语、气泡音或过重气声。",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm"
+    },
+    {
+      "id": "design_low",
+      "title": "F · 原创：温润微低",
+      "prompt": "成年年轻女性，约22岁，普通话，音区中等略低，温润柔和但字头清楚，声音轻而有支撑，干净近讲。内向、有主见、带一点干幽默的书店女孩，在安静的线上自习通话中聊天。自然口语节奏，放松、不拖尾、不刻意卖萌。避免成熟播音主持感、忧郁、性感耳语、过度气声及幼态高尖音。",
+      "voice_id": "ttv-voice-2026090803131326-uXeIEPSd"
+    }
+  ],
+  "failures": []
+}

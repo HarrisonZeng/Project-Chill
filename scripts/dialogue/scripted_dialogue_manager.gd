@@ -92,7 +92,7 @@ func make_transition_error_node(from_id: String, next_id: String) -> Dictionary:
 		choices.append({"text": "嗯", "next": fallback, "internal_return": true})
 	return {
 		"id": "_error_transition",
-		"line": "……抱歉，我刚走神了。\n\n我们说到哪儿了？",
+		"line": "诶，抱歉，我刚走神了。\n\n我们说到哪儿了？",
 		"choices": choices
 	}
 
@@ -141,8 +141,49 @@ func _register_node(node_data: Variant) -> void:
 		"speaker": str(node_data.get("speaker", "")),
 		"tags": _sanitize_tags(node_data.get("tags", [])),
 		"set_flags": _sanitize_set_flags(node_data.get("set_flags", {})),
-		"unlock": _sanitize_unlock(node_data.get("unlock", {}))
+		"unlock": _sanitize_unlock(node_data.get("unlock", {})),
+		"typed_routes": _sanitize_typed_routes(node_data.get("typed_routes", {}))
 	}
+
+# Optional per-node routing for TYPED replies (Ep3 «你脑子飞出去一般降落在哪»):
+#   "typed_routes": {
+#     "remember_key": "player_platform",          # profile key the answer is stored under
+#     "keywords": [ {"match": ["b站","bilibili"], "next": "ep03_bili", "remember": "bilibili"}, ... ],
+#     "ai_mode": "AI_MODE_PLATFORM_REACT",        # unmatched text → AI reply (optional)
+#     "after_ai_next": "ep03_end",                # scripted node to continue to after the AI beat
+#     "fallback_next": "ep03_any"                 # unmatched + AI off/failed → this scripted node
+#   }
+# Keyword match is case-insensitive substring, first rule wins. The AI can only
+# fill one reply beat; the story always continues through authored nodes.
+func _sanitize_typed_routes(raw: Variant) -> Dictionary:
+	if typeof(raw) != TYPE_DICTIONARY or (raw as Dictionary).is_empty():
+		return {}
+	var cleaned: Dictionary = {
+		"remember_key": str(raw.get("remember_key", "")).strip_edges(),
+		"ai_mode": str(raw.get("ai_mode", "")).strip_edges(),
+		"after_ai_next": str(raw.get("after_ai_next", "")).strip_edges(),
+		"fallback_next": str(raw.get("fallback_next", "")).strip_edges(),
+		"keywords": []
+	}
+	var rules: Variant = raw.get("keywords", [])
+	if typeof(rules) == TYPE_ARRAY:
+		for rule in rules:
+			if typeof(rule) != TYPE_DICTIONARY:
+				continue
+			var matches: Array = []
+			for m in rule.get("match", []):
+				var text := str(m).strip_edges().to_lower()
+				if not text.is_empty():
+					matches.append(text)
+			var next := str(rule.get("next", "")).strip_edges()
+			if matches.is_empty() or next.is_empty():
+				continue
+			cleaned["keywords"].append({
+				"match": matches,
+				"next": next,
+				"remember": str(rule.get("remember", matches[0]))
+			})
+	return cleaned
 
 func _sanitize_tags(raw_tags: Variant) -> Array:
 	var cleaned: Array = []
@@ -192,6 +233,11 @@ func _sanitize_choices(raw_choices: Variant) -> Array:
 		var set_flag_value = choice.get("set_flag", null)
 		if typeof(set_flag_value) == TYPE_DICTIONARY:
 			entry["set_flag"] = set_flag_value.duplicate(true)
+		# Optional {"key": ..., "value": ...}: picking this chip stores a profile
+		# value (e.g. player_platform) — "she remembers", without a story flag.
+		var remember_value = choice.get("remember", null)
+		if typeof(remember_value) == TYPE_DICTIONARY and remember_value.has("key"):
+			entry["remember"] = remember_value.duplicate(true)
 		cleaned.append(entry)
 	return cleaned
 
@@ -215,7 +261,7 @@ func _make_missing_node(node_id: String) -> Dictionary:
 		choices.append({"text": "嗯", "next": fallback, "internal_return": true})
 	return {
 		"id": "_missing_node",
-		"line": "……抱歉，我刚走神了。\n\n我们说到哪儿了？",
+		"line": "诶，抱歉，我刚走神了。\n\n我们说到哪儿了？",
 		"choices": choices
 	}
 

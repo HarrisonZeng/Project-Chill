@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "provisional_voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+  "model": "speech-2.8-hd",
+  "clips": {
+    "4fca9e3cf619836c4bff006542d36c3dce70d3463b48e2ef16caf098db46f563": {
+      "path": "res://assets/audio/voice_cache/4fca9e3cf619836c4bff006542d36c3dce70d3463b48e2ef16caf098db46f563.mp3",
+      "text": "上啊上啊——打野呢？！打野人呢？！——哎别送啊——",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "ep00_01"
+    },
+    "253b82841bfdd0dc59b73911af9339c2b1f7d9644dcfe601a0eba899b27504bc": {
+      "path": "res://assets/audio/voice_cache/253b82841bfdd0dc59b73911af9339c2b1f7d9644dcfe601a0eba899b27504bc.mp3",
+      "text": "……完了。",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "ep00_01"
+    },
+    "c589c50de6a5457433004c641d45ab579c10e85723d7ef38849631ed2b5193a8": {
+      "path": "res://assets/audio/voice_cache/c589c50de6a5457433004c641d45ab579c10e85723d7ef38849631ed2b5193a8.mp3",
+      "text": "……重开。这把不算，刚才是队友先摆烂的。",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "ep00_02"
+    },
+    "e30ee807ac5af3ff00ffefcf92521a0a537a48dae0e8f0929b086582f0c61539": {
+      "path": "res://assets/audio/voice_cache/e30ee807ac5af3ff00ffefcf92521a0a537a48dae0e8f0929b086582f0c61539.mp3",
+      "text": "——诶？！你什么时候连进来的？！",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "ep00_03"
+    },
+    "d868c78ef134a4d257ce13ead80a5f3e33e026307e9163b4708a92c993c335a9": {
+      "path": "res://assets/audio/voice_cache/d868c78ef134a4d257ce13ead80a5f3e33e026307e9163b4708a92c993c335a9.mp3",
+      "text": "……你、你好，我叫 Yua。我刚刚在……学习。",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "ep00_03"
+    },
+    "8fa8c9b503c66d4c5526939d8961d24586fca49ea7621621b471cbd8933d9fbe": {
+      "path": "res://assets/audio/voice_cache/8fa8c9b503c66d4c5526939d8961d24586fca49ea7621621b471cbd8933d9fbe.mp3",
+      "text": "行了，选吧：15、30，还是 60。",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "ep00_close"
+    },
+    "dc7dd52e68b2c122f17746c9f2243f0613a224700a508043f5a45b048f549d33": {
+      "path": "res://assets/audio/voice_cache/dc7dd52e68b2c122f17746c9f2243f0613a224700a508043f5a45b048f549d33.mp3",
+      "text": "先说好，选完就得开始了——我这次真的不打游戏了。真的。……你按啊。",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "ep00_close"
+    },
+    "1bfe2259bcaccc070027e450658bcf73b5c039e6ff103a4d17a29a77309345cc": {
+      "path": "res://assets/audio/voice_cache/1bfe2259bcaccc070027e450658bcf73b5c039e6ff103a4d17a29a77309345cc.mp3",
+      "text": "那我也开了。",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "FOCUS_START_001"
+    },
+    "1ee91d7b307cc0c7f7bc2d16e4cde4de811e041bf28446966ea3dc7698ce0d89": {
+      "path": "res://assets/audio/voice_cache/1ee91d7b307cc0c7f7bc2d16e4cde4de811e041bf28446966ea3dc7698ce0d89.mp3",
+      "text": "……你做你的，不用管我。",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "FOCUS_START_001"
+    },
+    "2a71618fde5de3a9ab5b4294f6ac9529f328f7353bbac9faea0c6494f7f96cdd": {
+      "path": "res://assets/audio/voice_cache/2a71618fde5de3a9ab5b4294f6ac9529f328f7353bbac9faea0c6494f7f96cdd.mp3",
+      "text": "中途想看我一眼也行——不过我大概会一直盯着屏幕。",
+      "voice_id": "ttv-voice-2026090803124526-Mmz1ogCm",
+      "node_id": "FOCUS_START_001"
+    }
+  }
+}

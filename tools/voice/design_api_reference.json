@@ -1,0 +1,153 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MiniMax Voice Design API",
+    "description": "MiniMax Voice Design API with support for voice generation from text prompts",
+    "license": {
+      "name": "MIT"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.minimax.io"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/v1/voice_design": {
+      "post": {
+        "summary": "Voice Design",
+        "operationId": "voiceDesign",
+        "tags": ["Voice"],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "description": "The media type of the request body. Must be set to `application/json` to ensure the data is sent in JSON format.",
+            "schema": {
+              "type": "string",
+              "enum": ["application/json"],
+              "default": "application/json"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Voice design request parameters",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/T2VReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/T2VResp"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": ["error", "message"],
+        "properties": {
+          "error": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Error code"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      },
+      "T2VReq": {
+        "type": "object",
+        "required": ["prompt", "preview_text"],
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "Voice description."
+          },
+          "preview_text": {
+            "type": "string",
+            "description": "The text used for generating a preview audio sample.\n\nNote: Generating preview audio incurs a fee of $30 per 1M characters.",
+            "maxLength": 500
+          },
+          "voice_id": {
+            "type": "string",
+            "description": "Custom voice ID for the generated voice. If not provided, a unique voice_id will be automatically created and returned."
+          }
+        },
+        "example": {
+          "prompt": "Excited and enthusiastic male product reviewer (e.g., tech vlogger), fast-paced, high energy, and persuasive.",
+          "preview_text": "What is UP, everyone! Today we're unboxing the brand new Gadget X-Pro, and let me tell you, this thing is absolutely insane! The features are next level, you guys are gonna love this!"
+        }
+      },
+      "T2VResp": {
+        "type": "object",
+        "properties": {
+          "voice_id": {
+            "type": "string",
+            "description": "The generated voice ID, which can be used for speech synthesis."
+          },
+          "trial_audio": {
+            "type": "string",
+            "description": "The generated preview audio in hex-encoded format."
+          },
+          "base_resp": {
+            "type": "object",
+            "description": "Status code and details.",
+            "properties": {
+              "status_code": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Status code.\n\n- `0`: Request successful\n- `1000`: Unknown error\n- `1001`: Timeout\n- `1002`: RPM rate limit triggered\n- `1004`: Authentication failed\n- `1008`: Insufficient balance\n- `1013`: Internal service error\n- `1027`: Output content error\n- `1039`: TPM rate limit triggered\n- `2013`: Invalid input format\n\nFor more information, please refer to the [Error Code Reference](/api-reference/errorcode)."
+              },
+              "status_msg": {
+                "type": "string",
+                "description": "Status details."
+              }
+            }
+          }
+        },
+        "example": {
+          "trial_audio": "hex-encoded audio",
+          "voice_id": "ttv-voice-2025060717322425-xxxxxxxx",
+          "base_resp": {
+            "status_code": 0,
+            "status_msg": "success"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "`HTTP: Bearer Auth`\n- Security Scheme Type: http\n- HTTP Authorization Scheme: `Bearer API_key`, can be found in [Account Management>API Keys](https://platform.minimax.io/user-center/basic-information/interface-key)."
+      }
+    }
+  }
+}
+

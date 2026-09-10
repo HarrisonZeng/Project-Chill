@@ -1,112 +1,52 @@
 # Thread Handoff (Project Chill)
 
-## Purpose
-
-Use this file to resume the project in another Claude session or on another machine.
-This is the portable replacement for live session history, which cannot be stored in Git directly.
+> Refreshed 2026-09-05. Use this file to resume the project in a new Claude session or on
+> another machine. It is deliberately thin: **`Progress.md` is the live state** — this file only
+> says what the project is and how to pick it up. If they disagree, `Progress.md` wins.
 
 ## Project Snapshot
 
-Project Chill is a Godot 4 2D fixed-camera companion demo inspired by Chill With You.
+Project Chill is a Godot 4 (4.6) 2D fixed-camera **co-presence companion game**: the player opens
+what feels like an online co-working call. Yua — a bookshop clerk writing her own novel — is on
+the other side, working on her manuscript. The player works or studies alongside her, optionally
+running focus-timer sessions. Mandarin-first; the demo audience is 小红书/Bilibili.
 
-Non-negotiables:
+Non-negotiables (full versions in `AGENTS.md`, which outranks everything):
 
-- no player avatar
-- no movement
-- Yua is always visible
-- interaction is click/tap plus dialogue UI
-- most dialogue is scripted
-- player-facing free text exists as `Type Mode`
-- memory is game-side and persistent
-- voice is optional and has a pre-generated playback path for demo lines
+- No player avatar, no movement. Fixed call framing; Yua always visible.
+- Yua is a peer, never a supervisor. No mandatory tasks, no nagging, no 打卡.
+- **Only completed focus time advances story.** Clicks and Type Mode add remembered warmth only;
+  AFK advances nothing; AI cannot unlock story.
+- Scripted Mandarin episodes (Ep0–Ep14, flag-guarded, v10 for Ep0–Ep2) are the backbone.
+  Type Mode (always-on free-text → AI, MiniMax-M3 → Poe → mock) is bounded augmentation.
+- Memory is game-side and persistent (one profile JSON via `memory_manager`).
+- Voice/TTS deferred and isolated behind `voice_manager`.
 
-## Current Product Goal
+## Current Goal
 
-Build a convincing short playable demo where:
-
-1. the player enters Yua's room
-2. Yua greets them
-3. the player can choose guided replies or type in their own words
-4. Yua supports a small focus / check-in / goodbye loop
-5. the player can mention something about tomorrow
-6. Yua remembers and follows up next session
-
-## Current State
-
-- Main scene exists and runs.
-- Character art and room art are already wired into the scene.
-- Dialogue panel exists and has been reworked recently.
-- Yua is the active companion character name in UI and script.
-- Scripted dialogue JSON exists and now includes:
-  - first launch intro
-  - return-session opening
-  - check-in / focus / small talk branches
-  - goodbye branch
-  - memory follow-ups for school / exam / work / sleep
-- `Type Mode` exists as the player-facing free-text feature.
-- AI routing exists behind the scenes.
-- If no API key is present, the game now falls back to a mock provider so Type Mode is always testable.
-- Memory extraction and follow-up persistence are implemented in game-side save data.
-- Utility messages (timer/todo/music) were separated from the main dialogue text so they do not overwrite the narrative layer.
-
-## Important Product Decisions
-
-- Do not use visible player-facing `AI` terminology in-game.
-- Keep `Type Mode` as the only visible label for free-text input.
-- Scripted dialogue remains the backbone.
-- Type Mode is the differentiator, but it should not replace the main loop.
-- The experience should feel calm, warm, gentle, and emotionally safe.
+**Demo Ship Push** (`docs/Demo_Ship_Plan.md`): a postable web/Windows demo + short vertical video.
+The web demo already auto-publishes to itch (password-restricted) on every push to `main`.
+Immediate milestone: a sister-review build — see the [THIS WEEKEND] block in `Progress.md`.
 
 ## Key Files
 
-- `AGENTS.md`
-- `docs/Game_Spec_and_Process_Guide.md`
-- `docs/Development_Summary.md`
-- `docs/AI_Dialogue_Infrastructure.md`
-- `docs/CODEX_TAKEOVER_PLAYBOOK.md`
-- `docs/CODEX_WORKFLOW.md`
-- `docs/CODEX_THREAD_PROMPTS.md`
-- `scenes/main/main_scene.tscn`
-- `scenes/ui/dialogue_panel.tscn`
-- `scenes/character/companion_view.tscn`
-- `scripts/core/main_scene.gd`
-- `scripts/core/dialogue_router.gd`
-- `scripts/dialogue/ai_dialogue_service.gd`
-- `scripts/dialogue/memory_manager.gd`
-- `data/dialogue/scripted_nodes.json`
-- `data/dialogue/yua_system_prompt.txt`
-- `data/dialogue/yua_runtime_rules.txt`
-- `scripts/audio/voice_manager.gd`
-- `docs/YUA_VOICE_ARCHITECTURE.md`
+- `Progress.md` — live state, active tasks, session log. **Read first.**
+- `AGENTS.md`, `CLAUDE.md` — constitution + Claude's role (single agent, main tree, no worktrees)
+- `SESSIONS.md` + `.sessions/` — multi-session file-ownership protocol
+- `docs/Dialogue_Flow_Map.md` — the dialogue decision tree as-built + the 2026-08-19 bug fixes
+- `docs/Demo_Art_Checklist.md` — every non-text demo item, with open owner decisions
+- `docs/Chinese_Style_Guide.md` + `docs/Yua_Taste_Log.md` — writing contract; taste log outranks guide
+- `scripts/core/main_scene.gd` — coordinator/core loop · `data/dialogue/scripted_nodes.json` — script
+- `tools/godot_check/` — self-serve test harness (`check.ps1`; run before any handoff)
+- Research: `docs/User_Feedback_Mining.md` (Steam), `docs/CWYL_Xiaoheihe_Feedback_2026-08-17.md` (CN)
+- Marketing: `docs/Social_Post_Drafts_2026-08.md`
 
-## Current Demo Loop
-
-1. first-time player gets an intro scene
-2. returning player gets a return-opening scene
-3. player can move through guided replies
-4. player can enter Type Mode and reply in their own words
-5. game stores simple memory topics from player text
-6. on later launch, Yua may follow up on one remembered topic
-
-## Known Gaps
-
-- UI still needs more visual polish and better hierarchy
-- the overall plot/game loop still needs tightening to feel fully demo-ready
-- voice playback is optional and ready for pre-generated clips, but no runtime TTS provider is wired yet
-- some docs may still reflect earlier directions and should be treated carefully
-
-## Best Next Priorities
-
-1. refine the first 3-5 minutes of scripted experience
-2. tighten the room UI and reduce visual clutter
-3. make the Type Mode + memory follow-up loop feel stronger and more intentional
-4. keep building toward one polished vertical slice rather than many half-finished features
+The `docs/CODEX_*.md` files describe a retired two-AI workflow — deprecated, do not follow.
 
 ## How To Resume
 
-1. read `AGENTS.md`
-2. read the main docs listed there
-3. read this handoff file
-4. inspect `scripts/core/main_scene.gd`
-5. inspect `data/dialogue/scripted_nodes.json`
-6. continue from the highest-priority playable-demo task
+1. Read `CLAUDE.md`, `AGENTS.md`, then `Progress.md` (current phase + active tasks).
+2. Follow `SESSIONS.md`: check `.sessions/` claims, write your own before editing.
+3. Run `powershell -File "tools/godot_check/check.ps1"` to confirm the green baseline (~8s).
+4. Continue from the top item in `Progress.md` Active Tasks. Verify with the harness before
+   handing anything to the owner; give the owner numbered Godot steps for anything visual.

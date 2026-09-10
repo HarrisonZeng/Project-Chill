@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dxpjm3t2mqatg"
-path="res://.godot/imported/room_v5_ujoin_prev.png-3c93c4abee7b5eea77cfa7c194832bde.ctex"
+uid="uid://iltannbhq2im"
+path="res://.godot/imported/audition_scene.png-9bc5fc93cdb1f6056c5409b63667d9e2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/backgrounds/room_v5_ujoin_prev.png"
-dest_files=["res://.godot/imported/room_v5_ujoin_prev.png-3c93c4abee7b5eea77cfa7c194832bde.ctex"]
+source_file="res://tools/voice/audition_scene.png"
+dest_files=["res://.godot/imported/audition_scene.png-9bc5fc93cdb1f6056c5409b63667d9e2.ctex"]
 
 [params]
 

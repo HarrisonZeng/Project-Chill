@@ -43,24 +43,33 @@ class MockAiProvider extends AiProvider:
 		if mode_id == "AI_MODE_TASK_CLARIFY":
 			return "这个可以切小一点。先选最容易开始的那一块，做完再看下一步。"
 		if mode_id == "AI_MODE_POST_SESSION":
-			return "刚才那段推进到哪里了？不用总结得很漂亮，说实话就行。"
+			return "叮。我这边也刚停。你随意，我先喝口水。"
 		if mode_id == "AI_MODE_BREAK_CHAT":
-			return "那就先歇一下。不是逃跑，是给下一段留一点电。"
+			return "那就先歇一下。我也停一停，杯子都空了。"
 		if mode_id == "AI_MODE_CHECKIN":
-			return "听起来可以。把它缩成一个小目标，我们就能开计时了。"
+			return "行，那就这个。我这边也开了。"
+		if mode_id == "AI_MODE_PLATFORM_REACT":
+			return "这个我不太刷。不过听起来，也是那种一进去就出不来的。"
+		# Offline stand-in for the real provider. Mandarin only, in her voice, and
+		# never a comment on the player's productivity — she reacts to what they
+		# said, then goes back to her own work (audit §5 BLOCK: the English
+		# catch-alls here reached Chinese players whenever no key was set).
 		if user_text.length() > 80:
-			return "Mm. That sounds like a lot. Want to keep it small?"
+			return "一口气说了这么多。我先记住前半段，后半段你歇口气再说。"
 		if _looks_like_sensitive_request(user_text):
-			return "Mm. I can't help with that, but we can keep things gentle and simple here."
+			return "这个我接不了。换个话题吧，我这杯茶快凉了。"
 		if _looks_like_memory_followup(mode_id, user_text):
 			return _memory_followup_reply(lowered)
-		if lowered.contains("tomorrow") or lowered.contains("later") or lowered.contains("soon"):
-			return _goodbye_seed_reply(lowered)
-		if lowered.contains("focus") or lowered.contains("study") or lowered.contains("work on"):
-			return "All right. Start small, then. I'll still be here when you come back."
-		if lowered.contains("tired") or lowered.contains("stressed") or lowered.contains("overwhelmed"):
-			return "Mm. Then let's make this smaller, not heavier. One step is enough."
-		return "Mm. I hear you. You can tell me a little more if you want."
+		if lowered.contains("tomorrow") or lowered.contains("later") or lowered.contains("soon") \
+				or user_text.contains("明天") or user_text.contains("待会") or user_text.contains("一会"):
+			return _goodbye_seed_reply(lowered, user_text)
+		if lowered.contains("focus") or lowered.contains("study") or lowered.contains("work on") \
+				or user_text.contains("专注") or user_text.contains("学习") or user_text.contains("干活"):
+			return "行。那各开各的。我这段也刚起了个头。"
+		if lowered.contains("tired") or lowered.contains("stressed") or lowered.contains("overwhelmed") \
+				or user_text.contains("累") or user_text.contains("烦") or user_text.contains("崩"):
+			return "那就先别硬撑。我这边也卡着呢，一起卡一会儿。"
+		return "嗯，听见了。想接着说就说，我这边一边写一边听。"
 
 	func _calm_opening(mode_id: String) -> String:
 		if mode_id == "AI_MODE_MEMORY_FOLLOWUP":
@@ -73,27 +82,29 @@ class MockAiProvider extends AiProvider:
 			return "嗯，先休息一下。我在。"
 		return "我在。"
 
-	func _goodbye_seed_reply(lowered: String) -> String:
-		if lowered.contains("school") or lowered.contains("class"):
-			return "School tomorrow? Then try not to let the night get too loud. Come back and tell me how it went."
-		if lowered.contains("exam") or lowered.contains("test"):
-			return "An exam tomorrow, then. I'll be quietly rooting for you."
-		if lowered.contains("work") or lowered.contains("shift"):
-			return "Work tomorrow? Then save a little energy for yourself too."
-		if lowered.contains("sleep") or lowered.contains("rest"):
-			return "Then let's not keep you too long. Rest first, and we can talk again after."
-		return "All right. Tell me again when you come back, if you feel like it."
+	# The player mentioned something upcoming. She acknowledges it and steps
+	# back — no "come back and tell me," no plans for tomorrow (taste log).
+	func _goodbye_seed_reply(lowered: String, original: String = "") -> String:
+		if lowered.contains("school") or lowered.contains("class") or original.contains("学校") or original.contains("上课"):
+			return "明天要上课啊。那今晚别熬太晚。我也是。"
+		if lowered.contains("exam") or lowered.contains("test") or original.contains("考试") or original.contains("考"):
+			return "有考试。嗯，那这段就当热身。我这边安静着。"
+		if lowered.contains("work") or lowered.contains("shift") or original.contains("上班") or original.contains("工作"):
+			return "明天要上班。那今天就到这儿，别把电用光。"
+		if lowered.contains("sleep") or lowered.contains("rest") or original.contains("睡") or original.contains("休息"):
+			return "那就别撑了，去睡。我也快关文档了。"
+		return "好，知道了。我记着。"
 
 	func _memory_followup_reply(lowered: String) -> String:
 		if lowered.contains("school") or lowered.contains("class"):
-			return "Mm. School stayed with you, then. How did it feel in the end?"
+			return "学校那边啊。后来怎么样了？不想说也行。"
 		if lowered.contains("exam") or lowered.contains("test"):
-			return "That exam again... was it kinder than you expected?"
+			return "那场考试……比你想的好一点没？"
 		if lowered.contains("work") or lowered.contains("shift"):
-			return "Work still sounds a little heavy. Has it eased up at all?"
+			return "工作还是那么忙？听着就累。"
 		if lowered.contains("sleep") or lowered.contains("rest"):
-			return "Then I hope you gave yourself at least a little rest."
-		return "Oh. Right, that too. How did it go?"
+			return "那后来睡好了没有？"
+		return "哦，对，那件事。后来呢？"
 
 	func _looks_like_sensitive_request(user_text: String) -> bool:
 		var lowered := user_text.to_lower()

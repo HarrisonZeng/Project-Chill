@@ -396,6 +396,7 @@ func _setup_view_options() -> void:
 	view_options.weather_picked.connect(_on_weather_picked)
 	view_options.stance_picked.connect(_on_stance_picked)
 	view_options.type_mode_toggled.connect(_on_type_mode_toggled)
+	view_options.frame_picked.connect(_on_frame_picked)
 	# Blink + expressions on top of the portrait. Built here, after the stance
 	# is known, so the first blink already uses the right face.
 	var portrait := get_node_or_null("CompanionStage/CompanionView/Portrait")
@@ -412,7 +413,6 @@ func _setup_view_options() -> void:
 		if ambient_effects != null and ambient_effects.has_method("register_lit_like_room"):
 			ambient_effects.register_lit_like_room(companion_stage)
 			var hands = companion_face.hands_layer()
-	view_options.frame_picked.connect(_on_frame_picked)
 			if hands != null:
 				ambient_effects.register_lit_like_room(hands)
 			# Re-apply so the registration takes effect on the starting view.
@@ -424,6 +424,10 @@ func _on_weather_picked(kind: String) -> void:
 	if ambient_effects != null and ambient_effects.has_method("set_weather"):
 		ambient_effects.set_weather(kind)
 	_save_persistent_state()
+
+func _on_frame_picked(frame_name: String) -> void:
+	if companion_face != null and companion_face.has_method("preview"):
+		companion_face.preview(frame_name, 5.0)
 
 func _on_stance_picked(kind: String) -> void:
 	yua_stance = kind
@@ -441,10 +445,6 @@ func _apply_yua_stance() -> void:
 		return
 	(portrait as TextureRect).texture = load(path)
 	if companion_face != null:
-func _on_frame_picked(frame_name: String) -> void:
-	if companion_face != null and companion_face.has_method("preview"):
-		companion_face.preview(frame_name, 5.0)
-
 		companion_face.set_stance(yua_stance)
 
 func _on_type_mode_toggled(on: bool) -> void:
@@ -562,7 +562,7 @@ func _ui_text(key: String) -> String:
 		"status_enter_minutes":
 			return "先填一个分钟数" if zh else "Enter a number of minutes first."
 		"history":
-			return "记录" if zh else "Log"
+			return "本子" if zh else "Notes"
 		_:
 			return key
 
@@ -682,7 +682,7 @@ func _show_node_data(node_data: Dictionary) -> void:
 	if node_data.is_empty():
 		# Never developer English in her voice — log it, cover it in-fiction.
 		push_warning("[dialogue] empty node data for '%s'" % current_node_id)
-		_set_dialogue_text("……抱歉，我刚走神了。\n\n我们说到哪儿了？")
+		_set_dialogue_text("诶，抱歉，我刚走神了。\n\n我们说到哪儿了？")
 		_render_choices([])
 		return
 
@@ -800,6 +800,8 @@ func _should_autofocus_input() -> bool:
 	if _current_node_has_tag(NAME_INPUT_TAG):
 		return true
 	if current_node_id == "TASK_INPUT_001":
+		return true
+	if not _current_node_typed_routes().is_empty():
 		return true
 	return current_node_id == "ep00_04"
 
@@ -945,7 +947,9 @@ func _apply_name_token(text: String) -> String:
 	var nick := player_nickname.strip_edges()
 	if not nick.is_empty():
 		return text.replace("{name}", nick)
-	return text.replace("{name}，", "").replace("，{name}", "").replace("{name}", "")
+	# No nickname: drop the token AND the punctuation glued to it, so a line like
+	# "{name}。好" never renders as "。好".
+	return text.replace("{name}。", "").replace("{name}，", "").replace("，{name}", "").replace("——{name}", "").replace("{name}", "")
 
 func _apply_focus_minutes_token(text: String) -> String:
 	if not text.contains("{focus_minutes}"):
@@ -1134,6 +1138,14 @@ func _show_idle_click_line() -> void:
 		pool = _reactive_pool("idle_click")
 	if pool.is_empty():
 		return
+	# About a third of idle clicks, she reacts to what is outside the window
+	# instead — the six painted views finally get lines (audit §1: zero lines
+	# referenced the weather). Keyed to the current view; silently skipped if
+	# that view has no pool.
+	if completed_focus_sessions > 0 and randf() < 0.35:
+		var view_pool: PackedStringArray = _reactive_pool("view_" + window_weather)
+		if not view_pool.is_empty():
+			pool = view_pool
 	var line := pool[randi() % pool.size()]
 	_set_dialogue_text(line)
 	_set_status_message("")
@@ -1162,6 +1174,7 @@ func _show_focus_click_line() -> void:
 
 func _on_choice_selected(choice_data: Dictionary) -> void:
 	_apply_choice_flags(choice_data)
+	_apply_choice_memory(choice_data)
 	var next_node_id := str(choice_data.get("next", "greeting_01"))
 	var internal_return := bool(choice_data.get("internal_return", false))
 	if internal_return:
@@ -1190,6 +1203,28 @@ func _apply_choice_flags(choice_data: Dictionary) -> void:
 		return
 	for key in flag_data.keys():
 		memory_manager.call("set_story_flag", str(key), flag_data[key])
+
+# A chip may carry "remember": {"key": "player_platform", "value": "bilibili"}.
+# Stored as a plain profile value (not a story flag) so later AI/scripted beats
+# can call it back. Never affects progression.
+func _apply_choice_memory(choice_data: Dictionary) -> void:
+	var remember = choice_data.get("remember", null)
+	if typeof(remember) != TYPE_DICTIONARY:
+		return
+	_remember_player_value(str(remember.get("key", "")), str(remember.get("value", "")))
+
+func _remember_player_value(key: String, value: String) -> void:
+	var clean_key := key.strip_edges()
+	var clean_value := value.strip_edges()
+	if clean_key.is_empty() or clean_value.is_empty() or memory_manager == null:
+		return
+	memory_manager.set_value(clean_key, clean_value)
+	_save_persistent_state()
+
+func _remembered_player_value(key: String) -> String:
+	if memory_manager == null:
+		return ""
+	return str(memory_manager.get_value(key, "")).strip_edges()
 
 # Apply node-level `set_flags` (preserved by ScriptedDialogueManager) when a node
 # is shown. This is how authored milestones mark themselves, e.g. ep00_close sets
@@ -1335,7 +1370,7 @@ func _scripted_name_reaction(nickname: String) -> String:
 		looks_like_handle = looks_like_handle or n.length() > 12 or n.contains(" ") or n.contains("_")
 	if looks_like_handle:
 		return "这是网名吧？……感觉像从哪部作品里来的。"
-	return "%s……哦？是本名？挺好记的。" % n
+	return "%s……哦？是本名？" % n
 
 # Relationship progress is advanced ONLY here (on a completed focus). Monotonic.
 func _apply_focus_completion_progress() -> void:
@@ -1383,7 +1418,7 @@ func _should_use_night_exit() -> bool:
 func _handle_special_choice(next_node_id: String) -> bool:
 	match next_node_id:
 		"ACTION_DEMO_TASK":
-			_capture_focus_task("整理一个小任务，先推进一点点")
+			_capture_focus_task("把桌面收一下")
 			return true
 		"ACTION_SET_TIMER_1":
 			_set_focus_seconds_from_script(QUICK_TEST_SECONDS, "3 秒试玩，够看一眼效果。")
@@ -1392,10 +1427,10 @@ func _handle_special_choice(next_node_id: String) -> bool:
 			_set_focus_minutes_from_script(15, "十五分钟，很理智的选择。短的先赢。")
 			return true
 		"ACTION_SET_TIMER_25":
-			_set_focus_minutes_from_script(25, "二十五分钟……标准番茄钟。经典之选。")
+			_set_focus_minutes_from_script(25, "二十五分钟。好，开。")
 			return true
 		"ACTION_SET_TIMER_45":
-			_set_focus_minutes_from_script(45, "四十五分钟……你还挺有自信的。好，我陪你。")
+			_set_focus_minutes_from_script(45, "四十五分钟。你还挺有自信的。开。")
 			return true
 		"ACTION_START_FOCUS":
 			_start_focus_from_script()
@@ -1480,7 +1515,7 @@ func _start_focus_from_script() -> void:
 func _start_quick_focus_from_script() -> void:
 	if current_focus_task.strip_edges().is_empty():
 		current_focus_task = "继续刚才那件事"
-	_set_dialogue_text("那就不重新报任务了。\n\n我们继续做自己的事。")
+	_set_dialogue_text("那就不换了。\n\n各做各的。")
 	_start_focus_from_script()
 
 func _on_ai_mode_toggled(pressed: bool) -> void:
@@ -1495,6 +1530,13 @@ func _handle_ai_mode_choice(mode_id: String) -> void:
 	ai_return_node_id = _safe_node_id()
 	if ai_return_node_id == "idle":
 		ai_return_node_id = "TASK_INPUT_001"
+	# A node that declares typed_routes.after_ai_next wants the free-chat beat to
+	# land THERE, not back on itself — e.g. ep02_01's "自己写" must still reach
+	# the ep02_listen payoff (audit §4#6). Same contract as _try_typed_route.
+	var routes := _current_node_typed_routes()
+	var after_ai := str(routes.get("after_ai_next", ""))
+	if not after_ai.is_empty() and scripted_dialogue_manager.has_dialogue_node(after_ai):
+		ai_return_node_id = after_ai
 	# Type-first: no escape chip, no meta status line. She just waits; typing
 	# talks to her, clicking her or starting the timer settles back naturally.
 	_set_dialogue_text("嗯，你说，我听着。\n\n想到什么写什么就行，不用组织得多漂亮。")
@@ -1549,6 +1591,13 @@ func _handle_player_text(raw_text: String) -> void:
 		_show_focus_click_line()
 		return
 
+	# Authored typed-answer node (Ep3 «你脑子飞出去一般降落在哪»): keyword → scripted
+	# reply; unknown answer → one bounded AI beat (or a scripted cover when AI is
+	# off), then the episode continues through its own nodes either way.
+	var routed: bool = await _try_typed_route(text)
+	if routed:
+		return
+
 	# Type Mode is always on: any other typed line routes to the AI. (The old
 	# AIModeToggle checkbox was removed from the UI; there is no "off" state.)
 	_note_meaningful_interaction()
@@ -1566,6 +1615,77 @@ func _handle_player_text(raw_text: String) -> void:
 	)
 	_handle_ai_route(route)
 
+# --- typed-answer routing (node "typed_routes", see ScriptedDialogueManager) ---
+const TYPED_ROUTE_AI_TIMEOUT_SECONDS := 12.0
+var _typed_route_token: int = 0
+
+func _current_node_typed_routes() -> Dictionary:
+	if scripted_dialogue_manager == null or not scripted_dialogue_manager.has_dialogue_node(current_node_id):
+		return {}
+	var node_data: Dictionary = scripted_dialogue_manager.get_dialogue_node(current_node_id)
+	var routes = node_data.get("typed_routes", {})
+	return routes if typeof(routes) == TYPE_DICTIONARY else {}
+
+func _try_typed_route(text: String) -> bool:
+	var routes := _current_node_typed_routes()
+	if routes.is_empty():
+		return false
+	_note_meaningful_interaction()
+	var remember_key := str(routes.get("remember_key", ""))
+	var lowered := text.to_lower()
+	for rule in routes.get("keywords", []):
+		for needle in rule.get("match", []):
+			if lowered.contains(str(needle)):
+				var next_id := str(rule.get("next", ""))
+				if scripted_dialogue_manager.has_dialogue_node(next_id):
+					_remember_player_value(remember_key, str(rule.get("remember", needle)))
+					_show_node(next_id)
+					return true
+	# Unmatched: keep what they typed (short), then AI beat or scripted cover.
+	_remember_player_value(remember_key, text.left(24))
+	var fallback_next := str(routes.get("fallback_next", ""))
+	var ai_mode := str(routes.get("ai_mode", ""))
+	var after_ai_next := str(routes.get("after_ai_next", fallback_next))
+	var can_use_ai := not ai_mode.is_empty() and ai_features_enabled \
+		and dialogue_router != null and dialogue_router.has_method("route_player_text_async")
+	if can_use_ai:
+		await _play_typed_route_ai(text, ai_mode, after_ai_next, fallback_next)
+		return true
+	if scripted_dialogue_manager.has_dialogue_node(fallback_next):
+		_show_node(fallback_next)
+		return true
+	return false
+
+# One AI reply beat inside an authored episode. Bounded: timeout → scripted cover;
+# a "继续" click always lands on the authored next node (AI never steers the story).
+func _play_typed_route_ai(text: String, ai_mode: String, after_ai_next: String, fallback_next: String) -> void:
+	_typed_route_token += 1
+	var my_token := _typed_route_token
+	_set_status_message(_ui_text("status_thinking"))
+	_render_choices([])
+	var packet := _build_context_packet(ai_mode)
+	var route: Dictionary = await _await_with_timeout(
+		dialogue_router.route_player_text_async(text, true, persona_text, packet, runtime_rules_text, ai_mode),
+		TYPED_ROUTE_AI_TIMEOUT_SECONDS)
+	if my_token != _typed_route_token:
+		return
+	var reply := str(route.get("text", "")).strip_edges()
+	var ai_ok := str(route.get("mode", "")) == "ai" and bool(route.get("success", false)) and not reply.is_empty()
+	if not ai_ok:
+		_set_status_message("")
+		if scripted_dialogue_manager.has_dialogue_node(fallback_next):
+			_show_node(fallback_next)
+		else:
+			_handle_ai_route(route)
+		return
+	_set_dialogue_text(reply)
+	_set_status_message("")
+	if scripted_dialogue_manager.has_dialogue_node(after_ai_next):
+		_render_choices([{"text": "继续", "next": after_ai_next, "internal_return": true}])
+	else:
+		_render_choices([])
+	_play_voice_for_line("typed_route_ai", reply)
+
 func _capture_focus_task(task_text: String) -> void:
 	current_focus_task = task_text.strip_edges()
 	if current_focus_task.is_empty():
@@ -1576,7 +1696,7 @@ func _capture_focus_task(task_text: String) -> void:
 	tasks_ui.refresh_controls()
 	current_node_id = "TASK_INPUT_002"
 	# Peer, not coach: receive the task lightly, no commentary on its content.
-	# In the intro this beat lands right after her own «继续写那个东西», so keep
+	# In the intro this beat lands right after her own «我的小项目», so keep
 	# her line short and hand straight to the canonical 15/30/60 (start-now) pick.
 	_set_dialogue_text("嗯，收到。『%s』。\n\n那，选个时长——选完就开始了。" % current_focus_task)
 	_set_status_message("")
@@ -1626,6 +1746,9 @@ func _build_context_packet(mode_id: String) -> String:
 	fields.append("time_bucket=%s" % _time_bucket())
 	if not player_nickname.strip_edges().is_empty():
 		fields.append("player_nickname=%s" % player_nickname)
+	var player_platform := _remembered_player_value("player_platform")
+	if not player_platform.is_empty():
+		fields.append("player_platform=%s" % player_platform)
 	if not current_focus_task.strip_edges().is_empty():
 		fields.append("current_task=%s" % current_focus_task)
 	fields.append("completed_focus_count=%d" % completed_focus_sessions)
@@ -1684,7 +1807,7 @@ func _handle_ai_route(route: Dictionary) -> void:
 	var route_text := str(route.get("text", ""))
 	if route_text.is_empty():
 		# In-fiction failure: a flaky call connection, never a UI instruction.
-		route_text = "唔……刚才这边卡了一下，没听清。\n\n再说一遍？"
+		route_text = "唔，刚才这边卡了一下，没刷出来。\n\n再发一遍？"
 
 	_set_dialogue_text(route_text)
 	_set_status_message("")
@@ -1788,8 +1911,15 @@ func _show_focus_complete_node() -> void:
 		current_story_milestone = ProgressionGate.current_milestone_label(state)
 		_show_node(beat_node)
 		return
-	if scripted_dialogue_manager.has_dialogue_node("FOCUS_DONE_REPEAT"):
-		_show_node("FOCUS_DONE_REPEAT")
+	# No episode eligible: pick from the FOCUS_DONE_REPEAT pool so the player who
+	# has seen every episode does not hear the same close (and the same
+	# "感觉怎么样？" question) every single session. Only the base node asks.
+	var repeat_pool: Array = []
+	for candidate in ["FOCUS_DONE_REPEAT", "FOCUS_DONE_REPEAT_2", "FOCUS_DONE_REPEAT_3", "FOCUS_DONE_REPEAT_4", "FOCUS_DONE_REPEAT_5"]:
+		if scripted_dialogue_manager.has_dialogue_node(candidate):
+			repeat_pool.append(candidate)
+	if not repeat_pool.is_empty():
+		_show_node(repeat_pool[randi() % repeat_pool.size()])
 		return
 	_show_system_status(_ui_text("status_focus_complete"))
 
@@ -1831,6 +1961,11 @@ func _resolve_start_node_id() -> String:
 	demo_script_version_seen = demo_script_version
 	has_seen_intro = true
 
+	# Away for days: a distinct opener before the ≤30-min / time-of-day ones, so
+	# coming back after a gap is not greeted exactly like coming back from lunch.
+	if has_seen_intro and _days_since_previous_visit() >= 3 and scripted_dialogue_manager.has_dialogue_node("return_open_days"):
+		return "return_open_days"
+
 	if has_seen_intro and _should_use_short_return_node() and scripted_dialogue_manager.has_dialogue_node("return_open_short"):
 		return "return_open_short"
 
@@ -1867,6 +2002,13 @@ func _pick_time_greeting_node_id() -> String:
 	if candidates.is_empty():
 		return ""
 	return candidates[randi() % candidates.size()]
+
+# Whole days since the previous session's stamp (0 if unknown or same day).
+func _days_since_previous_visit() -> int:
+	if previous_last_seen_unix <= 0:
+		return 0
+	var elapsed := int(Time.get_unix_time_from_system()) - previous_last_seen_unix
+	return maxi(0, int(elapsed / 86400))
 
 func _should_use_short_return_node() -> bool:
 	# Use the PREVIOUS session's stamp, not last_seen_unix (which saves overwrite

@@ -1,5 +1,13 @@
 # Demo Ship Plan — from today to a postable demo (written 2026-08-09, overnight audit)
 
+> **Status 2026-09-05:** ~2 weeks behind this plan's pace, almost entirely on script convergence
+> (arena rounds). Done since writing: Ep0–Ep2 v10 committed · dialogue-flow bugs fixed with 2 new
+> test scenarios (`docs/Dialogue_Flow_Map.md`) · B4 status strings localized · art pass landed
+> (open-U room, night relight, stances, blink) · 小红书 post drafts written. Week-4 friend test is
+> being front-run by a **sister-review build via the itch web link** — see `Progress.md`
+> [THIS WEEKEND]. B3 (Windows export) is deferred until the public post; the web build covers
+> review. Live state lives in `Progress.md`; this plan stays as the reference sequence.
+
 Goal: in **~6 weeks** (inside your 2–3 month window), a downloadable Windows demo + a short
 vertical video you can post to 小红书 and Bilibili to find first users. Not Steam-ready — postable.
 

@@ -8,11 +8,17 @@
 
 ## Current Phase
 
-**Demo Ship Push** — target: a postable Windows demo + short video for 小红书/Bilibili in ~6 weeks.
-Master plan: `docs/Demo_Ship_Plan.md` (week-by-week, with [CLAUDE]/[YOU] on every task).
+**Demo Ship Push** — target: a postable demo + short video for 小红书/Bilibili.
+Master plan: `docs/Demo_Ship_Plan.md` (week-by-week, with [CLAUDE]/[YOU] on every task; written
+2026-08-09 — the pace has slipped ~2 weeks behind it, almost entirely on script convergence).
 
-Vertical Slice 01 (co-presence-first session) is **functionally complete in code**; remaining work is
-look (call-frame composition), script depth, Windows export, and packaging/marketing.
+**Near-term milestone (set 2026-09-05): a sister-review build within 2–3 days**, via the live
+itch web link (no Windows export needed for this). Scope: Ep0–Ep2 audited, Chinese-by-default,
+Mandarin-only mock AI, basic UI restyle, optional incoming-call intro. Full plan in the
+[THIS WEEKEND] block under Active Tasks.
+
+Vertical Slice 01 (co-presence-first session) is **functionally complete in code**; remaining work
+is look (UI chrome / call-frame), script depth (Ep3+ arena), and packaging/marketing.
 
 ---
 
@@ -44,13 +50,13 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 
 | Gap | Priority | Owner | Notes |
 |---|---|---|---|
-| Script depth pass (Ep1/2/3/5, FOCUS_DONE, ep13 honesty line) | 🔴 | Claude after owner verdicts | Proposal awaiting checkmarks: `docs/Yua_Script_Polish_Proposal.md` |
-| Call-frame visual composition | 🔴 | Claude implements; owner picks direction | Biggest lever for 小红书 scroll-appeal |
-| Windows export preset (only Xogot/iPad/Web exist) | 🔴 | Claude writes preset; owner exports | `export_presets.cfg` |
+| Script depth: Ep4+ canon (Ep0–Ep3 ✅ in game, v11 2026-09-06) | 🔴 | Claude (arena or owner structure) | Ep3 landed from the owner's own structure, no arena; next: Ep4 = 偷听写作 beat |
+| UI chrome / call-frame look (D2 pick + restyle) | 🔴 | Claude implements; owner picks direction | Biggest lever for 小红书 scroll-appeal; basic pass due with sister build |
+| Windows export preset (only Xogot/iPad/Web exist) | 🟡 | Claude writes preset; owner exports | NOT needed for sister review (web link); needed for the public post |
 | ~~itch.io page + `BUTLER_API_KEY` secret~~ | ✅ | Owner, done 2026-08-13 | Demo live and password-restricted |
 | `gh secret set MINIMAX_API_KEY` so the demo gives real AI replies | 🟡 | Owner, 1 command | Claude cannot do this one — it will not handle API keys. Command in `docs/Web_Demo_Publishing.md` |
 | Open the live demo with the password and confirm it boots | 🟡 | Owner, 2 min | Only check Claude could not run; the page password blocks it |
-| All-Chinese surface (system status lines are English) + zh default | 🟡 | Claude | B4/B5 in ship plan |
+| All-Chinese surface + zh default | 🟡 half done | Claude | B4 status strings localized 2026-08-19 (`_ui_text("status_*")`); remaining: UI chrome labels (sweeps up with D2) + zh default (B5, 1 line, due with sister build) |
 | ~~Gate "3 秒试玩" chip behind debug flag~~ | ✅ | Claude | Now hidden unless `_debug_timeline_enabled()` |
 | ~~Debug bar off at ship~~ | ✅ | Claude | Now driven by `OS.is_debug_build()`; on in editor, off in release |
 | Friend test (2–3 people) | 🟡 | Owner | Week 4 |
@@ -60,6 +66,18 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
 
 ## Active Tasks
 
+- **[THIS WEEKEND — sister review build, agreed 2026-09-05.]** Deliver via the itch web link +
+  password (no Windows export). **[OWNER Friday, ~45 min]**: arena picks (or "ship what's there"),
+  UI direction A–D (default: C lo-fi minimal), D1 incoming-call yes/no, optionally
+  `gh secret set MINIMAX_API_KEY`, one listen for music-loop gaps. **[CLAUDE Saturday]**: stitch
+  picks → full harness → screenshot-audit every Ep0–Ep2 beat against the style guide → zh default
+  (B5) → Mandarin-only mock provider (keyless builds can still answer Type Mode in English) →
+  theme-level UI restyle (+ D1 if yes) → commit, push, itch republishes. **[OWNER Sunday]**:
+  10-min self-playthrough, then send sister the link + the four review questions (in the plan).
+- **[RISK — check before the next push]** `project.godot` has an uncommitted edit that DELETES
+  `renderer/rendering_method.web="gl_compatibility"` (and the forward_plus line). The web export
+  was verified working WITH that override; pushing without it may break the itch build. Restore or
+  consciously confirm before committing — do not let it ride along in an unrelated commit.
 - **[OWNER — decides] How should free typing and the authored script hand off to each other?**
   This is the one reported dialogue bug NOT fixed on 2026-08-19, because it is a design question,
   not a defect. Today: Type Mode is always on, typed text goes to the AI from wherever the player
@@ -83,12 +101,14 @@ look (call-frame composition), script depth, Windows export, and packaging/marke
   时事单元 slot; **暗线 DELETED**. See `Yua_World_Components.md` v3 + revised opening D beats.
 - **[OWNER — naming only]** ① 店长=退休轻小说编辑 yes/no ② 书咖 name ③ fake game name.
   Placeholders are usable; not blocking.
-- **[CLAUDE — next big task, unblocked]** Write final Ep0–5 into `scripted_nodes.json` (v10):
-  书咖 world + opening D + name-AI-reaction + V1 skeleton transplanted (aquarium eps → 副业
-  weekend eps). Then 杂谈池 pools.
-- **[CLAUDE — next session]** Implement dialogue UI 方案 A in `main_scene.tscn` + controllers.
-- **[CLAUDE — next session]** Type Mode implementation (`docs/Type_Mode_Design.md` §4) + persona
-  fixes found in AI sampling (stage-direction leak, romance over-escalation).
+- **[CLAUDE — in progress]** Script v10: Ep0–Ep2 canon is COMMITTED and playable
+  (opening D + 书咖 world). **Ep3 landed 2026-09-06 (v11, owner-authored structure, uncommitted).**
+  Remaining: Ep4+ (Ep4 = 偷听写作 beat from old opening A), then 杂谈池 pools.
+- ~~Dialogue UI 方案 A~~ superseded → UI direction is the D2 four-way pick in
+  `docs/Demo_Art_Checklist.md`; basic restyle lands with the sister-review build.
+- ~~Type Mode implementation~~ ✅ done — always-on input (toggle removed), routed to AI with
+  name/task/focus exceptions; persona fixes (stage-direction leak, romance escalation) landed
+  2026-08-11 in the prompt files.
 - **[CLAUDE]** B4/B5 (all-zh system strings, zh default) — unblocked.
 - **[OWNER — decides]** Word two in-fiction Mandarin replacements for the English UI-speak in
   `dialogue_router.gd:10-11` (details in "User Godot Checks Pending"). Found by `godot_check`.
@@ -157,6 +177,104 @@ either. What still does: feel, pacing, animation, audio.
 ---
 
 ## Session Log
+
+- **2026-09-06 (audit fixes §7-A/B applied + coverage fills + completeness proposal):** Applied
+  the daily-surface fixes from `docs/Script_Audit_2026-09-06.md` without touching the other
+  session's nodes (ep00_tools/ep01_c/ep02_end/ep03_*). **AI world layer** `yua_world.txt` rewritten
+  to 书咖 canon (was aquarium-as-main-job + deleted 暗线) — affects every AI reply. **Mock provider**
+  Mandarin-only, no 查岗/「不是逃跑」. **4 EXITs, ABORT_001, return_open_*, 4 greetings** rewritten:
+  no 下次/明天/早点睡, no 否定式查岗, no 「算数」. **focus_click pool** rewritten to HER state
+  (15 lines, none comment on the player); `idle_click_prefocus` now nudges by showing her move.
+  **3 括号动作** removed; Ep5 disclosure contradiction, Ep6 「那点东西」/「昨天」, Ep7 homework hook,
+  Ep9 泛描述→当场擦桌子, ep10_b 「留着」, ep13 「都记着」 fixed; ep01 chips now answer ep01_a;
+  ep02_a/b double 「你听」 removed; **ep02_01 typed route → ep02_listen** (the 名场面 is reachable
+  when typing; `_handle_ai_mode_choice` honors `after_ai_next`). Engine 穿帮: 「没听清」→「没刷出来」,
+  「你看着挺累」→「你说挺累」, 「报任务」, 「挺好记的」, 4 fallbacks no longer open with 「……」,
+  「记录」→「本子」, `{name}。` dangle handled. **Coverage fills**: `view_*` weather pools (6 views × 2,
+  ~35% of idle clicks), `return_open_days` (≥3-day gap opener), `FOCUS_DONE_REPEAT` → 5-line pool
+  (only one asks). Rule F: persona + style guide 「……」 rule relaxed to the enforceable form.
+  Mechanical lint 64→47 (parens 0, openers 20). Full suite 16/17 → call_intro timing assertion fixed
+  → expected 17/17. `docs/Completeness_Proposal_2026-09-06.md`: what to add for parity with CWYL
+  and beyond (living notebook = owner's idea, recommended as the demo's core shot; work monologue;
+  今日荐书卡; 她也下班; Nth-session; festival slot). Nothing committed — both sessions' work is on
+  the same tree; whoever commits next commits both.
+
+- **2026-09-06 (arena round 10 — Ep4 「铃响了她没停」):** Owner said «go run» → brief locks the beat
+  order (1 her writing mutter after the bell, no 小说/写作/稿子 words; 2 she notices + a specific bad
+  cover-up; 3 fixed chips 「刚才那是……？」/「我什么都没听见」/type; 4 her next step + player free,
+  optional P.S.; secret only shows its shape, Ep5 confesses). Writers: DeepSeek via `zh_arena.py`
+  (`tools/zh_arena_out/ep4_v1_*`), Codex via MCP (gpt-5.4 now rejected on ChatGPT accounts and the
+  default gpt-6-astra needs a newer CLI → **gpt-5.5 works**), Claude in-session. Six labeled options
+  published to the arena page (Codex 灯先别亮 / 纸边翘起 · DeepSeek 荐书卡太肉麻 / 推荐小剧场 · Claude
+  回头就露馅 / 名字改了八次). Note: Codex option 1 names the character «小七» (her aquarium
+  江豚, not yet introduced) — flag if picked. Awaiting owner pick.
+
+- **2026-09-06 (full script audit + text playtest tooling):** Audited EVERY player-facing text
+  surface (95 nodes, 3 reactive pools, engine strings, mock AI, memory follow-ups, ai_modes) →
+  `docs/Script_Audit_2026-09-06.md`. Method: coverage matrix vs Chill with You · new
+  `script_lint` scenario (mechanical style-guide/taste-log rules: 64 findings, 0 banned words,
+  34 「……」-openers, 3 stage-direction parens, `{name}。` dangle) · new `walk` scenario
+  (token-light text playtest: `check.ps1 -Mode test -Scenario walk [-Node x -Sessions n -Pick "1,t:名字"]`)
+  · three parallel reviewers (Ep0–7 voice / Ep8–14 + functional + engine / canon-continuity).
+  **Headline findings:** ① `yua_world.txt` (the AI world layer) is stale — still aquarium-as-main-job
+  and still carries the deleted 暗线 fixed-pairing mystery → affects every AI reply, cheapest fix,
+  do first. ② 15 BLOCKs, 9 of them on daily-played functional surfaces (EXIT ×4 with 下次/明天
+  hooks, focus_click pool written from a supervisor's POV, mock provider English + 「推进到哪里了」
+  查岗, 3 括号动作). ③ Ep0–3 is the game's voice (protect); Ep4–7 are pre-taste-log stock
+  (habit-description, warmth-by-words) → rewrite to Ep3's pattern; ep10/13/14 say the same thing
+  three times → merge. ④ Coverage gap vs CWYL: no weather lines despite 6 window views, no
+  days-since return, no unprompted work monologue, no festival slot content. Ordered action list
+  in §7 (A1–A4 recommended before the sister build). Also fixed check.ps1 to forward -Node in
+  test mode and added -Pick. Script edits themselves left to the script session (no JSON touched).
+
+- **2026-09-06 (Ep3 IN GAME — owner-authored structure, script v11):** Owner rejected all six
+  round-9 habits (every one a 泛描述 of a habit) and built the beat themselves: a 脑子飞了
+  confession about *this* session → a yes/no 科普区-title question («把一只鸡放大到霸王龙那么大，
+  能不能打过霸王龙？») → ended up watching «霸王龙和剑齿象谁战力高» (owner's 战力 meme, kept by
+  request) → «……但后面我真的认真学完了！真的！» → beat 3 changed from the generic motive question to
+  «你脑子飞出去的时候，一般降落在哪？» with chips B站/小红书/抖音/别的 + typed answers → P.S. ending
+  «哦对了，答案是不能». Six new taste-log vetoes + profile items 9–10 record why.
+  **Engine:** node-level `typed_routes` (keyword → scripted node; unknown → one bounded AI beat via
+  new `AI_MODE_PLATFORM_REACT`, or scripted cover `ep03_any` when AI is off; «继续» always lands on
+  `ep03_end`); chip-level `remember` → profile value `player_platform`, also injected into the AI
+  context packet — the first real "she remembers you" hook. Mock provider got a line for the mode.
+  **代称:** 「那个东西」→「我的小项目」 applied to the 3 Ep0/Ep1/Ep2 nodes + canon docs + context pack.
+  **Tests:** new scenario `ep3_platform` (29 checks: real 3-session unlock, chips, 5 typed routes,
+  AI-off cover, memory survives relaunch, no replay on session 4). Full check green except
+  `call_intro` — the paused ui-restyle session's own in-flight overlay-timing check, untouched here.
+  Name reaction (③) was found already wired (`_play_name_reaction_then`, 12 s timeout + scripted
+  fallback, `name_react` 10/10) — nothing to do. Notebook (②) still unbuilt, awaiting go.
+  **Sessions note:** main_scene.gd now carries the typed-route block alongside ui-restyle's
+  uncommitted call-intro lines; both coexist. Diff saved at `.sessions/ep3-typed-route.patch`;
+  claim in `.sessions/ep3-script.md`. Nothing committed (owner did not ask; main_scene.gd is HELD).
+
+- **2026-09-05 (management-doc sweep + weekend plan):** Set the sister-review milestone (see
+  Active Tasks [THIS WEEKEND]) and brought the management docs back in line with reality.
+  Also logged from this long-running thread, previously unrecorded: ① **CWYL 小黑盒 audience
+  research** → `docs/CWYL_Xiaoheihe_Feedback_2026-08-17.md` (China-audience companion to the
+  Steam mining doc; review feed is readable without login; headline finds: AI free-chat is the
+  top ask at 244 有用 on one review, "让她也休息" is a China-specific ask that fits Yua-as-peer,
+  grind-hour unlocks draw open hostility, and core players are wary of "完美女友供在高阁" —
+  more reason to never use AI-女友 framing). ② **First social posts drafted** →
+  `docs/Social_Post_Drafts_2026-08.md`: three ready 小红书 posts (origin/搭子, 「我给她写了下班」,
+  「她记得你」) + B站 mirror strategy, each ending in one design-feedback question; written to the
+  style guide, no "AI 女友" wording anywhere. ③ Doc corrections: `Architecture_Overview.md`
+  `_register_node` claim fixed (was describing a bug fixed 2026-08-09); stale `.sessions/` claims
+  closed (animation + audio said "active" since May; all art claims done);
+  `THREAD_HANDOFF.md` snapshot refreshed (it still described the pre-co-presence demo goal).
+  ④ Flagged: uncommitted `project.godot` edit drops the web gl_compatibility override — see the
+  RISK item; left uncommitted, as were the arena session's in-flight Progress/taste-log entries.
+
+- **2026-08-20 (arena round 9 — Ep3 habit rewrite):** Owner vetoed 「我很乖」 (撒娇-familiar to a
+  near-stranger) and the chair-recline confession (flat, no 画面感) — both logged as taste-log
+  vetoes. New round: beats 1+2 rewritten by all three writers with branches re-hooked to each
+  invented habit; beat-3 question locked. Six labeled options published (NEW RULE: models shown,
+  no more blind): Codex 桌面陈列失控 / 跟闹钟开庭, DeepSeek 闹钟串通 / 轻小说热脑, Claude
+  查一个词深海鱼 / 背景学习视频. Artifact publish hit a 409 (parallel session had pushed the old
+  draft page); merged the pending ②代称 ③小本子 proposal sections into the new page and
+  republished. Still awaiting owner: Ep3 pick, 小项目 rename OK, notebook design go/no-go
+  (name-reaction engine hookup ready — probe passed 10/10).
+
 
 - **2026-08-20 (round-8 verdict + two owner proposals):** Owner: round 8 read non-native across the
   board; root cause = my brief instructed "beat 1 callbacks the previous ep" → everyone wrote meta-

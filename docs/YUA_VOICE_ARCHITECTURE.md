@@ -1,103 +1,108 @@
-# Yua Voice Architecture
+# Yua voice system and auditions
 
-## Goal
+Updated 2026-09-08. Voice implementation and auditions were explicitly requested
+by the owner; this work supersedes the earlier voice-deferral for this component.
 
-Yua voice should be optional, soft, and fail-safe. Text dialogue must remain the source of truth, and the game should keep working even when a voice clip is missing or runtime voice generation is unavailable.
+## What is implemented
 
-## Recommended Approach
+- `scripts/audio/voice_manager.gd`: optional playback of exact-text authored clips,
+  legacy node-ID clips for standalone callers, and cached desktop TTS.
+- `scripts/audio/minimax_voice_provider.gd`: non-streaming MiniMax Speech 2.8 HD
+  adapter, 20-second timeout, bounded responses, cancellation and error handling.
+- `scenes/tools/voice_audition.tscn`: independent audition player. It never reads or
+  writes the player profile and never calls an API. Chinese, English, Japanese and
+  actual game clips have separate filters, replay/stop/next, seek and volume.
+- `assets/audio/voice_auditions/manifest.json`: 13 voice/delivery comparisons plus
+  10 game paragraphs. Includes actual prompts, IDs, settings and spoken text.
+- `data/dialogue/voice_manifest.json`: 10 exact-text Chinese paragraphs mapped to
+  clips under `assets/audio/voice_cache/`. The first designed voice is a provisional
+  demonstration cast, not a final owner-approved choice.
 
-Use a hybrid voice system:
+The opening pack covers selected paragraphs in ep00_01, ep00_02, ep00_03,
+ep00_close and FOCUS_START_001. This is not full episode voice coverage.
+Missing clips remain text-only. A changed paragraph no longer matches its old
+clip. Other sessions can therefore edit the script without stale voice playback.
 
-- Scripted lines use pre-generated voice clips.
-- Type Mode replies use text-only for now, with a runtime voice cache path ready for later TTS.
-- Runtime TTS should stay behind `VoiceManager` or a future voice provider adapter so it can be swapped without changing dialogue flow.
+## How to listen (Godot editor)
 
-This is the fastest practical route to a convincing playable demo because the most important authored lines can be voice-directed and QA-tested without depending on an API during play.
+1. In FileSystem, open `scenes/tools/voice_audition.tscn`.
+2. Press F6 (Run Current Scene).
+3. Start with A-D: same Chinese text, same speed, different stock voices.
+4. E-F are two original voice-design prompts: 清亮自然 and 温润微低.
+5. G-I use E for quiet work, light teasing, and a sincere/embarrassed contrast.
+6. English and 日本語 each compare that same custom voice with a native-language
+   stock voice. These are audition lines, not committed game translations.
+7. 游戏片段 plays the actual 10 authored paragraphs used by the main scene.
+8. Press F8 to stop. Open the main scene and F5 for normal gameplay; leave the
+   existing voice toggle on to hear matching opening paragraphs.
 
-## Current Implementation
+All generation completed and audio was decoded by Godot. Vocal casting remains
+subjective: these are candidates to listen to, not claimed listening-based winners.
+No cloned or celebrity reference voice was used.
 
-`scripts/audio/voice_manager.gd` handles playback.
+## Main-scene integration
 
-When `main_scene.gd` shows a Yua line, it calls:
+The existing coordinator calls `play_voice_for_line` with whole-node text while
+it displays one paragraph at a time. VoiceManager binds a narrow subtitle bridge
+to its parent when that parent has `_set_dialogue_text`. Each frame it observes:
+`dialogue_text`, `dialogue_beat_index`, `current_node_id`, `voice_enabled`,
+`focus_running`, and `ai_features_enabled`.
 
-```gdscript
-_play_voice_for_line(line_id, line_text)
-```
+It plays only the current visible paragraph; skips cancel the old audio/request;
+hiding dialogue and muting stop playback. Unmuting does not replay the old line.
+This keeps edits out of the coordinator and scene files held by other sessions.
+The bridge's property names are an explicit coupling to preserve if UI is refactored.
+Standalone callers and the audition scene do not use the bridge.
 
-`VoiceManager` then tries, in order:
+## Optional live desktop TTS
 
-1. A pre-generated clip under `res://assets/audio/voice_cache/`.
-2. A cached runtime clip under `user://voice_cache/`.
-3. Future runtime TTS only if `runtime_tts_enabled` is turned on.
+Off by default. No networking is required for the audition or generated game clips.
+To try live synthesis on this PC:
 
-Missing voice returns `false` and fails silently from the player perspective.
+1. Ensure the Godot process inherits `MINIMAX_API_KEY` (already configured on the
+   owner's PC; restart the editor if the environment was changed after it opened).
+2. In the main scene select VoiceManager and enable Runtime Tts Enabled.
+3. Keep AI features/privacy permission and the voice toggle on.
+4. Send a brief Type Mode message while not focusing. Its visible reply can be
+   synthesized and cached. Text appears immediately and never waits for voice.
+5. Disable Runtime Tts Enabled again if you want only the recorded clip pack.
 
-## Scripted Voice Assets
+The adapter is desktop-only; browser exports never send a key to MiniMax. A future
+public live-TTS feature needs a server boundary. Keys are read from the environment,
+never scene data, the voice manifest, generated metadata, or build exports.
 
-Place pre-generated clips here:
+Runtime cache: `user://voice_cache/<hash>.mp3`, where the hash includes text,
+voice ID, model, language, speed, pitch and emotion. Stop/mute advances a request
+serial so a late response cannot play over a newer line. AI-off and active focus
+cancel pending synthesis. Previously generated local clips remain playable.
 
-```text
-assets/audio/voice_cache/
-```
+## Regeneration
 
-Name each clip after the scripted dialogue node ID:
+`tools/voice/generate_auditions.mjs` reads MINIMAX_API_KEY from its process only.
+Run it with Node from this repository. It uses installed mmx-cli for normal TTS,
+and the documented HTTP API for voice design and emotion controls missing in
+mmx 1.0.15. Unchanged successful samples are reused to avoid repeat charges.
+Custom voice IDs and original prompts are preserved in the audition manifest.
 
-```text
-first_launch_01.ogg
-greeting_01.ogg
-return_open_01.ogg
-memory_school_followup.ogg
-```
+Generation makes paid API calls under the owner's explicit audition request.
+No auto-generation occurs at game launch. No entire-script batch was generated.
 
-Supported pre-generated extensions:
+## Verification and handoff
 
-- `.ogg` preferred
-- `.wav`
-- `.mp3`
+- Isolated: `godot --headless --path . --script tools/voice/test_voice.gd`.
+  Verifies all 23 MP3s decode, stale text is rejected, settings alter cache keys,
+  stop/mute/skip/hide behave, missing credentials fail safely, late replies are ignored.
+- Live adapter: `godot --headless --path . --script tools/voice/test_runtime.gd`.
+  One short Chinese request, reused from cache on later runs. Does not touch profile.
+- Visual: audition scene rendered and inspected at 1600x900.
+- Full project: `powershell -File tools/godot_check/check.ps1 -Mode all`.
+  Check `tools/voice/verification.md` for this run's result and inherited issues.
 
-For Godot reliability and smaller build size, prefer `.ogg`.
+Not implemented: full-script dubbing, streaming TTS, phoneme lip-sync, runtime TTS
+for web, final voice selection, and automatic revoicing after script changes.
+Next step: owner compares A-F, picks a voice, then direct a small Ep0/Ep1 batch.
 
-## Type Mode Voice
-
-Type Mode replies already pass the reply text into `VoiceManager`. The manager creates a stable cache filename from the reply text:
-
-```text
-user://voice_cache/<sha256>.ogg
-```
-
-Runtime TTS is not implemented yet. When a TTS provider is added, it should synthesize the reply to that cache path, then ask `VoiceManager` to play it.
-
-## Manual Godot Setup
-
-1. Open `scenes/main/main_scene.tscn`.
-2. Confirm `MainScene` has a child named `VoiceManager`.
-3. Confirm `VoiceManager` has a child named `AudioStreamPlayer`.
-4. Select `VoiceManager`.
-5. Keep `Runtime TTS Enabled` off for the first demo.
-6. Set `Volume Db` around `-4` to `-8` if Yua is too loud.
-7. Import voice clips into `assets/audio/voice_cache/`.
-8. Run the scene and make sure the `Voice On` button is enabled.
-
-## Asset Direction
-
-For the first playable demo, record or generate only the highest-impact lines:
-
-- first launch greeting
-- return greeting
-- one check-in line
-- one focus-start encouragement
-- one focus-complete or break line
-- one memory follow-up line
-
-The voice should be calm, close-mic, gentle, and not overly emotional. Avoid robotic delivery, heavy breathiness, or jump-scare volume spikes.
-
-## Future TTS Requirements
-
-Runtime TTS will need:
-
-- a provider/API key chosen by the project owner
-- a soft Yua voice profile or voice ID
-- an adapter method that writes `.ogg` audio into `user://voice_cache/`
-- timeout and failure handling so Type Mode still works as text
-
-Do not put API keys in scene files or committed data files.
+Official references:
+- https://platform.minimax.io/docs/api-reference/speech-t2a-http
+- https://platform.minimax.io/docs/api-reference/voice-design-design
+- https://platform.minimax.io/docs/api-reference/voice-management-get

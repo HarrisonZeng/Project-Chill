@@ -40,6 +40,10 @@ param(
     # node renders with the surrounding state it would really have.
     [int] $Sessions = 0,
 
+    # walk scenario only: comma list of moves — a number taps that choice
+    # (1-based), "t:text" types it. e.g. -Pick "2,1,t:超级霸王龙"
+    [string] $Pick = '',
+
     # Path to Godot. Falls back to $env:GODOT_BIN, then a short search.
     [string] $Godot = '',
 
@@ -263,9 +267,12 @@ function Invoke-Scenario {
     }
     $godotArgs += @('--script', 'res://tools/godot_check/harness.gd', '--', "--scenario=$Name")
     if ($Ai) { $godotArgs += '--ai' }
+    # -Node/-Sessions forward in every mode, so text scenarios (walk) can jump
+    # to a beat the same way shot mode does.
+    if ($Node) { $godotArgs += @("--node=$Node", "--sessions=$Sessions") }
+    if ($Pick) { $godotArgs += "--pick=$Pick" }
     if ($Windowed) {
         $godotArgs += ('--shot-dir=' + $ShotDir)
-        if ($Node) { $godotArgs += @("--node=$Node", "--sessions=$Sessions") }
     }
 
     $result = Invoke-Godot $godotArgs
@@ -316,7 +323,7 @@ try {
         'lint' { Invoke-Lint }
         'boot' { Invoke-Boot }
         'test' {
-            $names = if ($Scenario -eq 'all') { Get-ScenarioNames | Where-Object { $_ -ne 'look' } } else { @($Scenario) }
+            $names = if ($Scenario -eq 'all') { Get-ScenarioNames | Where-Object { $_ -notin @('look', 'walk', 'script_lint') } } else { @($Scenario) }
             foreach ($name in $names) { Invoke-Scenario -Name $name }
         }
         'shot' {
@@ -330,8 +337,8 @@ try {
             Invoke-Lint
             Invoke-Boot
             foreach ($name in (Get-ScenarioNames)) {
-                # lint already ran; 'look' is a camera, not a test.
-                if ($name -eq 'lint' -or $name -eq 'look') { continue }
+                # lint already ran; 'look' is a camera and 'walk' a transcript, not tests.
+                if ($name -in @('lint', 'look', 'walk', 'script_lint')) { continue }
                 Invoke-Scenario -Name $name
             }
         }

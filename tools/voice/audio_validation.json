@@ -1,0 +1,97 @@
+{
+  "clips": [
+    {
+      "duration_seconds": 6.52481269836426,
+      "id": "zh_warm"
+    },
+    {
+      "duration_seconds": 6.90793752670288,
+      "id": "zh_gentle"
+    },
+    {
+      "duration_seconds": 6.78025007247925,
+      "id": "zh_soft"
+    },
+    {
+      "duration_seconds": 6.73381233215332,
+      "id": "zh_young"
+    },
+    {
+      "duration_seconds": 6.04946851730347,
+      "id": "design_close"
+    },
+    {
+      "duration_seconds": 6.3506875038147,
+      "id": "design_low"
+    },
+    {
+      "duration_seconds": 4.75,
+      "id": "zh_calm"
+    },
+    {
+      "duration_seconds": 4.09646892547607,
+      "id": "zh_tease"
+    },
+    {
+      "duration_seconds": 9.16346836090088,
+      "id": "zh_embarrassed"
+    },
+    {
+      "duration_seconds": 6.30421876907349,
+      "id": "en_same"
+    },
+    {
+      "duration_seconds": 10.2748441696167,
+      "id": "ja_same"
+    },
+    {
+      "duration_seconds": 7.6277813911438,
+      "id": "en_native"
+    },
+    {
+      "duration_seconds": 7.1169376373291,
+      "id": "ja_native"
+    },
+    {
+      "duration_seconds": 4.94587516784668,
+      "id": "game_ep00_01_0"
+    },
+    {
+      "duration_seconds": 1.05653119087219,
+      "id": "game_ep00_01_1"
+    },
+    {
+      "duration_seconds": 3.75003123283386,
+      "id": "game_ep00_02_0"
+    },
+    {
+      "duration_seconds": 2.72837495803833,
+      "id": "game_ep00_03_0"
+    },
+    {
+      "duration_seconds": 4.94587516784668,
+      "id": "game_ep00_03_1"
+    },
+    {
+      "duration_seconds": 4.5627498626709,
+      "id": "game_ep00_close_0"
+    },
+    {
+      "duration_seconds": 7.69999980926514,
+      "id": "game_ep00_close_1"
+    },
+    {
+      "duration_seconds": 1.27712500095367,
+      "id": "game_FOCUS_START_001_0"
+    },
+    {
+      "duration_seconds": 1.99693751335144,
+      "id": "game_FOCUS_START_001_1"
+    },
+    {
+      "duration_seconds": 4.85300016403198,
+      "id": "game_FOCUS_START_001_2"
+    }
+  ],
+  "total_seconds": 126.497187972069
+}

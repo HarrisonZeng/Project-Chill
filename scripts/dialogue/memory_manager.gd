@@ -343,11 +343,11 @@ func _follow_up_line_for_tag(tag: String) -> String:
 		"ask_about_school":
 			return "对了，你之前提过学校那边的事。\n\n后来怎么样了？不想说也没关系。"
 		"ask_about_exam":
-			return "你之前说有场考试要考。\n\n考完了吧？希望比你想的好一点。"
+			return "你之前说有场考试要考。\n\n考了没？希望比你想的好一点。"
 		"ask_about_sleep":
-			return "上次你看着挺累的。\n\n后来睡了个好觉没有？"
+			return "上次你说挺累的。\n\n后来睡了个好觉没有？"
 		"ask_about_work":
-			return "上次听着你那边挺忙的。\n\n最近还是那样吗？"
+			return "上次你说那边挺忙的。\n\n最近还是那样吗？"
 		_:
 			return ""
 

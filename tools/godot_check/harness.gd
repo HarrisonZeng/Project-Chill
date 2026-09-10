@@ -149,6 +149,12 @@ func _mount_game() -> bool:
 	# _ready reaches the provider, so that frame is not an exposure.
 	await frames(1)
 	game.set_ai_features_enabled(_ai_enabled)
+	# Answer the incoming-call overlay instantly so scenarios (and -Mode shot,
+	# which runs windowed and therefore skips the headless auto-skip) start on
+	# the live room, exactly as before the overlay existed.
+	var call_intro: Node = game.get_node_or_null("CallIntro")
+	if call_intro != null and call_intro.has_method("skip"):
+		call_intro.call("skip")
 	await frames(2)
 	await settle()
 	return true

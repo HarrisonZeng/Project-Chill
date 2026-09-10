@@ -11,7 +11,7 @@ var ai_allowed: bool = true
 # docs/Yua_Taste_Log.md (汇报/UI-speak vetoes) and Type_Mode_Design.md §0.
 const SCRIPTED_FALLBACK_TEXT := "嗯，我在。你先忙，我这边也接着写。"
 # Provider call failed: treat it as the call connection hiccuping.
-const AI_FALLBACK_TEXT := "唔……刚才这边卡了一下，没听清。\n\n再说一遍？"
+const AI_FALLBACK_TEXT := "唔，刚才这边卡了一下，没刷出来。\n\n再发一遍？"
 # AI switched off in settings: she is simply absorbed in her own work.
 const AI_DISABLED_TEXT := "……嗯？抱歉，我这段写得正入神。\n\n你先忙你的，我一会儿抬头。"
 

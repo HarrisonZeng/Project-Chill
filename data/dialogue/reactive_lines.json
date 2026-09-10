@@ -1,41 +1,57 @@
 {
-  "_doc": "Short reactive line pools. Add new categories by adding a new key with a string array. Categories used by main_scene.gd: focus_click (click during focus, 3-min reply cooldown), idle_click_prefocus (click with no conversation open, before first-ever completed focus — soft timer nudge), idle_click (same but after first completed focus — plain co-presence). Future: status_idle, break_start, break_mid, break_end, action_water, action_glasses, action_window, action_typing_pause.",
+  "_doc": "Short reactive line pools. Add new categories by adding a new key with a string array. Categories used by main_scene.gd: focus_click (click during focus, 3-min reply cooldown), idle_click_prefocus (click with no conversation open, before first-ever completed focus — soft timer nudge by showing HER move, never by asking), idle_click (same but after first completed focus — plain co-presence), view_<weather> (rain/day/night/sunset/seaside/treetops — one of these replaces an idle_click line about a third of the time, keyed to the current window view). RULE for every pool (docs/Script_Audit_2026-09-06.md §5): lines are about HER state, never a comment on the player's state — no 偷懒/放弃/走神/眼睛看屏幕, no 算数, no 明天/下次.",
   "idle_click_prefocus": [
-    "嗯？我在。\n\n……想试试一起专注一段吗？时间随你挑。",
-    "怎么啦。\n\n我先把这段写完……你要是想开一段计时，我随时奉陪。",
-    "我在呢。\n\n不急。等你想开始了，开个短的就行，十五分钟也算数。",
-    "……被你点到了。\n\n那要不，一起坐一段？你做你的，我做我的。"
+    "嗯？我在。\n\n我先开我的了，你随意。",
+    "怎么啦。\n\n计时器我摆好了……先说好，不是催你。",
+    "我在呢。\n\n我这边准备坐一段。你想的话，开个短的一起。",
+    "被你点到了。\n\n那要不，一起坐一段？你做你的，我做我的。"
   ],
   "idle_click": [
     "嗯？我在。",
-    "怎么啦。\n\n……没事的话，我先写两句。",
-    "我在这儿呢。\n\n你随意，想开一段就开。",
-    "……嗯。喝口水吧，我也刚喝。",
+    "怎么啦。\n\n没事的话，我先写两句。",
+    "我在这儿呢。\n\n你随意。",
+    "嗯。喝口水吧，我也刚喝。",
     "在的在的。\n\n我这段写得正有点顺，先不聊太久哦。"
   ],
   "focus_click": [
-    "还差一会儿，再撑一下。",
     "嗯，我也在。",
-    "别看我了，看你的屏幕。",
-    "……你是在偷懒，还是只是想确认我在？——嗯，我在的。",
-    "快了快了，时间在走的。",
-    "先别想别的事，那个等一会儿再说。",
-    "走神了？正常。回来就行。",
-    "不用做完，先往前推一点。",
+    "别点，我正卡在一个字上。",
+    "等下，这段快写完了。",
     "我假装没看见你点我。你继续。",
-    "来都来了，再做一小块。",
-    "比你想的快。信我。",
-    "就算在发呆，人也还坐在这。算数。",
-    "手边那件事，先做一个动作。就一个。",
-    "我知道，你需要人陪。但还是要继续哦。",
     "计时器还走着呢——你也是。",
-    "就快了，别现在放弃。",
-    "坐着不动可以，眼睛看屏幕。",
-    "肯定想别的事了吧——放一边。响了再说。",
     "嗯，你还在。挺好的。",
-    "这一段搞完，后面就轻松了。",
-    "不用状态好，动着就行。",
+    "水凉了。响了一起去接。",
+    "我没开游戏！你听这个打字声！",
+    "刚删了一句，又写回来了。别问。",
+    "……点我干嘛。算了，你继续吧。",
     "时间还有，但也不多了。刚好。",
-    "……点我干嘛。算了，你继续吧。"
+    "我这边走神了一下，回来了。",
+    "别看我，我脸上没有答案。",
+    "嘘。我数着这一段还差几行。",
+    "你点一下，我就抬头一下。好了，低头了。"
+  ],
+  "view_rain": [
+    "下雨了。这种天写东西刚好，写不出来也怪雨。",
+    "雨声挺好的。比我放的歌好。"
+  ],
+  "view_day": [
+    "今天太亮了，屏幕都看不清。我把帘子拉了一半。",
+    "这个光线，适合干活。理论上。"
+  ],
+  "view_night": [
+    "外面全黑了。也就我们两盏灯还亮着。",
+    "这个点，镇上连狗都睡了。"
+  ],
+  "view_sunset": [
+    "天要黑了。这个颜色我每次都想拍，每次都没拍。",
+    "傍晚这一小会儿，做什么都像在偷时间。"
+  ],
+  "view_seaside": [
+    "汽笛。今天第三班了。",
+    "海面今天特别平。像谁把它熨过。"
+  ],
+  "view_treetops": [
+    "风一过，那棵树又在翻书了。",
+    "叶子响了一阵。我以为有人来了。"
   ]
 }
