@@ -1,0 +1,329 @@
+<title>Yua 剧本审阅</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#F6EEDF; --card:#FDF8EE; --ink:#2E211C; --ink-2:#6E5A4E; --muted:#9A8577;
+  --line:#E4D6C1; --amber:#D99A4E; --amber-soft:#F5E3C5; --sage:#8FAE93; --sage-soft:#E3ECE3;
+  --brick:#B8624F; --brick-soft:#F3DCD5; --focus:#4E7DBF;
+  --serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"Cascadia Mono","Consolas",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#1D1613; --card:#28201B; --ink:#EFE5D6; --ink-2:#C9B6A4; --muted:#8E7D70;
+  --line:#3A2F29; --amber:#E0A458; --amber-soft:#3E2E1A; --sage:#9DB89F; --sage-soft:#22302A;
+  --brick:#D08272; --brick-soft:#3D2420; --focus:#7FA6E0;}}
+:root[data-theme="dark"]{
+  --paper:#1D1613; --card:#28201B; --ink:#EFE5D6; --ink-2:#C9B6A4; --muted:#8E7D70;
+  --line:#3A2F29; --amber:#E0A458; --amber-soft:#3E2E1A; --sage:#9DB89F; --sage-soft:#22302A;
+  --brick:#D08272; --brick-soft:#3D2420; --focus:#7FA6E0;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+button,textarea,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}
+.top-inner{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.brand{font-family:var(--serif);font-weight:600;font-size:18px;letter-spacing:.02em}
+.brand small{font-family:var(--sans);font-weight:400;color:var(--muted);font-size:12px;margin-left:8px}
+.progress{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:13px}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--sage);width:0;transition:width .3s}
+.save{font-size:12px;color:var(--muted);margin-left:auto}
+.save.cloud{color:var(--sage)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 11px;font-size:13px;color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip b{font-variant-numeric:tabular-nums;margin-left:4px;opacity:.8}
+.search{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;min-width:160px;font-size:13px}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:0 32px;padding:0 16px 80px}
+.rail{display:none}
+@media (min-width:1000px){
+  .wrap{grid-template-columns:220px minmax(0,1fr)}
+  .rail{display:block;position:sticky;top:64px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;padding:18px 0}
+}
+.rail a{display:block;padding:5px 10px;border-radius:8px;color:var(--ink-2);text-decoration:none;font-size:13px}
+.rail a:hover{background:var(--card)}
+.rail a .n{float:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.railchips{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;border-bottom:1px solid var(--line);scrollbar-width:none}
+.railchips::-webkit-scrollbar{display:none}
+.railchips a{white-space:nowrap;text-decoration:none;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;background:var(--card)}
+@media (min-width:1000px){.railchips{display:none}}
+
+.main{max-width:720px}
+.group{margin-top:44px}
+.group h2{font-family:var(--serif);font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.group .gate{color:var(--muted);font-size:12px;margin-bottom:18px}
+.empty{color:var(--muted);padding:40px 0;text-align:center}
+
+/* ---------- node ---------- */
+.node{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px 14px;margin:0 0 14px}
+.node.depth-1{margin-left:22px}.node.depth-2{margin-left:44px}.node.depth-3{margin-left:66px}.node.depth-4{margin-left:88px}
+.node.v-keep{border-left:4px solid var(--sage)}
+.node.v-edit{border-left:4px solid var(--amber)}
+.node.v-cut{border-left:4px solid var(--brick);opacity:.85}
+.eyebrow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:8px}
+.eyebrow .id{font-family:var(--mono);color:var(--ink-2)}
+.eyebrow .via{color:var(--amber)}
+.tagline{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:0 6px;font-size:11px}
+.beat{font-family:var(--serif);font-size:17px;line-height:1.75;margin:0 0 8px;color:var(--ink)}
+.beat:last-of-type{margin-bottom:0}
+.beat .tok{background:var(--amber-soft);border-radius:4px;padding:0 4px;font-family:var(--mono);font-size:13px}
+.choices{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.choice{border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:13px;background:var(--paper);color:var(--ink-2)}
+.choice .to{color:var(--muted);font-family:var(--mono);font-size:11px;margin-left:6px}
+.choice .to.special{color:var(--amber)}
+.original{margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--paper);color:var(--muted);font-family:var(--serif);font-size:14px;text-decoration:line-through;white-space:pre-wrap}
+.lint{margin-top:10px;font-size:12px;color:var(--muted)}
+.lint li{margin:2px 0}
+.lint ul{margin:0;padding-left:16px}
+.lint b{color:var(--ink-2);font-weight:500}
+
+/* ---------- review strip ---------- */
+.review{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:6px 14px;font-size:13px;color:var(--ink-2)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"].k{background:var(--sage-soft);color:var(--ink)}
+.seg button[aria-pressed="true"].e{background:var(--amber-soft);color:var(--ink)}
+.seg button[aria-pressed="true"].c{background:var(--brick-soft);color:var(--ink)}
+.ghost{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:13px;color:var(--ink-2)}
+.ghost[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+textarea{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:8px 10px;resize:vertical;min-height:38px;line-height:1.55}
+textarea.edit{font-family:var(--serif);font-size:16px;min-height:96px}
+.editbox{display:none;flex-direction:column;gap:6px}
+.editbox.open{display:flex}
+.editbox label{font-size:12px;color:var(--muted)}
+.editbox input{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:6px 10px}
+.stamp{font-size:11px;color:var(--muted)}
+
+/* ---------- pools ---------- */
+.pool .beat{font-size:16px}
+.foot{max-width:720px;margin:60px auto 0;color:var(--muted);font-size:12px;text-align:center}
+.toolbar{display:flex;gap:8px;justify-content:center;margin-top:12px}
+</style>
+
+<div class="top">
+  <div class="top-inner">
+    <div class="brand">Yua 剧本审阅 <small id="meta"></small></div>
+    <div class="progress"><span id="done">0</span>/<span id="total">0</span> 已看 <span class="bar"><i id="barfill"></i></span></div>
+    <div class="filters" id="filters"></div>
+    <input class="search" id="search" type="search" placeholder="搜台词 / 节点 id">
+    <div class="save" id="save">未连接</div>
+  </div>
+  <nav class="railchips" id="railchips"></nav>
+</div>
+
+<div class="wrap">
+  <nav class="rail" id="rail"></nav>
+  <main class="main" id="main"></main>
+</div>
+<div class="foot">
+  只写你自己的标记；Claude 用 apply.py 收回。改字直接在页面里改就行。
+  <div class="toolbar"><button class="ghost" id="export" hidden>导出 JSON（备用）</button></div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const LS_KEY = "yua_review_v1";
+const state = new Map();          // id -> doc
+let db = null, downloads = null, saveTimer = new Map();
+let filter = "all", query = "";
+
+const VERDICTS = [["keep","好","k"],["edit","改","e"],["cut","删","c"]];
+const FILTERS = [["all","全部"],["todo","未看"],["keep","好"],["edit","改"],["cut","删"],["comment","有评论"],["lint","有提示"]];
+
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const beats = line => String(line??"").split(/\n+/).map(s=>s.trim()).filter(Boolean);
+const withTokens = s => esc(s).replace(/\{[a-z_]+\}/g, m=>`<span class="tok">${m}</span>`);
+const poolId = (cat,i) => `${cat}~${i}`;
+
+function docOf(id){ return state.get(id) || {verdict:"",comment:"",line:null,choices:{},updated_at:""}; }
+function reviewed(d){ return !!(d.verdict || (d.comment&&d.comment.trim()) || d.line || Object.keys(d.choices||{}).length); }
+
+/* ---------- persistence ---------- */
+function loadLocal(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw){ for(const [k,v] of Object.entries(JSON.parse(raw))) state.set(k,v);} }catch(e){} }
+function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(Object.fromEntries(state))); }catch(e){} }
+function setSaveNote(t, cloud){ const el=document.getElementById("save"); el.textContent=t; el.classList.toggle("cloud",!!cloud); }
+
+function persist(id){
+  const d = docOf(id); d.updated_at = new Date().toISOString(); state.set(id,d); saveLocal();
+  clearTimeout(saveTimer.get(id));
+  saveTimer.set(id, setTimeout(async()=>{
+    if(!db){ setSaveNote("仅存本机（云端未连接）", false); return; }
+    try{ await db.doc("review/"+id).set(d); setSaveNote("已存云端 · "+new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}), true); }
+    catch(e){ setSaveNote("云端保存失败："+(e&&e.code||"unknown")+"，本机已存", false); }
+  }, 400));
+  refreshNode(id); refreshProgress();
+}
+
+async function connect(){
+  try{
+    db = await claude.use("db");
+    if(!db){ setSaveNote("仅存本机（云端未连接）", false); return; }
+    db.collection("review").onSnapshot(snap=>{
+      snap.docs.forEach(s=>{ if(s.exists) state.set(s.id, s.data()); });
+      saveLocal(); renderAll();
+      setSaveNote("已同步云端 · "+snap.size+" 条", true);
+    }, e=>{ setSaveNote("云端出错："+e.code, false); });
+  }catch(e){ setSaveNote("仅存本机", false); }
+  try{ downloads = await claude.use("downloads"); if(downloads){ const b=document.getElementById("export"); b.hidden=false; b.onclick=()=>downloads.save({filename:"yua_review.json", data:JSON.stringify(Object.fromEntries(state),null,2)}).catch(()=>{}); } }catch(e){}
+}
+
+/* ---------- rendering ---------- */
+function nodeHTML(id, meta){
+  const n = DATA.nodes[id]; const d = docOf(id);
+  const lint = DATA.lint[id] || [];
+  const line = d.line!=null ? d.line : n.line;
+  const cls = ["node", meta.depth?`depth-${Math.min(meta.depth,4)}`:"", d.verdict?`v-${d.verdict}`:""].join(" ");
+  const tags = (n.tags||[]).map(t=>`<span class="tagline">${esc(t)}</span>`).join("");
+  const flags = (Array.isArray(n.set_flags)?n.set_flags:Object.keys(n.set_flags||{})).map(f=>`<span class="tagline">设 ${esc(f)}</span>`).join("");
+  const inbound = (DATA.inbound[id]||[]);
+  const via = meta.via ? `<span class="via">↳ 选了「${esc(meta.via)}」</span>` : (inbound.length && meta.depth===0 ? `<span>从 ${inbound.map(x=>esc(x.from)).join(", ")} 进来</span>`:"");
+  const choices = (n.choices||[]).map((c,i)=>{
+    const t = d.choices && d.choices[i]!=null ? d.choices[i] : c.text;
+    const special = /^(AI_MODE_|ACTION_)/.test(c.next);
+    return `<span class="choice">${esc(t)}<span class="to ${special?"special":""}">→ ${esc(special?(c.next.startsWith("AI_MODE_")?"自由聊":"开始专注"):c.next)}</span></span>`;
+  }).join("");
+  const typed = n.typed_routes && n.typed_routes.after_ai_next ? `<span class="tagline">打字 → ${esc(n.typed_routes.after_ai_next)}</span>`:"";
+  return `<article class="${cls}" id="n-${esc(id)}" data-id="${esc(id)}">
+    <div class="eyebrow"><span class="id">${esc(id)}</span>${via}${tags}${flags}${typed}</div>
+    ${beats(line).map(b=>`<p class="beat">${withTokens(b)}</p>`).join("") || `<p class="beat" style="color:var(--muted)">（空）</p>`}
+    ${choices?`<div class="choices">${choices}</div>`:""}
+    ${d.line!=null && d.line!==n.line ? `<div class="original">${esc(n.line)}</div>`:""}
+    ${lint.length?`<div class="lint">机械检查<ul>${lint.map(l=>`<li><b>${esc(l.label)}</b> — ${esc(l.detail)}</li>`).join("")}</ul></div>`:""}
+    ${reviewHTML(id, d, n)}
+  </article>`;
+}
+
+function poolHTML(cat, i, text){
+  const id = poolId(cat,i); const d = docOf(id);
+  const lint = DATA.lint[`${cat}[${i}]`] || [];
+  const line = d.line!=null ? d.line : text;
+  const cls = ["node pool", d.verdict?`v-${d.verdict}`:""].join(" ");
+  return `<article class="${cls}" id="n-${esc(id)}" data-id="${esc(id)}">
+    <div class="eyebrow"><span class="id">${esc(cat)} #${i+1}</span></div>
+    ${beats(line).map(b=>`<p class="beat">${withTokens(b)}</p>`).join("")}
+    ${d.line!=null && d.line!==text ? `<div class="original">${esc(text)}</div>`:""}
+    ${lint.length?`<div class="lint">机械检查<ul>${lint.map(l=>`<li><b>${esc(l.label)}</b> — ${esc(l.detail)}</li>`).join("")}</ul></div>`:""}
+    ${reviewHTML(id, d, {line:text, choices:[]})}
+  </article>`;
+}
+
+function reviewHTML(id, d, n){
+  const open = d.line!=null || Object.keys(d.choices||{}).length;
+  return `<div class="review">
+    <div class="row">
+      <div class="seg" role="group" aria-label="判断">${VERDICTS.map(([v,l,k])=>`<button class="${k}" data-v="${v}" aria-pressed="${d.verdict===v}">${l}</button>`).join("")}</div>
+      <button class="ghost tog" aria-pressed="${!!open}">改文字</button>
+      ${d.updated_at?`<span class="stamp">${new Date(d.updated_at).toLocaleString("zh-CN",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span>`:""}
+    </div>
+    <textarea class="comment" rows="1" placeholder="评论：哪儿不对、为什么、想怎么改……">${esc(d.comment||"")}</textarea>
+    <div class="editbox ${open?"open":""}">
+      <label>台词（空一行 = 一拍）</label>
+      <textarea class="edit">${esc(d.line!=null?d.line:n.line)}</textarea>
+      ${(n.choices||[]).map((c,i)=>`<label>选项 ${i+1} → ${esc(c.next)}</label><input class="choice-edit" data-i="${i}" value="${esc(d.choices&&d.choices[i]!=null?d.choices[i]:c.text)}">`).join("")}
+    </div>
+  </div>`;
+}
+
+function passes(id, d, hasLint){
+  if(query){ const n=DATA.nodes[id]; const hay=(id+" "+(n?n.line:"")+" "+(d.line||"")+" "+(d.comment||"")).toLowerCase(); if(!hay.includes(query)) return false; }
+  switch(filter){
+    case "todo": return !reviewed(d);
+    case "keep": case "edit": case "cut": return d.verdict===filter;
+    case "comment": return !!(d.comment&&d.comment.trim());
+    case "lint": return hasLint;
+    default: return true;
+  }
+}
+
+function renderAll(){
+  const main = document.getElementById("main"); let html=""; let shown=0;
+  for(const g of DATA.groups){
+    const items = g.nodes.filter(m=>passes(m.id, docOf(m.id), !!(DATA.lint[m.id]||[]).length));
+    if(!items.length) continue;
+    html += `<section class="group" id="g-${esc(g.id)}"><h2>${esc(g.title)}</h2><div class="gate">${esc(g.gate||"")}</div>${items.map(m=>nodeHTML(m.id,m)).join("")}</section>`;
+    shown += items.length;
+  }
+  for(const [cat, lines] of Object.entries(DATA.pools)){
+    const items = lines.map((t,i)=>[t,i]).filter(([t,i])=>passes(poolId(cat,i), docOf(poolId(cat,i)), !!(DATA.lint[`${cat}[${i}]`]||[]).length));
+    if(!items.length) continue;
+    html += `<section class="group" id="g-pool-${esc(cat)}"><h2>反应池 · ${esc(cat)}</h2><div class="gate">${lines.length} 句，随机抽</div>${items.map(([t,i])=>poolHTML(cat,i,t)).join("")}</section>`;
+    shown += items.length;
+  }
+  main.innerHTML = html || `<div class="empty">这个筛选下没有节点</div>`;
+  refreshProgress(); renderRail();
+}
+
+function refreshNode(id){
+  const old = document.getElementById("n-"+id); if(!old) return;
+  const m = findMeta(id); const tmp=document.createElement("div");
+  tmp.innerHTML = m.pool ? poolHTML(m.cat, m.i, m.text) : nodeHTML(id, m);
+  const fresh = tmp.firstElementChild;
+  // keep focus in the field being typed in
+  const active = document.activeElement; const activeCls = active && old.contains(active) ? active.className : null; const pos = active && active.selectionStart;
+  old.replaceWith(fresh);
+  if(activeCls){ const again = fresh.querySelector("."+activeCls.split(" ")[0]); if(again){ again.focus(); try{ again.setSelectionRange(pos,pos);}catch(e){} } }
+}
+function findMeta(id){
+  for(const g of DATA.groups){ const m=g.nodes.find(x=>x.id===id); if(m) return m; }
+  const mm = id.match(/^([a-z_]+)~(\d+)$/); if(mm){ const cat=mm[1], i=+mm[2]; return {pool:true, cat, i, text:(DATA.pools[cat]||[])[i]}; }
+  return {id, depth:0, via:""};
+}
+
+function refreshProgress(){
+  const ids = allIds(); const done = ids.filter(i=>reviewed(docOf(i))).length;
+  document.getElementById("done").textContent = done; document.getElementById("total").textContent = ids.length;
+  document.getElementById("barfill").style.width = (ids.length? (100*done/ids.length):0)+"%";
+  const counts = {all:ids.length, todo:ids.length-done, keep:0, edit:0, cut:0, comment:0, lint:0};
+  for(const i of ids){ const d=docOf(i); if(d.verdict) counts[d.verdict]++; if(d.comment&&d.comment.trim()) counts.comment++; if((DATA.lint[i]||DATA.lint[i.replace(/~(\d+)$/,"[$1]")]||[]).length) counts.lint++; }
+  document.getElementById("filters").innerHTML = FILTERS.map(([k,l])=>`<button class="chip" data-f="${k}" aria-pressed="${filter===k}">${l}<b>${counts[k]}</b></button>`).join("");
+}
+function allIds(){ const out=[]; for(const g of DATA.groups) for(const m of g.nodes) out.push(m.id); for(const [c,l] of Object.entries(DATA.pools)) l.forEach((_,i)=>out.push(poolId(c,i))); return out; }
+
+function renderRail(){
+  const items = DATA.groups.map(g=>{ const n=g.nodes.length, done=g.nodes.filter(m=>reviewed(docOf(m.id))).length; return `<a href="#g-${esc(g.id)}">${esc(g.title.split("·")[0].trim())}<span class="n">${done}/${n}</span></a>`; })
+    .concat(Object.entries(DATA.pools).map(([c,l])=>`<a href="#g-pool-${esc(c)}">池 ${esc(c)}<span class="n">${l.length}</span></a>`));
+  document.getElementById("rail").innerHTML = items.join("");
+  document.getElementById("railchips").innerHTML = DATA.groups.map(g=>`<a href="#g-${esc(g.id)}">${esc(g.title.split("·")[0].trim())}</a>`).join("");
+}
+
+/* ---------- events (delegated) ---------- */
+document.addEventListener("click", e=>{
+  const f = e.target.closest("[data-f]"); if(f){ filter=f.dataset.f; renderAll(); return; }
+  const art = e.target.closest("article[data-id]"); if(!art) return; const id=art.dataset.id;
+  const v = e.target.closest("button[data-v]"); if(v){ const d=docOf(id); d.verdict = d.verdict===v.dataset.v ? "" : v.dataset.v; state.set(id,d); persist(id); return; }
+  if(e.target.closest(".tog")){ art.querySelector(".editbox").classList.toggle("open"); e.target.closest(".tog").setAttribute("aria-pressed", art.querySelector(".editbox").classList.contains("open")); }
+});
+document.addEventListener("input", e=>{
+  const art = e.target.closest("article[data-id]"); if(!art) return; const id=art.dataset.id; const d=docOf(id);
+  if(e.target.classList.contains("comment")){ d.comment=e.target.value; e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }
+  else if(e.target.classList.contains("edit")){ const meta=findMeta(id); const orig = meta.pool? meta.text : DATA.nodes[id].line; d.line = e.target.value===orig ? null : e.target.value; if(d.line!=null && !d.verdict) d.verdict="edit"; }
+  else if(e.target.classList.contains("choice-edit")){ const i=e.target.dataset.i; const orig=DATA.nodes[id].choices[i].text; d.choices=d.choices||{}; if(e.target.value===orig) delete d.choices[i]; else d.choices[i]=e.target.value; if(Object.keys(d.choices).length && !d.verdict) d.verdict="edit"; }
+  else return;
+  state.set(id,d);
+  d.updated_at=new Date().toISOString(); saveLocal();
+  clearTimeout(saveTimer.get(id));
+  saveTimer.set(id, setTimeout(()=>persistQuiet(id), 600));
+});
+// typing: save without re-rendering (re-render would steal the caret); repaint on blur
+async function persistQuiet(id){
+  const d=docOf(id);
+  if(!db){ setSaveNote("仅存本机（云端未连接）", false); return; }
+  try{ await db.doc("review/"+id).set(d); setSaveNote("已存云端 · "+new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}), true); }
+  catch(e){ setSaveNote("云端保存失败："+(e&&e.code||"unknown")+"，本机已存", false); }
+}
+document.addEventListener("focusout", e=>{ const art=e.target.closest && e.target.closest("article[data-id]"); if(art && (e.target.matches("textarea,input"))) { refreshNode(art.dataset.id); refreshProgress(); } });
+document.getElementById("search").addEventListener("input", e=>{ query=e.target.value.trim().toLowerCase(); renderAll(); });
+
+/* ---------- boot ---------- */
+document.getElementById("meta").textContent = `剧本 v${DATA.version} · 生成于 ${DATA.generated}`;
+loadLocal(); renderAll(); connect();
+</script>

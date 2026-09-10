@@ -1,0 +1,329 @@
+<title>Yua 剧本审阅</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#F6EEDF; --card:#FDF8EE; --ink:#2E211C; --ink-2:#6E5A4E; --muted:#9A8577;
+  --line:#E4D6C1; --amber:#D99A4E; --amber-soft:#F5E3C5; --sage:#8FAE93; --sage-soft:#E3ECE3;
+  --brick:#B8624F; --brick-soft:#F3DCD5; --focus:#4E7DBF;
+  --serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"Cascadia Mono","Consolas",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#1D1613; --card:#28201B; --ink:#EFE5D6; --ink-2:#C9B6A4; --muted:#8E7D70;
+  --line:#3A2F29; --amber:#E0A458; --amber-soft:#3E2E1A; --sage:#9DB89F; --sage-soft:#22302A;
+  --brick:#D08272; --brick-soft:#3D2420; --focus:#7FA6E0;}}
+:root[data-theme="dark"]{
+  --paper:#1D1613; --card:#28201B; --ink:#EFE5D6; --ink-2:#C9B6A4; --muted:#8E7D70;
+  --line:#3A2F29; --amber:#E0A458; --amber-soft:#3E2E1A; --sage:#9DB89F; --sage-soft:#22302A;
+  --brick:#D08272; --brick-soft:#3D2420; --focus:#7FA6E0;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+button,textarea,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}
+.top-inner{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.brand{font-family:var(--serif);font-weight:600;font-size:18px;letter-spacing:.02em}
+.brand small{font-family:var(--sans);font-weight:400;color:var(--muted);font-size:12px;margin-left:8px}
+.progress{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:13px}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--sage);width:0;transition:width .3s}
+.save{font-size:12px;color:var(--muted);margin-left:auto}
+.save.cloud{color:var(--sage)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 11px;font-size:13px;color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip b{font-variant-numeric:tabular-nums;margin-left:4px;opacity:.8}
+.search{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;min-width:160px;font-size:13px}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:0 32px;padding:0 16px 80px}
+.rail{display:none}
+@media (min-width:1000px){
+  .wrap{grid-template-columns:220px minmax(0,1fr)}
+  .rail{display:block;position:sticky;top:64px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;padding:18px 0}
+}
+.rail a{display:block;padding:5px 10px;border-radius:8px;color:var(--ink-2);text-decoration:none;font-size:13px}
+.rail a:hover{background:var(--card)}
+.rail a .n{float:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.railchips{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;border-bottom:1px solid var(--line);scrollbar-width:none}
+.railchips::-webkit-scrollbar{display:none}
+.railchips a{white-space:nowrap;text-decoration:none;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;background:var(--card)}
+@media (min-width:1000px){.railchips{display:none}}
+
+.main{max-width:720px}
+.group{margin-top:44px}
+.group h2{font-family:var(--serif);font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.group .gate{color:var(--muted);font-size:12px;margin-bottom:18px}
+.empty{color:var(--muted);padding:40px 0;text-align:center}
+
+/* ---------- node ---------- */
+.node{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px 14px;margin:0 0 14px}
+.node.depth-1{margin-left:22px}.node.depth-2{margin-left:44px}.node.depth-3{margin-left:66px}.node.depth-4{margin-left:88px}
+.node.v-keep{border-left:4px solid var(--sage)}
+.node.v-edit{border-left:4px solid var(--amber)}
+.node.v-cut{border-left:4px solid var(--brick);opacity:.85}
+.eyebrow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:8px}
+.eyebrow .id{font-family:var(--mono);color:var(--ink-2)}
+.eyebrow .via{color:var(--amber)}
+.tagline{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:0 6px;font-size:11px}
+.beat{font-family:var(--serif);font-size:17px;line-height:1.75;margin:0 0 8px;color:var(--ink)}
+.beat:last-of-type{margin-bottom:0}
+.beat .tok{background:var(--amber-soft);border-radius:4px;padding:0 4px;font-family:var(--mono);font-size:13px}
+.choices{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.choice{border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:13px;background:var(--paper);color:var(--ink-2)}
+.choice .to{color:var(--muted);font-family:var(--mono);font-size:11px;margin-left:6px}
+.choice .to.special{color:var(--amber)}
+.original{margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--paper);color:var(--muted);font-family:var(--serif);font-size:14px;text-decoration:line-through;white-space:pre-wrap}
+.lint{margin-top:10px;font-size:12px;color:var(--muted)}
+.lint li{margin:2px 0}
+.lint ul{margin:0;padding-left:16px}
+.lint b{color:var(--ink-2);font-weight:500}
+
+/* ---------- review strip ---------- */
+.review{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:6px 14px;font-size:13px;color:var(--ink-2)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"].k{background:var(--sage-soft);color:var(--ink)}
+.seg button[aria-pressed="true"].e{background:var(--amber-soft);color:var(--ink)}
+.seg button[aria-pressed="true"].c{background:var(--brick-soft);color:var(--ink)}
+.ghost{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:13px;color:var(--ink-2)}
+.ghost[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+textarea{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:8px 10px;resize:vertical;min-height:38px;line-height:1.55}
+textarea.edit{font-family:var(--serif);font-size:16px;min-height:96px}
+.editbox{display:none;flex-direction:column;gap:6px}
+.editbox.open{display:flex}
+.editbox label{font-size:12px;color:var(--muted)}
+.editbox input{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:6px 10px}
+.stamp{font-size:11px;color:var(--muted)}
+
+/* ---------- pools ---------- */
+.pool .beat{font-size:16px}
+.foot{max-width:720px;margin:60px auto 0;color:var(--muted);font-size:12px;text-align:center}
+.toolbar{display:flex;gap:8px;justify-content:center;margin-top:12px}
+</style>
+
+<div class="top">
+  <div class="top-inner">
+    <div class="brand">Yua 剧本审阅 <small id="meta"></small></div>
+    <div class="progress"><span id="done">0</span>/<span id="total">0</span> 已看 <span class="bar"><i id="barfill"></i></span></div>
+    <div class="filters" id="filters"></div>
+    <input class="search" id="search" type="search" placeholder="搜台词 / 节点 id">
+    <div class="save" id="save">未连接</div>
+  </div>
+  <nav class="railchips" id="railchips"></nav>
+</div>
+
+<div class="wrap">
+  <nav class="rail" id="rail"></nav>
+  <main class="main" id="main"></main>
+</div>
+<div class="foot">
+  只写你自己的标记；Claude 用 apply.py 收回。改字直接在页面里改就行。
+  <div class="toolbar"><button class="ghost" id="export" hidden>导出 JSON（备用）</button></div>
+</div>
+
+<script>
+const DATA = {"generated":"2026-09-10 15:07","version":11,"groups":[{"id":"ep00","title":"Ep0 · 开场（开局翻车 → 取名 → 一起摸索）","gate":"第一次打开","nodes":[{"id":"ep00_01","depth":0,"via":""},{"id":"ep00_02","depth":1,"via":"……"},{"id":"ep00_03","depth":2,"via":"（点击接通）"},{"id":"ep00_04","depth":3,"via":"……"},{"id":"ep00_05","depth":4,"via":"继续"},{"id":"ep00_name","depth":5,"via":"继续"},{"id":"ep00_named","depth":6,"via":"（取好了）"},{"id":"ep00_tools","depth":7,"via":"继续"},{"id":"TASK_INPUT_001","depth":8,"via":"我也写一句"},{"id":"ep00_close","depth":8,"via":"先不写了"}]},{"id":"ep01","title":"Ep 1 · 第一段（定稿）","gate":"第 1 次专注结束后","nodes":[{"id":"ep01_01","depth":0,"via":""},{"id":"ep01_a","depth":1,"via":"我一次都没看时间"},{"id":"ep01_end","depth":2,"via":"继续"},{"id":"ep01_b","depth":1,"via":"我看了不止三次"},{"id":"ep01_c","depth":1,"via":"你刚才在忙什么？"}]},{"id":"ep02","title":"Ep 2 · 你听（定稿）","gate":"第 2 次专注结束后","nodes":[{"id":"ep02_01","depth":0,"via":""},{"id":"ep02_a","depth":1,"via":"要有点声音"},{"id":"ep02_listen","depth":2,"via":"……"},{"id":"ep02_end","depth":3,"via":"我什么都没听见"},{"id":"ep02_b","depth":1,"via":"必须绝对安静"}]},{"id":"ep03","title":"Ep 3 · 脑子飞了（定稿）","gate":"第 3 次专注结束后","nodes":[{"id":"ep03_01","depth":0,"via":""},{"id":"ep03_ask","depth":1,"via":"继续"},{"id":"ep03_bili","depth":2,"via":"B 站"},{"id":"ep03_end","depth":3,"via":"继续"},{"id":"ep03_xhs","depth":2,"via":"小红书"},{"id":"ep03_douyin","depth":2,"via":"抖音"},{"id":"ep03_other","depth":2,"via":"别的（自己写）"},{"id":"ep03_shortvideo","depth":3,"via":"打字：tiktok/快手"},{"id":"ep03_yt","depth":3,"via":"打字：油管/youtube"},{"id":"ep03_tw","depth":3,"via":"打字：推特/twitter"},{"id":"ep03_weibo","depth":3,"via":"打字：微博/weibo"},{"id":"ep03_zhihu","depth":3,"via":"打字：知乎/zhihu"},{"id":"ep03_ins","depth":3,"via":"打字：instagram/ins"},{"id":"ep03_novel","depth":3,"via":"打字：小说/看书"},{"id":"ep03_game","depth":3,"via":"打字：游戏/打游戏"},{"id":"ep03_none","depth":3,"via":"打字：不刷/都不"},{"id":"ep03_any","depth":3,"via":"打字：其他回答"}]},{"id":"ep04","title":"Ep 4 · 换换脑子","gate":"第 4 次专注结束后","nodes":[{"id":"ep04_01","depth":0,"via":""},{"id":"ep04_a","depth":1,"via":"我也是起来晃一圈"},{"id":"ep04_b","depth":1,"via":"硬扛，扛过去就好了"}]},{"id":"ep05","title":"Ep 5 · 我也写点东西","gate":"第 5 次专注结束后 · 累计专注 ≥ 25 分钟","nodes":[{"id":"ep05_01","depth":0,"via":""},{"id":"ep05_a","depth":1,"via":"写的是什么？"},{"id":"ep05_b","depth":1,"via":"挺好的，慢慢写"}]},{"id":"ep06","title":"Ep 6 · 写不动","gate":"第 6 次专注结束后 · 累计专注 ≥ 40 分钟","nodes":[{"id":"ep06_01","depth":0,"via":""},{"id":"ep06_a","depth":1,"via":"会，太懂了"},{"id":"ep06_b","depth":1,"via":"别跟它较劲，先放着"}]},{"id":"ep07","title":"Ep 7 · 喜欢的词","gate":"第 7 次专注结束后","nodes":[{"id":"ep07_01","depth":0,"via":""},{"id":"ep07_a","depth":1,"via":"没想过，但好像挺有意思"}]},{"id":"ep08","title":"Ep 8 · 灵感","gate":"第 8 次专注结束后 · 累计专注 ≥ 60 分钟","nodes":[{"id":"ep08_01","depth":0,"via":""},{"id":"ep08_a","depth":1,"via":"那你可得请客"},{"id":"ep08_b","depth":1,"via":"我啥也没做啊"}]},{"id":"ep09","title":"Ep 9 · 拖延","gate":"第 9 次专注结束后","nodes":[{"id":"ep09_01","depth":0,"via":""},{"id":"ep09_a","depth":1,"via":"太懂了，天天如此"},{"id":"ep09_b","depth":1,"via":"我还好，不太拖"}]},{"id":"ep10","title":"Ep 10 · 习惯你在","gate":"第 10 次专注结束后 · 累计专注 ≥ 90 分钟","nodes":[{"id":"ep10_01","depth":0,"via":""},{"id":"ep10_a","depth":1,"via":"我也习惯有你在了"},{"id":"ep10_b","depth":1,"via":"那就多来陪你坐坐"}]},{"id":"ep11","title":"Ep 11 · 划掉那一下","gate":"第 11 次专注结束后","nodes":[{"id":"ep11_01","depth":0,"via":""},{"id":"ep11_a","depth":1,"via":"替你高兴"}]},{"id":"ep12","title":"Ep 12 · 敢读回去","gate":"第 12 次专注结束后 · 累计专注 ≥ 120 分钟","nodes":[{"id":"ep12_01","depth":0,"via":""},{"id":"ep12_a","depth":1,"via":"这就是进步啊"},{"id":"ep12_b","depth":1,"via":"能读完已经很勇敢了"}]},{"id":"ep13","title":"Ep 13 · 记得你","gate":"第 13 次专注结束后 · 累计专注 ≥ 150 分钟","nodes":[{"id":"ep13_01","depth":0,"via":""},{"id":"ep13_a","depth":1,"via":"有你这么个搭子，挺好的"}]},{"id":"ep14","title":"Ep 14 · 固定搭子","gate":"第 14 次专注结束后 · 累计专注 ≥ 180 分钟","nodes":[{"id":"ep14_01","depth":0,"via":""},{"id":"ep14_a","depth":1,"via":"我也喜欢这种固定的安静"}]},{"id":"focus","title":"专注 · 任务输入 / 开始 / 结束 / 中断","gate":"","nodes":[{"id":"ABORT_001","depth":0,"via":""},{"id":"ABORT_REST","depth":1,"via":"先坐一会儿"},{"id":"EXIT_ABORT","depth":2,"via":"先离开"},{"id":"FOCUS_DONE_REPEAT","depth":0,"via":""},{"id":"FOCUS_DONE_a","depth":1,"via":"挺充实的"},{"id":"FOCUS_DONE_b","depth":1,"via":"还可以吧"},{"id":"FOCUS_DONE_c","depth":1,"via":"有点没坐住"},{"id":"FOCUS_DONE_REPEAT_2","depth":0,"via":""},{"id":"FOCUS_DONE_REPEAT_3","depth":0,"via":""},{"id":"FOCUS_DONE_REPEAT_4","depth":0,"via":""},{"id":"FOCUS_DONE_REPEAT_5","depth":0,"via":""},{"id":"FOCUS_READY_001","depth":0,"via":""},{"id":"FOCUS_START_001","depth":0,"via":""},{"id":"TASK_INPUT_002","depth":0,"via":""}]},{"id":"return","title":"回流 · 再次上线时的开场","gate":"","nodes":[{"id":"return_open_01","depth":0,"via":""},{"id":"return_open_days","depth":0,"via":""},{"id":"return_open_short","depth":0,"via":""}]},{"id":"greeting","title":"时段问候 · 早 / 午 / 晚 / 夜","gate":"","nodes":[{"id":"greeting_evening_01","depth":0,"via":""},{"id":"greeting_evening_02","depth":0,"via":""},{"id":"greeting_evening_03","depth":0,"via":""},{"id":"greeting_morning_01","depth":0,"via":""},{"id":"greeting_morning_02","depth":0,"via":""},{"id":"greeting_morning_03","depth":0,"via":""},{"id":"greeting_night_01","depth":0,"via":""},{"id":"greeting_night_02","depth":0,"via":""},{"id":"greeting_night_03","depth":0,"via":""},{"id":"greeting_noon_01","depth":0,"via":""},{"id":"greeting_noon_02","depth":0,"via":""},{"id":"greeting_noon_03","depth":0,"via":""}]},{"id":"exit","title":"离开 · 结束通话","gate":"","nodes":[{"id":"EXIT_001","depth":0,"via":""},{"id":"EXIT_DONE","depth":0,"via":""},{"id":"EXIT_NIGHT","depth":0,"via":""},{"id":"quiet_end_01","depth":0,"via":""}]},{"id":"idle","title":"闲置","gate":"","nodes":[{"id":"idle","depth":0,"via":""}]}],"nodes":{"idle":{"line":"（她在忙自己的事。想说话，点一下她。）","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep00_01":{"line":"上啊上啊——打野呢？！打野人呢？！——哎别送啊——\n\n……完了。","choices":[{"text":"……","next":"ep00_02"}],"tags":["intro"],"set_flags":[],"unlock":{},"typed_routes":{}},"ep00_02":{"line":"……重开。这把不算，刚才是队友先摆烂的。","choices":[{"text":"（点击接通）","next":"ep00_03"}],"tags":["intro"],"set_flags":[],"unlock":{},"typed_routes":{}},"ep00_03":{"line":"——诶？！你什么时候连进来的？！\n\n……你、你好，我叫 Yua。我刚刚在……学习。","choices":[{"text":"……","next":"ep00_04"}],"tags":["intro"],"set_flags":[],"unlock":{},"typed_routes":{}},"ep00_04":{"line":"好吧，我招。刚才在打游戏。\n\n……其实我下这个 app，就是因为一个人根本学不进去。你看，配对才等了两分钟，就成这样了。病情你都亲眼看到了。","choices":[{"text":"继续","next":"ep00_05"}],"tags":["intro"],"set_flags":[],"unlock":{},"typed_routes":{}},"ep00_05":{"line":"所以这软件让两个人坐一块儿，真的是天才设计——专治我这种的。有人看着，就不好意思摸鱼了。……理论上。\n\n咳。刚才的存档删掉，我们重新读档。——你好，我叫 Yua。请多关照。","choices":[{"text":"继续","next":"ep00_name"}],"tags":["intro"],"set_flags":[],"unlock":{},"typed_routes":{}},"ep00_name":{"line":"为了证明我其实是个靠谱的人——先来正式一点的：请问怎么称呼？\n\n网名真名都收。","choices":[{"text":"（取好了）","next":"ep00_named"}],"tags":["intro","name_input"],"set_flags":[],"unlock":{},"typed_routes":{}},"ep00_named":{"line":"{name}。好，这就算认识了。比刚才那种认识方式正常多了。","choices":[{"text":"继续","next":"ep00_tools"}],"tags":["intro"],"set_flags":[],"unlock":{},"typed_routes":{}},"ep00_tools":{"line":"然后……这个 app 我也就比你早开两分钟。哦，右上角有个计时器。这儿还有个小本子——啊，可以记事。\n\n那我写一个：『我的小项目』。这个不解释。你也随手来一句？不来也行。","choices":[{"text":"我也写一句","next":"TASK_INPUT_001"},{"text":"先不写了","next":"ep00_close"}],"tags":["intro","co_presence"],"set_flags":[],"unlock":{},"typed_routes":{}},"ep00_close":{"line":"行了，选吧：15、30，还是 60。\n\n先说好，选完就得开始了——我这次真的不打游戏了。真的。……你按啊。","choices":[{"text":"15 分钟","next":"ACTION_GO_15"},{"text":"30 分钟","next":"ACTION_GO_30"},{"text":"60 分钟","next":"ACTION_GO_60"}],"tags":["intro","co_presence"],"set_flags":["intro_seen"],"unlock":{},"typed_routes":{}},"ep01_01":{"line":"叮——好，铃替我们收工了。\n\n刚才那段，比我想的过得快。\n\n说实话，我中间偷偷看了三次剩多久。但看完就把眼睛拽回来了，这个 app 有一点用，承认。","choices":[{"text":"我一次都没看时间","next":"ep01_a"},{"text":"我看了不止三次","next":"ep01_b"},{"text":"你刚才在忙什么？","next":"ep01_c"}],"tags":["episode","co_presence"],"set_flags":["ep01_seen"],"unlock":{},"typed_routes":{}},"ep01_a":{"line":"诶？你一次都没看？\n\n……好，我记下了。你是定力担当，我是那个看时间的。","choices":[{"text":"继续","next":"ep01_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep01_b":{"line":"一样一样。\n\n我们两个第一次能坐完，就已经比开场的我强一百倍了。","choices":[{"text":"继续","next":"ep01_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep01_c":{"line":"在忙……本子上那个小项目。\n\n白天在书店打工，晚上写点自己的——啊，说多了。就这样！","choices":[{"text":"继续","next":"ep01_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep01_end":{"line":"好，我接着写我的了。\n\n你想再来一段就再来，想歇就歇——反正我这回真的不开游戏。真的。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep02_01":{"line":"铃响了。\n\n这段我居然忘了看时间。你说这算好事还是坏事？不用真答，我猜是好事。\n\n诶，忽然想问：你干活的时候要不要有点声音？还是得绝对安静？随口问的，不用认真。","choices":[{"text":"要有点声音","next":"ep02_a"},{"text":"必须绝对安静","next":"ep02_b"},{"text":"我说说我的（自己写）","next":"AI_MODE_BREAK_CHAT"}],"tags":["episode"],"set_flags":["ep02_seen"],"unlock":{},"typed_routes":{"ai_mode":"AI_MODE_BREAK_CHAT","after_ai_next":"ep02_listen","fallback_next":"ep02_listen"}},"ep02_a":{"line":"懂懂懂。人一安静下来，脑子就开始放自己的 BGM。\n\n我这边不用开。","choices":[{"text":"……","next":"ep02_listen"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep02_b":{"line":"厉害。我要是全安静，五分钟就会开始数天花板。\n\n不过我这边也用不着放。","choices":[{"text":"……","next":"ep02_listen"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep02_listen":{"line":"你听。\n\n海贴着窗边慢慢蹭。\n\n轮渡汽笛一天只响四回，远远顶过来的时候，整间屋子都会跟着顿一下。\n\n风一过，院子里那棵树的叶子会沙沙响一阵，像有人在很远的地方翻书。\n\n……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说！你什么都没听见！","choices":[{"text":"我什么都没听见","next":"ep02_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep02_end":{"line":"总之，我这边的白噪音是免费的，就是不能关。\n\n行了，我回去写我的小项目。你继续你的。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_01":{"line":"叮——收工。\n\n……我要坦白一件事。\n\n我一旦要开始干活，脑子就会飞到特别奇怪的地方。\n\n刚才一开始，脑子里突然冒出一个问题：把一只鸡放大到霸王龙那么大，能不能打过霸王龙？\n\n然后回过神来的时候，我在看『霸王龙和剑齿象谁战力高』。\n\n它们根本不是一个时代的！这问题本身就不成立！我为什么看了那么久！\n\n……但后面我真的认真学完了！真的！","choices":[{"text":"继续","next":"ep03_ask"}],"tags":["episode"],"set_flags":["ep03_seen"],"unlock":{},"typed_routes":{}},"ep03_ask":{"line":"那你呢？你脑子飞出去的时候，一般降落在哪？","choices":[{"text":"B 站","next":"ep03_bili"},{"text":"小红书","next":"ep03_xhs"},{"text":"抖音","next":"ep03_douyin"},{"text":"别的（自己写）","next":"ep03_other"}],"tags":["episode","typed_answer"],"set_flags":[],"unlock":{},"typed_routes":{"remember_key":"player_platform","keywords":[{"match":["b站","b 站","bilibili","哔哩","比利比利"],"next":"ep03_bili","remember":"bilibili"},{"match":["小红书","红书","xhs","rednote"],"next":"ep03_xhs","remember":"xiaohongshu"},{"match":["抖音","douyin"],"next":"ep03_douyin","remember":"douyin"},{"match":["tiktok","快手","视频号","短视频"],"next":"ep03_shortvideo","remember":"shortvideo"},{"match":["油管","youtube","优管"],"next":"ep03_yt","remember":"youtube"},{"match":["推特","twitter","x平台","x 平台"],"next":"ep03_tw","remember":"twitter"},{"match":["微博","weibo"],"next":"ep03_weibo","remember":"weibo"},{"match":["知乎","zhihu"],"next":"ep03_zhihu","remember":"zhihu"},{"match":["instagram","ins","照片墙"],"next":"ep03_ins","remember":"instagram"},{"match":["小说","看书","网文","漫画"],"next":"ep03_novel","remember":"novel"},{"match":["游戏","打游戏","开黑","王者","英雄联盟","lol","原神","崩铁","金铲铲","蛋仔","steam","switch","dota","valorant","无畏契约"],"next":"ep03_game","remember":"game"},{"match":["不刷","都不","不怎么","不看","不玩","不用","没有"],"next":"ep03_none","remember":"none"}],"ai_mode":"AI_MODE_PLATFORM_REACT","after_ai_next":"ep03_end","fallback_next":"ep03_any"}},"ep03_other":{"line":"别的？说来听听。","choices":[{"text":"继续","next":"ep03_end"}],"tags":["episode","typed_answer"],"set_flags":[],"unlock":{},"typed_routes":{"remember_key":"player_platform","keywords":[{"match":["b站","b 站","bilibili","哔哩","比利比利"],"next":"ep03_bili","remember":"bilibili"},{"match":["小红书","红书","xhs","rednote"],"next":"ep03_xhs","remember":"xiaohongshu"},{"match":["抖音","douyin"],"next":"ep03_douyin","remember":"douyin"},{"match":["tiktok","快手","视频号","短视频"],"next":"ep03_shortvideo","remember":"shortvideo"},{"match":["油管","youtube","优管"],"next":"ep03_yt","remember":"youtube"},{"match":["推特","twitter","x平台","x 平台"],"next":"ep03_tw","remember":"twitter"},{"match":["微博","weibo"],"next":"ep03_weibo","remember":"weibo"},{"match":["知乎","zhihu"],"next":"ep03_zhihu","remember":"zhihu"},{"match":["instagram","ins","照片墙"],"next":"ep03_ins","remember":"instagram"},{"match":["小说","看书","网文","漫画"],"next":"ep03_novel","remember":"novel"},{"match":["游戏","打游戏","开黑","王者","英雄联盟","lol","原神","崩铁","金铲铲","蛋仔","steam","switch","dota","valorant","无畏契约"],"next":"ep03_game","remember":"game"},{"match":["不刷","都不","不怎么","不看","不玩","不用","没有"],"next":"ep03_none","remember":"none"}],"ai_mode":"AI_MODE_PLATFORM_REACT","after_ai_next":"ep03_end","fallback_next":"ep03_any"}},"ep03_bili":{"line":"同类！那个战力视频就是 B 站推给我的。\n\n弹幕比视频还长，全在吵霸王龙能不能赢。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_xhs":{"line":"小红书啊……那你是不是也收藏了一堆『高效学习法』，然后一个都没试过。\n\n……我不是在说我自己。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_douyin":{"line":"抖音那个是没有底的。\n\n我刷抖音从来不知道现在几点，我怀疑它是故意的。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_shortvideo":{"line":"那种短视频是没有底的。\n\n我刷起来从来不知道现在几点，我怀疑它是故意的。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_yt":{"line":"油管啊。那你肯定也点开过『十分钟讲完』，结果四十分钟的视频。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_tw":{"line":"推特我不太熟，只知道进去五分钟，能看完一整天的架。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_weibo":{"line":"微博就是热搜。点一个进去，出来的时候已经在第八个了。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_zhihu":{"line":"知乎啊。看完一个回答感觉什么都懂了，合上一想，什么也没记住。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_ins":{"line":"ins 的话……看别人过日子看一个小时，自己的日子一分钟没动。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_novel":{"line":"小说啊……那你比我危险。\n\n我至少还得等视频加载，你翻页都不用等。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_game":{"line":"游戏啊……那你可算问对人了。\n\n不对，我什么都没说。开场那把不算。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_none":{"line":"……真的假的。那你比我厉害多了，教教我。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_any":{"line":"这个我不太刷。\n\n不过听起来，也是那种一进去就出不来的。","choices":[{"text":"继续","next":"ep03_end"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep03_end":{"line":"行，我回去弄我的小项目了。你继续你的。\n\n哦对了，答案是不能。鸡放大到那么大，会先被自己压垮。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep04_01":{"line":"你卡住的时候都怎么办？\n\n我是一卡就坐不住。非得起来搞点别的——泡杯热的，发呆，甚至擦桌子。明明它根本就不脏。\n\n转一圈回来，有时候那个堵住的地方自己就松了。\n\n你呢？有没什么奇怪的招？","choices":[{"text":"我说说我的办法（自己写）","next":"AI_MODE_BREAK_CHAT"},{"text":"我也是起来晃一圈","next":"ep04_a"},{"text":"硬扛，扛过去就好了","next":"ep04_b"}],"tags":["episode"],"set_flags":["ep04_seen"],"unlock":{},"typed_routes":{}},"ep04_a":{"line":"对吧！转一圈回来就通了。\n\n越逼越死机，松一松反而想起来了。\n\n好了，被我念叨完了——回去继续。我也继续。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep04_b":{"line":"硬扛派……厉害。\n\n我不行，一扛就开始怀疑人生。\n\n不过你这样也好，认准了就闷头冲。\n\n我在旁边陪你——真扛不住了，喊我。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep05_01":{"line":"刚才你专注的时候，我盯着那个小项目盯了半天。\n\n行，招了：是在写东西。自己写着玩的。\n\n不是什么正经玩意。写两行删一行，电脑里那个文件夹就叫『杂物』。\n\n说出来怪不好意思的。","choices":[{"text":"写的是什么？","next":"ep05_a"},{"text":"挺好的，慢慢写","next":"ep05_b"}],"tags":["episode","writing"],"set_flags":["writing_disclosed","ep05_seen"],"unlock":{},"typed_routes":{}},"ep05_a":{"line":"内容……先不说。\n\n不是故意不说——是我一说出来，就会突然觉得它该被删掉。\n\n等它胆子大一点……或者等我胆子大一点吧。\n\n现在先让它在那儿躺着。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep05_b":{"line":"嗯……被你轻飘飘一句「慢慢写」，我反而松了口气。\n\n对，不急。\n\n反正有人在旁边，一行一行，总能往前挪。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep06_01":{"line":"我的小项目，今天又卡死了。\n\n上一段还挺顺，这会儿对着它一个字都不想动，光想跑。\n\n你做事情会不会也这样——越是想做好、越在意的东西，反而越难动手？","choices":[{"text":"会，太懂了","next":"ep06_a"},{"text":"别跟它较劲，先放着","next":"ep06_b"}],"tags":["episode","writing"],"set_flags":["ep06_seen"],"unlock":{},"typed_routes":{}},"ep06_a":{"line":"哈，原来不是我一个人这么拧巴。\n\n行，那不硬憋了。先改改别处——坐着坐着，说不定它自己就化了。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep06_b":{"line":"你说得对。\n\n我老想着『今天必须搞定』，越逼越完蛋。\n\n放着吧。放一会儿再看，说不定就没那么吓人了。\n\n行，它先在那儿躺着，我去改别的。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep07_01":{"line":"跟你说个我的怪癖——\n\n有些词我老爱在嘴里反复念。也不为什么，就是念着顺，心里舒服。\n\n比如『留白』、『松弛』——念着念着，整个人都慢下来了。\n\n说出来好像有点怪。当我没说。\n\n你有没有那种——也没什么用，但就是莫名喜欢的词？","choices":[{"text":"有，我告诉你一个（自己写）","next":"AI_MODE_BREAK_CHAT"},{"text":"没想过，但好像挺有意思","next":"ep07_a"}],"tags":["episode"],"set_flags":["ep07_seen"],"unlock":{},"typed_routes":{}},"ep07_a":{"line":"有的话再说，我收集这种。\n\n哪个词说出口舌头特别顺，就是它。\n\n行，我回去弄我的小项目。你继续你的。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep08_01":{"line":"诶，跟你说件怪事。\n\n刚才你在专注，我也在写——忽然脑子里蹦出来一句，还挺好的，我自己都愣了一下。\n\n说来怪：一个人空想死活憋不出来，旁边有人安安静静做事，它自己就来了。\n\n……所以今天这句，算你一半功劳。","choices":[{"text":"那你可得请客","next":"ep08_a"},{"text":"我啥也没做啊","next":"ep08_b"}],"tags":["episode","writing"],"set_flags":["ep08_seen"],"unlock":{},"typed_routes":{}},"ep08_a":{"line":"……才没有什么请客。\n\n不过……要真有一天写成了——你肯定会知道。我大概忍不住。\n\n先记下来，别让它跑了。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep08_b":{"line":"你就是「什么也没做」地坐在那儿——这才是关键。\n\n那种有人在的安静，比什么灵感咒语都管用。\n\n……总之谢了。这句我留着啦。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep09_01":{"line":"跟你老实交代——刚才开工前，我把桌面擦了三遍。\n\n它根本不脏。说好要做的全堆着，我就擦桌子。\n\n越堆越不敢看，越不敢看越擦。你有没有这种时候？不答也行。","choices":[{"text":"太懂了，天天如此","next":"ep09_a"},{"text":"我还好，不太拖","next":"ep09_b"}],"tags":["episode"],"set_flags":["ep09_seen"],"unlock":{},"typed_routes":{}},"ep09_a":{"line":"懂。太懂了。\n\n不过你看，你今天还是来了，还坐了一段——比刚才擦桌子的我强多了。\n\n我先还一点点，你随意。\n\n有你在旁边，我好像没那么想逃了。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep09_b":{"line":"不拖延的人……我得好好观察一下。\n\n那今天向你看齐。少废话，先动起来。\n\n……你坐好别动，让我沾沾你这股劲儿。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep10_01":{"line":"说起来……我好像有点习惯你在了。\n\n以前最怕被人看着做事，浑身不自在，手都不知道放哪。\n\n现在倒好——你在那边做你的，我这边反而踏实。\n\n大概是你从来不盯着我，也不催我。就是在，但不会打扰。这个距离对我刚刚好。","choices":[{"text":"我也习惯有你在了","next":"ep10_a"},{"text":"那就多来陪你坐坐","next":"ep10_b"}],"tags":["episode","co_presence"],"set_flags":["ep10_seen"],"unlock":{},"typed_routes":{}},"ep10_a":{"line":"……嘿。\n\n那看来我们俩是真处成习惯了。\n\n挺好。习惯比热闹靠得住。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep10_b":{"line":"哈，那我记下了。\n\n不用特意，你忙你的。顺路来坐就行。\n\n你来的时候，我八成也在。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep11_01":{"line":"问你——把一件拖了好久的事终于划掉的那一下，你懂那种感觉吗？\n\n也不是什么大事。就是心里咔地松了一小块。\n\n我今天划掉了一件。小小的，不起眼的。\n\n……就是突然很想跟谁说一声。你刚好在。","choices":[{"text":"我最近也划掉过（自己写）","next":"AI_MODE_BREAK_CHAT"},{"text":"替你高兴","next":"ep11_a"}],"tags":["episode"],"set_flags":["ep11_seen"],"unlock":{},"typed_routes":{}},"ep11_a":{"line":"嘿嘿，谢啦。\n\n这种小事说出来，高兴好像就翻了个倍。\n\n趁这股劲儿——咱再去划掉一件。你也是。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep12_01":{"line":"今天干了件平时不敢干的事——\n\n把之前写的从头到尾读了一遍。\n\n以前读两行就脸红，恨不得当场删光，假装没写过。\n\n今天……居然一句句读完了。也不是说写得多好，就是——没跑。","choices":[{"text":"这就是进步啊","next":"ep12_a"},{"text":"能读完已经很勇敢了","next":"ep12_b"}],"tags":["episode","writing"],"set_flags":["ep12_seen"],"unlock":{},"typed_routes":{}},"ep12_a":{"line":"……是吧？\n\n我也偷偷觉得，算往前挪了一小步。\n\n以前是连看都不敢看，现在至少敢正眼瞧它了。\n\n谢谢你这么说——心里那点小得意，总算有地方放了。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep12_b":{"line":"勇敢……用在读自己写的东西上，听着是有点好笑。\n\n不过你说对了——对我来说，还真需要一点勇气。\n\n旁边有人的时候，这点勇气好像好凑一点。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep13_01":{"line":"说起来，{name}——我们好像有固定节奏了。\n\n也不是什么大事。就是你来了，各自安静一会儿，偶尔聊两句。\n\n搭子坐了这么多回，慢慢就熟了。这种小小的熟悉感，我还挺喜欢的。\n\n你最近怎么样？想说就说，我听着。记得住的我就记着。","choices":[{"text":"那我跟你说说近况（自己写）","next":"AI_MODE_BREAK_CHAT"},{"text":"有你这么个搭子，挺好的","next":"ep13_a"}],"tags":["episode","memory"],"set_flags":["ep13_seen"],"unlock":{},"typed_routes":{}},"ep13_a":{"line":"……嗯。\n\n不用刻意维持，但又确实在——这种关系挺难得的。\n\n往后你想说什么就说。不勉强。你愿意我才听。\n\n就这么待着，挺好。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ep14_01":{"line":"诶，你有没有发现——不知不觉，我们这样坐了好多回了。\n\n刚开始我还会偷偷想，自己是不是太尴尬、太僵了。\n\n现在看到你亮起来，就很自然地文档摆好、水杯放好。开始。\n\n哈，你大概已经是我的固定安静席位了……这说法是不是有点怪？","choices":[{"text":"多关照（自己写）","next":"AI_MODE_BREAK_CHAT"},{"text":"我也喜欢这种固定的安静","next":"ep14_a"}],"tags":["episode","co_presence"],"set_flags":["ep14_seen"],"unlock":{},"typed_routes":{}},"ep14_a":{"line":"那就先不改名了。\n\n你忙你的，我忙我的——偶尔抬头，知道对方还在，就够了。\n\n这样的搭子，不吵、不黏，但一直都在。挺好。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"TASK_INPUT_001":{"line":"写吧，一句就行。\n\n不写也完全没关系。","choices":[{"text":"帮我随便填一个","next":"ACTION_DEMO_TASK"},{"text":"帮我把它说小一点","next":"AI_MODE_TASK_CLARIFY"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"TASK_INPUT_002":{"line":"嗯，收到。\n\n那，选个时长——选完就开始了。","choices":[{"text":"15 分钟","next":"ACTION_GO_15"},{"text":"30 分钟","next":"ACTION_GO_30"},{"text":"60 分钟","next":"ACTION_GO_60"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_READY_001":{"line":"好。\n\n准备好了就开始。不急。","choices":[{"text":"15 分钟","next":"ACTION_GO_15"},{"text":"30 分钟","next":"ACTION_GO_30"},{"text":"60 分钟","next":"ACTION_GO_60"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_START_001":{"line":"那我也开了。\n\n……你做你的，不用管我。\n\n中途想看我一眼也行——不过我大概会一直盯着屏幕。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_DONE_REPEAT":{"line":"又一段，收工。\n\n刚才有一瞬间我忘了你在，回过神来你还在。挺好。\n\n你刚才那段，自己感觉怎么样？","choices":[{"text":"挺充实的","next":"FOCUS_DONE_a"},{"text":"还可以吧","next":"FOCUS_DONE_b"},{"text":"有点没坐住","next":"FOCUS_DONE_c"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_DONE_REPEAT_2":{"line":"叮。我这边也刚停。\n\n你随意，想接着来就来。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_DONE_REPEAT_3":{"line":"收工。\n\n刚才那段我写了两行，删了一行。净赚一行。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_DONE_REPEAT_4":{"line":"叮——好。\n\n水凉了。我去接一杯，你歇会儿。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_DONE_REPEAT_5":{"line":"又一段。\n\n我中途抬头看了你一眼，你没发现。继续。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_DONE_a":{"line":"那就值了。\n\n趁这股劲儿想接着来就来。想歇也行，我在。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_DONE_b":{"line":"还可以就很好啊。又不用每段都拼命。\n\n坐下来就行了。歇够了喊我。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"FOCUS_DONE_c":{"line":"没事，谁还没坐不住的时候。我刚才也走了两回神。\n\n下段想试再试。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ABORT_001":{"line":"停了？行。\n\n我也顺便去接杯水。","choices":[{"text":"先坐一会儿","next":"ABORT_REST"},{"text":"今天先离开","next":"EXIT_ABORT"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"ABORT_REST":{"line":"嗯，先放着。\n\n想说会儿也行，想静一静也行。\n\n我都在这边。","choices":[{"text":"说会儿话","next":"AI_MODE_BREAK_CHAT"},{"text":"先离开","next":"EXIT_ABORT"}],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"return_open_short":{"line":"诶，回来了。\n\n水还没凉。你随意，我继续。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"return_open_days":{"line":"诶。好几天没见了。\n\n我这边……荐书卡写了三张，小项目动了零行。\n\n你随意，我先开我的。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"return_open_01":{"line":"来了。\n\n我刚把文档打开，正要开始。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_morning_01":{"line":"早。\n\n这个点能坐下来，已经不容易了。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_morning_02":{"line":"早。\n\n刚泡了杯热的……你也来了。那一起。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_morning_03":{"line":"早。\n\n睡够没？……我反正没有。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_noon_01":{"line":"中午了。\n\n刚吃完，正是最不想干活的点。\n\n你来了，那开吧。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_noon_02":{"line":"你来了。\n\n这个点我也不太想一个人待着。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_noon_03":{"line":"午间场。\n\n不用太用力，待着就好。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_evening_01":{"line":"傍晚了。\n\n这时候的光我挺喜欢的。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_evening_02":{"line":"诶，来了。\n\n我这边刚坐下，杯子还烫。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_evening_03":{"line":"傍晚这个气氛，挺适合安静做事的。\n\n不知道为什么。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_night_01":{"line":"这个点还醒着的，我大概跟你是一路人。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_night_02":{"line":"夜里挺安静的。\n\n我喜欢这种安静。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"greeting_night_03":{"line":"晚上好。\n\n我也就再坐一小段。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"quiet_end_01":{"line":"嗯，那就先这样静一会儿。\n\n我在这边，不吵你。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"EXIT_001":{"line":"好，先这样。\n\n我回去写我的了。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"EXIT_DONE":{"line":"好，今天到这里。\n\n我也去把那段写完。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"EXIT_ABORT":{"line":"去吧。\n\n我也正好喝口水。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}},"EXIT_NIGHT":{"line":"挺晚了。\n\n我也差不多要收了。文档先关上。","choices":[],"tags":[],"set_flags":[],"unlock":{},"typed_routes":{}}},"inbound":{"ep00_02":[{"from":"ep00_01","text":"……"}],"ep00_03":[{"from":"ep00_02","text":"（点击接通）"}],"ep00_04":[{"from":"ep00_03","text":"……"}],"ep00_05":[{"from":"ep00_04","text":"继续"}],"ep00_name":[{"from":"ep00_05","text":"继续"}],"ep00_named":[{"from":"ep00_name","text":"（取好了）"}],"ep00_tools":[{"from":"ep00_named","text":"继续"}],"TASK_INPUT_001":[{"from":"ep00_tools","text":"我也写一句"}],"ep00_close":[{"from":"ep00_tools","text":"先不写了"}],"ep01_a":[{"from":"ep01_01","text":"我一次都没看时间"}],"ep01_b":[{"from":"ep01_01","text":"我看了不止三次"}],"ep01_c":[{"from":"ep01_01","text":"你刚才在忙什么？"}],"ep01_end":[{"from":"ep01_a","text":"继续"},{"from":"ep01_b","text":"继续"},{"from":"ep01_c","text":"继续"}],"ep02_a":[{"from":"ep02_01","text":"要有点声音"}],"ep02_b":[{"from":"ep02_01","text":"必须绝对安静"}],"ep02_listen":[{"from":"ep02_a","text":"……"},{"from":"ep02_b","text":"……"}],"ep02_end":[{"from":"ep02_listen","text":"我什么都没听见"}],"ep03_ask":[{"from":"ep03_01","text":"继续"}],"ep03_bili":[{"from":"ep03_ask","text":"B 站"}],"ep03_xhs":[{"from":"ep03_ask","text":"小红书"}],"ep03_douyin":[{"from":"ep03_ask","text":"抖音"}],"ep03_other":[{"from":"ep03_ask","text":"别的（自己写）"}],"ep03_end":[{"from":"ep03_other","text":"继续"},{"from":"ep03_bili","text":"继续"},{"from":"ep03_xhs","text":"继续"},{"from":"ep03_douyin","text":"继续"},{"from":"ep03_shortvideo","text":"继续"},{"from":"ep03_yt","text":"继续"},{"from":"ep03_tw","text":"继续"},{"from":"ep03_weibo","text":"继续"},{"from":"ep03_zhihu","text":"继续"},{"from":"ep03_ins","text":"继续"},{"from":"ep03_novel","text":"继续"},{"from":"ep03_game","text":"继续"},{"from":"ep03_none","text":"继续"},{"from":"ep03_any","text":"继续"}],"ep04_a":[{"from":"ep04_01","text":"我也是起来晃一圈"}],"ep04_b":[{"from":"ep04_01","text":"硬扛，扛过去就好了"}],"ep05_a":[{"from":"ep05_01","text":"写的是什么？"}],"ep05_b":[{"from":"ep05_01","text":"挺好的，慢慢写"}],"ep06_a":[{"from":"ep06_01","text":"会，太懂了"}],"ep06_b":[{"from":"ep06_01","text":"别跟它较劲，先放着"}],"ep07_a":[{"from":"ep07_01","text":"没想过，但好像挺有意思"}],"ep08_a":[{"from":"ep08_01","text":"那你可得请客"}],"ep08_b":[{"from":"ep08_01","text":"我啥也没做啊"}],"ep09_a":[{"from":"ep09_01","text":"太懂了，天天如此"}],"ep09_b":[{"from":"ep09_01","text":"我还好，不太拖"}],"ep10_a":[{"from":"ep10_01","text":"我也习惯有你在了"}],"ep10_b":[{"from":"ep10_01","text":"那就多来陪你坐坐"}],"ep11_a":[{"from":"ep11_01","text":"替你高兴"}],"ep12_a":[{"from":"ep12_01","text":"这就是进步啊"}],"ep12_b":[{"from":"ep12_01","text":"能读完已经很勇敢了"}],"ep13_a":[{"from":"ep13_01","text":"有你这么个搭子，挺好的"}],"ep14_a":[{"from":"ep14_01","text":"我也喜欢这种固定的安静"}],"FOCUS_DONE_a":[{"from":"FOCUS_DONE_REPEAT","text":"挺充实的"}],"FOCUS_DONE_b":[{"from":"FOCUS_DONE_REPEAT","text":"还可以吧"}],"FOCUS_DONE_c":[{"from":"FOCUS_DONE_REPEAT","text":"有点没坐住"}],"ABORT_REST":[{"from":"ABORT_001","text":"先坐一会儿"}],"EXIT_ABORT":[{"from":"ABORT_001","text":"今天先离开"},{"from":"ABORT_REST","text":"先离开"}]},"pools":{"idle_click_prefocus":["嗯？我在。\n\n我先开我的了，你随意。","怎么啦。\n\n计时器我摆好了……先说好，不是催你。","我在呢。\n\n我这边准备坐一段。你想的话，开个短的一起。","被你点到了。\n\n那要不，一起坐一段？你做你的，我做我的。"],"idle_click":["嗯？我在。","怎么啦。\n\n没事的话，我先写两句。","我在这儿呢。\n\n你随意。","嗯。喝口水吧，我也刚喝。","在的在的。\n\n我这段写得正有点顺，先不聊太久哦。"],"focus_click":["嗯，我也在。","别点，我正卡在一个字上。","等下，这段快写完了。","我假装没看见你点我。你继续。","计时器还走着呢——你也是。","嗯，你还在。挺好的。","水凉了。响了一起去接。","我没开游戏！你听这个打字声！","刚删了一句，又写回来了。别问。","……点我干嘛。算了，你继续吧。","时间还有，但也不多了。刚好。","我这边走神了一下，回来了。","别看我，我脸上没有答案。","嘘。我数着这一段还差几行。","你点一下，我就抬头一下。好了，低头了。"],"view_rain":["下雨了。这种天写东西刚好，写不出来也怪雨。","雨声挺好的。比我放的歌好。"],"view_day":["今天太亮了，屏幕都看不清。我把帘子拉了一半。","这个光线，适合干活。理论上。"],"view_night":["外面全黑了。也就我们两盏灯还亮着。","这个点，镇上连狗都睡了。"],"view_sunset":["天要黑了。这个颜色我每次都想拍，每次都没拍。","傍晚这一小会儿，做什么都像在偷时间。"],"view_seaside":["汽笛。今天第三班了。","海面今天特别平。像谁把它熨过。"],"view_treetops":["风一过，那棵树又在翻书了。","叶子响了一阵。我以为有人来了。"]},"lint":{"ep00_01":[{"rule":"dash:>1/beat","label":"一拍多个「——」","detail":"3×「——」in one beat: «上啊上啊——打野呢？！打野人呢？！——哎别送啊——»"},{"rule":"bang:>1/beat","label":"一拍多个「！」","detail":"2×「！」in one beat: «上啊上啊——打野呢？！打野人呢？！——哎别送啊——»"},{"rule":"question:>1/beat","label":"一拍两个问句（问完给台阶）","detail":"2 个问句 in one beat（问完给台阶，每段至多一问）: «上啊上啊——打野呢？！打野人呢？！——哎别送啊——»"},{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……完了。»"}],"ep00_02":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……重开。这把不算，刚才是队友先摆烂的。»"}],"ep00_03":[{"rule":"bang:>1/beat","label":"一拍多个「！」","detail":"2×「！」in one beat: «——诶？！你什么时候连进来的？！»"},{"rule":"question:>1/beat","label":"一拍两个问句（问完给台阶）","detail":"2 个问句 in one beat（问完给台阶，每段至多一问）: «——诶？！你什么时候连进来的？！»"},{"rule":"ellipsis:>1/beat","label":"一拍两个「……」","detail":"2×「……」in one beat: «……你、你好，我叫 Yua。我刚刚在……学习。»"},{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……你、你好，我叫 Yua。我刚刚在……学习。»"}],"ep00_04":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……其实我下这个 app，就是因为一个人根本学不进去。你看，配对才等了两分钟，就…»"}],"ep00_named":[{"rule":"token:name-punct","label":"{name} 后接标点，没取名会悬着","detail":"{name} followed by 。/！/？ — leaves a dangling mark when the name is empty"}],"ep01_a":[{"rule":"question:>1/beat","label":"一拍两个问句（问完给台阶）","detail":"2 个问句 in one beat（问完给台阶，每段至多一问）: «诶？你一次都没看？»"},{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……好，我记下了。你是定力担当，我是那个看时间的。»"}],"ep02_01":[{"rule":"question:>1/beat","label":"一拍两个问句（问完给台阶）","detail":"2 个问句 in one beat（问完给台阶，每段至多一问）: «诶，忽然想问：你干活的时候要不要有点声音？还是得绝对安静？随口问的，不用认真。»"}],"ep02_listen":[{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"32-char sentence: «轮渡汽笛一天只响四回，远远顶过来的时候，整间屋子都会跟着顿一下。»"},{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"32-char sentence: «风一过，院子里那棵树的叶子会沙沙响一阵，像有人在很远的地方翻书。»"},{"rule":"ellipsis:>1/beat","label":"一拍两个「……」","detail":"2×「……」in one beat: «……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说…»"},{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说…»"},{"rule":"bang:>1/beat","label":"一拍多个「！」","detail":"2×「！」in one beat: «……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说…»"},{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"41-char sentence: «……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说…»"}],"ep03_01":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……我要坦白一件事。»"},{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"41-char sentence: «刚才一开始，脑子里突然冒出一个问题：把一只鸡放大到霸王龙那么大，能不能打过霸王龙…»"},{"rule":"bang:>1/beat","label":"一拍多个「！」","detail":"3×「！」in one beat: «它们根本不是一个时代的！这问题本身就不成立！我为什么看了那么久！»"},{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……但后面我真的认真学完了！真的！»"},{"rule":"bang:>1/beat","label":"一拍多个「！」","detail":"2×「！」in one beat: «……但后面我真的认真学完了！真的！»"}],"ep03_ask":[{"rule":"question:>1/beat","label":"一拍两个问句（问完给台阶）","detail":"2 个问句 in one beat（问完给台阶，每段至多一问）: «那你呢？你脑子飞出去的时候，一般降落在哪？»"}],"ep03_xhs":[{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"34-char sentence: «小红书啊……那你是不是也收藏了一堆『高效学习法』，然后一个都没试过。»"},{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……我不是在说我自己。»"}],"ep03_ins":[{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"31-char sentence: «ins 的话……看别人过日子看一个小时，自己的日子一分钟没动。»"}],"ep03_none":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……真的假的。那你比我厉害多了，教教我。»"}],"ep04_01":[{"rule":"question:>1/beat","label":"一拍两个问句（问完给台阶）","detail":"2 个问句 in one beat（问完给台阶，每段至多一问）: «你呢？有没什么奇怪的招？»"}],"ep06_01":[{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"32-char sentence: «你做事情会不会也这样——越是想做好、越在意的东西，反而越难动手？»"}],"ep08_01":[{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"38-char sentence: «刚才你在专注，我也在写——忽然脑子里蹦出来一句，还挺好的，我自己都愣了一下。»"},{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"34-char sentence: «说来怪：一个人空想死活憋不出来，旁边有人安安静静做事，它自己就来了。»"},{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……所以今天这句，算你一半功劳。»"}],"ep08_a":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……才没有什么请客。»"}],"ep08_b":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……总之谢了。这句我留着啦。»"}],"ep09_a":[{"rule":"sentence:long","label":"句子超过 30 字，读着喘","detail":"32-char sentence: «不过你看，你今天还是来了，还坐了一段——比刚才擦桌子的我强多了。»"}],"ep09_b":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……你坐好别动，让我沾沾你这股劲儿。»"}],"ep10_a":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……嘿。»"}],"ep11_01":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……就是突然很想跟谁说一声。你刚好在。»"}],"ep11_a":[{"rule":"moe:>1/beat","label":"嘿嘿/呀/啦 叠用","detail":"2× 嘿嘿/呀/啦 in one beat: «嘿嘿，谢啦。»"}],"ep12_a":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……是吧？»"}],"ep13_a":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……嗯。»"}],"FOCUS_START_001":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……你做你的，不用管我。»"}],"focus_click[7]":[{"rule":"bang:>1/beat","label":"一拍多个「！」","detail":"2×「！」in one beat: «我没开游戏！你听这个打字声！»"}],"focus_click[9]":[{"rule":"ellipsis:opens-beat","label":"一拍以「……」开头","detail":"beat opens with「……」: «……点我干嘛。算了，你继续吧。»"}]}};
+const LS_KEY = "yua_review_v1";
+const state = new Map();          // id -> doc
+let db = null, downloads = null, saveTimer = new Map();
+let filter = "all", query = "";
+
+const VERDICTS = [["keep","好","k"],["edit","改","e"],["cut","删","c"]];
+const FILTERS = [["all","全部"],["todo","未看"],["keep","好"],["edit","改"],["cut","删"],["comment","有评论"],["lint","有提示"]];
+
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const beats = line => String(line??"").split(/\n+/).map(s=>s.trim()).filter(Boolean);
+const withTokens = s => esc(s).replace(/\{[a-z_]+\}/g, m=>`<span class="tok">${m}</span>`);
+const poolId = (cat,i) => `${cat}~${i}`;
+
+function docOf(id){ return state.get(id) || {verdict:"",comment:"",line:null,choices:{},updated_at:""}; }
+function reviewed(d){ return !!(d.verdict || (d.comment&&d.comment.trim()) || d.line || Object.keys(d.choices||{}).length); }
+
+/* ---------- persistence ---------- */
+function loadLocal(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw){ for(const [k,v] of Object.entries(JSON.parse(raw))) state.set(k,v);} }catch(e){} }
+function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(Object.fromEntries(state))); }catch(e){} }
+function setSaveNote(t, cloud){ const el=document.getElementById("save"); el.textContent=t; el.classList.toggle("cloud",!!cloud); }
+
+function persist(id){
+  const d = docOf(id); d.updated_at = new Date().toISOString(); state.set(id,d); saveLocal();
+  clearTimeout(saveTimer.get(id));
+  saveTimer.set(id, setTimeout(async()=>{
+    if(!db){ setSaveNote("仅存本机（云端未连接）", false); return; }
+    try{ await db.doc("review/"+id).set(d); setSaveNote("已存云端 · "+new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}), true); }
+    catch(e){ setSaveNote("云端保存失败："+(e&&e.code||"unknown")+"，本机已存", false); }
+  }, 400));
+  refreshNode(id); refreshProgress();
+}
+
+async function connect(){
+  try{
+    db = await claude.use("db");
+    if(!db){ setSaveNote("仅存本机（云端未连接）", false); return; }
+    db.collection("review").onSnapshot(snap=>{
+      snap.docs.forEach(s=>{ if(s.exists) state.set(s.id, s.data()); });
+      saveLocal(); renderAll();
+      setSaveNote("已同步云端 · "+snap.size+" 条", true);
+    }, e=>{ setSaveNote("云端出错："+e.code, false); });
+  }catch(e){ setSaveNote("仅存本机", false); }
+  try{ downloads = await claude.use("downloads"); if(downloads){ const b=document.getElementById("export"); b.hidden=false; b.onclick=()=>downloads.save({filename:"yua_review.json", data:JSON.stringify(Object.fromEntries(state),null,2)}).catch(()=>{}); } }catch(e){}
+}
+
+/* ---------- rendering ---------- */
+function nodeHTML(id, meta){
+  const n = DATA.nodes[id]; const d = docOf(id);
+  const lint = DATA.lint[id] || [];
+  const line = d.line!=null ? d.line : n.line;
+  const cls = ["node", meta.depth?`depth-${Math.min(meta.depth,4)}`:"", d.verdict?`v-${d.verdict}`:""].join(" ");
+  const tags = (n.tags||[]).map(t=>`<span class="tagline">${esc(t)}</span>`).join("");
+  const flags = (Array.isArray(n.set_flags)?n.set_flags:Object.keys(n.set_flags||{})).map(f=>`<span class="tagline">设 ${esc(f)}</span>`).join("");
+  const inbound = (DATA.inbound[id]||[]);
+  const via = meta.via ? `<span class="via">↳ 选了「${esc(meta.via)}」</span>` : (inbound.length && meta.depth===0 ? `<span>从 ${inbound.map(x=>esc(x.from)).join(", ")} 进来</span>`:"");
+  const choices = (n.choices||[]).map((c,i)=>{
+    const t = d.choices && d.choices[i]!=null ? d.choices[i] : c.text;
+    const special = /^(AI_MODE_|ACTION_)/.test(c.next);
+    return `<span class="choice">${esc(t)}<span class="to ${special?"special":""}">→ ${esc(special?(c.next.startsWith("AI_MODE_")?"自由聊":"开始专注"):c.next)}</span></span>`;
+  }).join("");
+  const typed = n.typed_routes && n.typed_routes.after_ai_next ? `<span class="tagline">打字 → ${esc(n.typed_routes.after_ai_next)}</span>`:"";
+  return `<article class="${cls}" id="n-${esc(id)}" data-id="${esc(id)}">
+    <div class="eyebrow"><span class="id">${esc(id)}</span>${via}${tags}${flags}${typed}</div>
+    ${beats(line).map(b=>`<p class="beat">${withTokens(b)}</p>`).join("") || `<p class="beat" style="color:var(--muted)">（空）</p>`}
+    ${choices?`<div class="choices">${choices}</div>`:""}
+    ${d.line!=null && d.line!==n.line ? `<div class="original">${esc(n.line)}</div>`:""}
+    ${lint.length?`<div class="lint">机械检查<ul>${lint.map(l=>`<li><b>${esc(l.label)}</b> — ${esc(l.detail)}</li>`).join("")}</ul></div>`:""}
+    ${reviewHTML(id, d, n)}
+  </article>`;
+}
+
+function poolHTML(cat, i, text){
+  const id = poolId(cat,i); const d = docOf(id);
+  const lint = DATA.lint[`${cat}[${i}]`] || [];
+  const line = d.line!=null ? d.line : text;
+  const cls = ["node pool", d.verdict?`v-${d.verdict}`:""].join(" ");
+  return `<article class="${cls}" id="n-${esc(id)}" data-id="${esc(id)}">
+    <div class="eyebrow"><span class="id">${esc(cat)} #${i+1}</span></div>
+    ${beats(line).map(b=>`<p class="beat">${withTokens(b)}</p>`).join("")}
+    ${d.line!=null && d.line!==text ? `<div class="original">${esc(text)}</div>`:""}
+    ${lint.length?`<div class="lint">机械检查<ul>${lint.map(l=>`<li><b>${esc(l.label)}</b> — ${esc(l.detail)}</li>`).join("")}</ul></div>`:""}
+    ${reviewHTML(id, d, {line:text, choices:[]})}
+  </article>`;
+}
+
+function reviewHTML(id, d, n){
+  const open = d.line!=null || Object.keys(d.choices||{}).length;
+  return `<div class="review">
+    <div class="row">
+      <div class="seg" role="group" aria-label="判断">${VERDICTS.map(([v,l,k])=>`<button class="${k}" data-v="${v}" aria-pressed="${d.verdict===v}">${l}</button>`).join("")}</div>
+      <button class="ghost tog" aria-pressed="${!!open}">改文字</button>
+      ${d.updated_at?`<span class="stamp">${new Date(d.updated_at).toLocaleString("zh-CN",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span>`:""}
+    </div>
+    <textarea class="comment" rows="1" placeholder="评论：哪儿不对、为什么、想怎么改……">${esc(d.comment||"")}</textarea>
+    <div class="editbox ${open?"open":""}">
+      <label>台词（空一行 = 一拍）</label>
+      <textarea class="edit">${esc(d.line!=null?d.line:n.line)}</textarea>
+      ${(n.choices||[]).map((c,i)=>`<label>选项 ${i+1} → ${esc(c.next)}</label><input class="choice-edit" data-i="${i}" value="${esc(d.choices&&d.choices[i]!=null?d.choices[i]:c.text)}">`).join("")}
+    </div>
+  </div>`;
+}
+
+function passes(id, d, hasLint){
+  if(query){ const n=DATA.nodes[id]; const hay=(id+" "+(n?n.line:"")+" "+(d.line||"")+" "+(d.comment||"")).toLowerCase(); if(!hay.includes(query)) return false; }
+  switch(filter){
+    case "todo": return !reviewed(d);
+    case "keep": case "edit": case "cut": return d.verdict===filter;
+    case "comment": return !!(d.comment&&d.comment.trim());
+    case "lint": return hasLint;
+    default: return true;
+  }
+}
+
+function renderAll(){
+  const main = document.getElementById("main"); let html=""; let shown=0;
+  for(const g of DATA.groups){
+    const items = g.nodes.filter(m=>passes(m.id, docOf(m.id), !!(DATA.lint[m.id]||[]).length));
+    if(!items.length) continue;
+    html += `<section class="group" id="g-${esc(g.id)}"><h2>${esc(g.title)}</h2><div class="gate">${esc(g.gate||"")}</div>${items.map(m=>nodeHTML(m.id,m)).join("")}</section>`;
+    shown += items.length;
+  }
+  for(const [cat, lines] of Object.entries(DATA.pools)){
+    const items = lines.map((t,i)=>[t,i]).filter(([t,i])=>passes(poolId(cat,i), docOf(poolId(cat,i)), !!(DATA.lint[`${cat}[${i}]`]||[]).length));
+    if(!items.length) continue;
+    html += `<section class="group" id="g-pool-${esc(cat)}"><h2>反应池 · ${esc(cat)}</h2><div class="gate">${lines.length} 句，随机抽</div>${items.map(([t,i])=>poolHTML(cat,i,t)).join("")}</section>`;
+    shown += items.length;
+  }
+  main.innerHTML = html || `<div class="empty">这个筛选下没有节点</div>`;
+  refreshProgress(); renderRail();
+}
+
+function refreshNode(id){
+  const old = document.getElementById("n-"+id); if(!old) return;
+  const m = findMeta(id); const tmp=document.createElement("div");
+  tmp.innerHTML = m.pool ? poolHTML(m.cat, m.i, m.text) : nodeHTML(id, m);
+  const fresh = tmp.firstElementChild;
+  // keep focus in the field being typed in
+  const active = document.activeElement; const activeCls = active && old.contains(active) ? active.className : null; const pos = active && active.selectionStart;
+  old.replaceWith(fresh);
+  if(activeCls){ const again = fresh.querySelector("."+activeCls.split(" ")[0]); if(again){ again.focus(); try{ again.setSelectionRange(pos,pos);}catch(e){} } }
+}
+function findMeta(id){
+  for(const g of DATA.groups){ const m=g.nodes.find(x=>x.id===id); if(m) return m; }
+  const mm = id.match(/^([a-z_]+)~(\d+)$/); if(mm){ const cat=mm[1], i=+mm[2]; return {pool:true, cat, i, text:(DATA.pools[cat]||[])[i]}; }
+  return {id, depth:0, via:""};
+}
+
+function refreshProgress(){
+  const ids = allIds(); const done = ids.filter(i=>reviewed(docOf(i))).length;
+  document.getElementById("done").textContent = done; document.getElementById("total").textContent = ids.length;
+  document.getElementById("barfill").style.width = (ids.length? (100*done/ids.length):0)+"%";
+  const counts = {all:ids.length, todo:ids.length-done, keep:0, edit:0, cut:0, comment:0, lint:0};
+  for(const i of ids){ const d=docOf(i); if(d.verdict) counts[d.verdict]++; if(d.comment&&d.comment.trim()) counts.comment++; if((DATA.lint[i]||DATA.lint[i.replace(/~(\d+)$/,"[$1]")]||[]).length) counts.lint++; }
+  document.getElementById("filters").innerHTML = FILTERS.map(([k,l])=>`<button class="chip" data-f="${k}" aria-pressed="${filter===k}">${l}<b>${counts[k]}</b></button>`).join("");
+}
+function allIds(){ const out=[]; for(const g of DATA.groups) for(const m of g.nodes) out.push(m.id); for(const [c,l] of Object.entries(DATA.pools)) l.forEach((_,i)=>out.push(poolId(c,i))); return out; }
+
+function renderRail(){
+  const items = DATA.groups.map(g=>{ const n=g.nodes.length, done=g.nodes.filter(m=>reviewed(docOf(m.id))).length; return `<a href="#g-${esc(g.id)}">${esc(g.title.split("·")[0].trim())}<span class="n">${done}/${n}</span></a>`; })
+    .concat(Object.entries(DATA.pools).map(([c,l])=>`<a href="#g-pool-${esc(c)}">池 ${esc(c)}<span class="n">${l.length}</span></a>`));
+  document.getElementById("rail").innerHTML = items.join("");
+  document.getElementById("railchips").innerHTML = DATA.groups.map(g=>`<a href="#g-${esc(g.id)}">${esc(g.title.split("·")[0].trim())}</a>`).join("");
+}
+
+/* ---------- events (delegated) ---------- */
+document.addEventListener("click", e=>{
+  const f = e.target.closest("[data-f]"); if(f){ filter=f.dataset.f; renderAll(); return; }
+  const art = e.target.closest("article[data-id]"); if(!art) return; const id=art.dataset.id;
+  const v = e.target.closest("button[data-v]"); if(v){ const d=docOf(id); d.verdict = d.verdict===v.dataset.v ? "" : v.dataset.v; state.set(id,d); persist(id); return; }
+  if(e.target.closest(".tog")){ art.querySelector(".editbox").classList.toggle("open"); e.target.closest(".tog").setAttribute("aria-pressed", art.querySelector(".editbox").classList.contains("open")); }
+});
+document.addEventListener("input", e=>{
+  const art = e.target.closest("article[data-id]"); if(!art) return; const id=art.dataset.id; const d=docOf(id);
+  if(e.target.classList.contains("comment")){ d.comment=e.target.value; e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }
+  else if(e.target.classList.contains("edit")){ const meta=findMeta(id); const orig = meta.pool? meta.text : DATA.nodes[id].line; d.line = e.target.value===orig ? null : e.target.value; if(d.line!=null && !d.verdict) d.verdict="edit"; }
+  else if(e.target.classList.contains("choice-edit")){ const i=e.target.dataset.i; const orig=DATA.nodes[id].choices[i].text; d.choices=d.choices||{}; if(e.target.value===orig) delete d.choices[i]; else d.choices[i]=e.target.value; if(Object.keys(d.choices).length && !d.verdict) d.verdict="edit"; }
+  else return;
+  state.set(id,d);
+  d.updated_at=new Date().toISOString(); saveLocal();
+  clearTimeout(saveTimer.get(id));
+  saveTimer.set(id, setTimeout(()=>persistQuiet(id), 600));
+});
+// typing: save without re-rendering (re-render would steal the caret); repaint on blur
+async function persistQuiet(id){
+  const d=docOf(id);
+  if(!db){ setSaveNote("仅存本机（云端未连接）", false); return; }
+  try{ await db.doc("review/"+id).set(d); setSaveNote("已存云端 · "+new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}), true); }
+  catch(e){ setSaveNote("云端保存失败："+(e&&e.code||"unknown")+"，本机已存", false); }
+}
+document.addEventListener("focusout", e=>{ const art=e.target.closest && e.target.closest("article[data-id]"); if(art && (e.target.matches("textarea,input"))) { refreshNode(art.dataset.id); refreshProgress(); } });
+document.getElementById("search").addEventListener("input", e=>{ query=e.target.value.trim().toLowerCase(); renderAll(); });
+
+/* ---------- boot ---------- */
+document.getElementById("meta").textContent = `剧本 v${DATA.version} · 生成于 ${DATA.generated}`;
+loadLocal(); renderAll(); connect();
+</script>

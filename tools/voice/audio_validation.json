@@ -1,6 +1,38 @@
 {
   "clips": [
     {
+      "duration_seconds": 3.66878128051758,
+      "id": "r2_a"
+    },
+    {
+      "duration_seconds": 3.75003123283386,
+      "id": "r2_b"
+    },
+    {
+      "duration_seconds": 3.66878128051758,
+      "id": "r2_c"
+    },
+    {
+      "duration_seconds": 3.75003123283386,
+      "id": "r2_d"
+    },
+    {
+      "duration_seconds": 6.06043767929077,
+      "id": "r2_a_acting"
+    },
+    {
+      "duration_seconds": 6.43193769454956,
+      "id": "r2_b_acting"
+    },
+    {
+      "duration_seconds": 6.3506875038147,
+      "id": "r2_c_acting"
+    },
+    {
+      "duration_seconds": 5.66568756103516,
+      "id": "r2_d_acting"
+    },
+    {
       "duration_seconds": 6.52481269836426,
       "id": "zh_warm"
     },
@@ -93,5 +125,5 @@
       "id": "game_FOCUS_START_001_2"
     }
   ],
-  "total_seconds": 126.497187972069
+  "total_seconds": 165.843563437462
 }

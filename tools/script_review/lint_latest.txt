@@ -1,0 +1,47 @@
+dash:>1/beat              ep00_01  3×「——」in one beat: «上啊上啊——打野呢？！打野人呢？！——哎别送啊——»
+bang:>1/beat              ep00_01  2×「！」in one beat: «上啊上啊——打野呢？！打野人呢？！——哎别送啊——»
+question:>1/beat          ep00_01  2 个问句 in one beat（问完给台阶，每段至多一问）: «上啊上啊——打野呢？！打野人呢？！——哎别送啊——»
+ellipsis:opens-beat       ep00_01  beat opens with「……」: «……完了。»
+ellipsis:opens-beat       ep00_02  beat opens with「……」: «……重开。这把不算，刚才是队友先摆烂的。»
+bang:>1/beat              ep00_03  2×「！」in one beat: «——诶？！你什么时候连进来的？！»
+question:>1/beat          ep00_03  2 个问句 in one beat（问完给台阶，每段至多一问）: «——诶？！你什么时候连进来的？！»
+ellipsis:>1/beat          ep00_03  2×「……」in one beat: «……你、你好，我叫 Yua。我刚刚在……学习。»
+ellipsis:opens-beat       ep00_03  beat opens with「……」: «……你、你好，我叫 Yua。我刚刚在……学习。»
+ellipsis:opens-beat       ep00_04  beat opens with「……」: «……其实我下这个 app，就是因为一个人根本学不进去。你看，配对才等了两分钟，就…»
+token:name-punct          ep00_named  {name} followed by 。/！/？ — leaves a dangling mark when the name is empty
+question:>1/beat          ep01_a  2 个问句 in one beat（问完给台阶，每段至多一问）: «诶？你一次都没看？»
+ellipsis:opens-beat       ep01_a  beat opens with「……」: «……好，我记下了。你是定力担当，我是那个看时间的。»
+question:>1/beat          ep02_01  2 个问句 in one beat（问完给台阶，每段至多一问）: «诶，忽然想问：你干活的时候要不要有点声音？还是得绝对安静？随口问的，不用认真。»
+sentence:long             ep02_listen  32-char sentence: «轮渡汽笛一天只响四回，远远顶过来的时候，整间屋子都会跟着顿一下。»
+sentence:long             ep02_listen  32-char sentence: «风一过，院子里那棵树的叶子会沙沙响一阵，像有人在很远的地方翻书。»
+ellipsis:>1/beat          ep02_listen  2×「……」in one beat: «……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说…»
+ellipsis:opens-beat       ep02_listen  beat opens with「……」: «……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说…»
+bang:>1/beat              ep02_listen  2×「！」in one beat: «……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说…»
+sentence:long             ep02_listen  41-char sentence: «……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说…»
+ellipsis:opens-beat       ep03_01  beat opens with「……」: «……我要坦白一件事。»
+sentence:long             ep03_01  41-char sentence: «刚才一开始，脑子里突然冒出一个问题：把一只鸡放大到霸王龙那么大，能不能打过霸王龙…»
+bang:>1/beat              ep03_01  3×「！」in one beat: «它们根本不是一个时代的！这问题本身就不成立！我为什么看了那么久！»
+ellipsis:opens-beat       ep03_01  beat opens with「……」: «……但后面我真的认真学完了！真的！»
+bang:>1/beat              ep03_01  2×「！」in one beat: «……但后面我真的认真学完了！真的！»
+question:>1/beat          ep03_ask  2 个问句 in one beat（问完给台阶，每段至多一问）: «那你呢？你脑子飞出去的时候，一般降落在哪？»
+sentence:long             ep03_xhs  34-char sentence: «小红书啊……那你是不是也收藏了一堆『高效学习法』，然后一个都没试过。»
+ellipsis:opens-beat       ep03_xhs  beat opens with「……」: «……我不是在说我自己。»
+sentence:long             ep03_ins  31-char sentence: «ins 的话……看别人过日子看一个小时，自己的日子一分钟没动。»
+ellipsis:opens-beat       ep03_none  beat opens with「……」: «……真的假的。那你比我厉害多了，教教我。»
+question:>1/beat          ep04_01  2 个问句 in one beat（问完给台阶，每段至多一问）: «你呢？有没什么奇怪的招？»
+sentence:long             ep06_01  32-char sentence: «你做事情会不会也这样——越是想做好、越在意的东西，反而越难动手？»
+sentence:long             ep08_01  38-char sentence: «刚才你在专注，我也在写——忽然脑子里蹦出来一句，还挺好的，我自己都愣了一下。»
+sentence:long             ep08_01  34-char sentence: «说来怪：一个人空想死活憋不出来，旁边有人安安静静做事，它自己就来了。»
+ellipsis:opens-beat       ep08_01  beat opens with「……」: «……所以今天这句，算你一半功劳。»
+ellipsis:opens-beat       ep08_a  beat opens with「……」: «……才没有什么请客。»
+ellipsis:opens-beat       ep08_b  beat opens with「……」: «……总之谢了。这句我留着啦。»
+sentence:long             ep09_a  32-char sentence: «不过你看，你今天还是来了，还坐了一段——比刚才擦桌子的我强多了。»
+ellipsis:opens-beat       ep09_b  beat opens with「……」: «……你坐好别动，让我沾沾你这股劲儿。»
+ellipsis:opens-beat       ep10_a  beat opens with「……」: «……嘿。»
+ellipsis:opens-beat       ep11_01  beat opens with「……」: «……就是突然很想跟谁说一声。你刚好在。»
+moe:>1/beat               ep11_a  2× 嘿嘿/呀/啦 in one beat: «嘿嘿，谢啦。»
+ellipsis:opens-beat       ep12_a  beat opens with「……」: «……是吧？»
+ellipsis:opens-beat       ep13_a  beat opens with「……」: «……嗯。»
+ellipsis:opens-beat       FOCUS_START_001  beat opens with「……」: «……你做你的，不用管我。»
+bang:>1/beat              focus_click[7]  2×「！」in one beat: «我没开游戏！你听这个打字声！»
+ellipsis:opens-beat       focus_click[9]  beat opens with「……」: «……点我干嘛。算了，你继续吧。»

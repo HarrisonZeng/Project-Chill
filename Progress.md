@@ -66,6 +66,12 @@ is look (UI chrome / call-frame), script depth (Ep3+ arena), and packaging/marke
 
 ## Active Tasks
 
+- **[OWNER — review the script here]** https://claude.ai/code/artifact/ce5ccdc2-6e38-4a6e-a64d-1e7c443367dd —
+  the whole script in play order with 好/改/删 + comment + inline edit per line, saved to the page's
+  database (phone or desktop, picks up where you left off). Claude pulls it back with
+  `tools/script_review/apply.py` (README in that folder). Replaces `tools/dialogue_viewer/`.
+  Rebuild + republish after every script change (`build.py`).
+
 - **[THIS WEEKEND — sister review build, agreed 2026-09-05.]** Deliver via the itch web link +
   password (no Windows export). **[OWNER Friday, ~45 min]**: arena picks (or "ship what's there"),
   UI direction A–D (default: C lo-fi minimal), D1 incoming-call yes/no, optionally
