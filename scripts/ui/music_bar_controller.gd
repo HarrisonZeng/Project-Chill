@@ -31,6 +31,9 @@ var bgm_paused: bool = true
 var voice_enabled: bool = true
 var playback_mode: int = 0
 
+const ICON_PLAY: Texture2D = preload("res://assets/art/ui/icons/play.svg")
+const ICON_PAUSE: Texture2D = preload("res://assets/art/ui/icons/pause.svg")
+
 func _ready() -> void:
 	if prev_button != null:
 		prev_button.pressed.connect(_on_prev_pressed)
@@ -116,7 +119,10 @@ func refresh_bar() -> void:
 		is_playing = bool(bgm_manager.call("is_playing"))
 	bgm_paused = not is_playing
 	if play_pause_button != null:
-		play_pause_button.text = UiStrings.t("music.play", language) if bgm_paused else UiStrings.t("music.pause", language)
+		# Icon-only since the journal restyle; the word lives in the tooltip.
+		play_pause_button.icon = ICON_PLAY if bgm_paused else ICON_PAUSE
+		play_pause_button.text = ""
+		play_pause_button.tooltip_text = UiStrings.t("music.play", language) if bgm_paused else UiStrings.t("music.pause", language)
 	_refresh_voice_button()
 	if bgm_manager != null and bgm_manager.has_method("get_playback_mode"):
 		playback_mode = int(bgm_manager.call("get_playback_mode"))

@@ -13,26 +13,33 @@
 [ext_resource type="AudioStream" uid="uid://ewejvkanytnj" path="res://assets/bgm/track_01_morning_coffee.mp3" id="11_a1617"]
 [ext_resource type="AudioStream" uid="uid://71r3l78w4llm" path="res://assets/bgm/track_02_afternoon_light_v2.mp3" id="12_cf2is"]
 [ext_resource type="AudioStream" uid="uid://dgij6dux1ixok" path="res://assets/bgm/track_jazz_midnight_brew.mp3" id="13_wlnme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/call_intro.tscn" id="14_callintro"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/icons/gear.svg" id="ic_gear"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/icons/book.svg" id="ic_book"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/icons/tasks.svg" id="ic_tasks"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/icons/play.svg" id="ic_play"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/icons/prev.svg" id="ic_prev"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/icons/next.svg" id="ic_next"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_placeholder"]
-bg_color = Color(1, 0.870588, 0.74902, 0.1)
+bg_color = Color(0.996078, 0.980392, 0.941176, 0.92)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(1, 0.85098, 0.733333, 0.24)
+border_color = Color(0.611765, 0.474510, 0.352941, 0.55)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
-bg_color = Color(0.2, 0.14, 0.16, 0.56)
+bg_color = Color(0.984314, 0.956863, 0.894118, 0.96)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(1, 0.823529, 0.658824, 0.3)
+border_color = Color(0.611765, 0.474510, 0.352941, 0.55)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
@@ -43,12 +50,12 @@ content_margin_left = 14.0
 content_margin_top = 8.0
 content_margin_right = 14.0
 content_margin_bottom = 8.0
-bg_color = Color(0.239216, 0.164706, 0.141176, 0.55)
+bg_color = Color(0.984314, 0.956863, 0.894118, 0.95)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.960784, 0.921569, 0.862745, 0.18)
+border_color = Color(0.611765, 0.474510, 0.352941, 0.55)
 corner_radius_top_left = 18
 corner_radius_top_right = 18
 corner_radius_bottom_right = 18
@@ -188,28 +195,37 @@ color = Color(0, 0, 0, 0)
 [node name="SettingsButton" type="Button" parent="." unique_id=812930172]
 layout_mode = 1
 anchors_preset = -1
-offset_left = 28.0
-offset_top = 152.0
-offset_right = 148.0
-offset_bottom = 188.0
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -72.0
+offset_top = 64.0
+offset_right = -24.0
+offset_bottom = 108.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_placeholder")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_placeholder")
-theme_override_styles/hover = SubResource("StyleBoxFlat_placeholder")
-text = "Settings"
+theme_type_variation = &"IconButton"
+text = ""
 
+icon = ExtResource("ic_gear")
+icon_alignment = 1
+expand_icon = true
 [node name="SettingsPanel" type="PanelContainer" parent="." unique_id=581732771]
 visible = false
 layout_mode = 1
 anchors_preset = -1
-offset_left = 28.0
-offset_top = 196.0
-offset_right = 310.0
-offset_bottom = 328.0
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -378.0
+offset_top = 64.0
+offset_right = -96.0
+offset_bottom = 196.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+theme_type_variation = &"PanelGlass"
 
 [node name="SettingsMargin" type="MarginContainer" parent="SettingsPanel" unique_id=730123884]
 layout_mode = 2
@@ -258,7 +274,7 @@ offset_right = 416.0
 offset_bottom = -28.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+theme_type_variation = &"PanelGlass"
 script = ExtResource("9_musicbar")
 
 [node name="MusicMargin" type="MarginContainer" parent="BottomLeftMusicBar" unique_id=1716632383]
@@ -280,8 +296,9 @@ horizontal_alignment = 1
 clip_text = true
 
 [node name="ProgressBar" type="ProgressBar" parent="BottomLeftMusicBar/MusicMargin/MusicVBox" unique_id=766962508]
-custom_minimum_size = Vector2(0, 12)
+custom_minimum_size = Vector2(0, 6)
 layout_mode = 2
+show_percentage = false
 
 [node name="Controls" type="HBoxContainer" parent="BottomLeftMusicBar/MusicMargin/MusicVBox" unique_id=128112317]
 layout_mode = 2
@@ -289,23 +306,30 @@ theme_override_constants/separation = 5
 alignment = 1
 
 [node name="PrevButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=112952394]
-custom_minimum_size = Vector2(34, 30)
+custom_minimum_size = Vector2(38, 30)
 layout_mode = 2
-text = "<<"
+theme_type_variation = &"ChipButton"
+text = ""
 
+icon = ExtResource("ic_prev")
 [node name="PlayPauseButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=801793230]
-custom_minimum_size = Vector2(58, 30)
+custom_minimum_size = Vector2(64, 30)
 layout_mode = 2
+theme_type_variation = &"ChipButton"
 text = "Play"
 
 [node name="NextButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=179663867]
-custom_minimum_size = Vector2(34, 30)
+custom_minimum_size = Vector2(38, 30)
 layout_mode = 2
-text = ">>"
+theme_type_variation = &"ChipButton"
+text = ""
 
+icon = ExtResource("ic_next")
 [node name="VoiceButton" type="Button" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=437113254]
+visible = false
 custom_minimum_size = Vector2(74, 30)
 layout_mode = 2
+theme_type_variation = &"ChipButton"
 text = "Voice"
 
 [node name="PlaybackModeButton" type="OptionButton" parent="BottomLeftMusicBar/MusicMargin/MusicVBox/Controls" unique_id=1741200937]
@@ -375,15 +399,15 @@ theme_override_styles/panel = SubResource("StyleBox_status_dot")
 
 [node name="StatusLine" type="Label" parent="OverlayLayer/HUD/CallStatusPill/Col/Row1" unique_id=604077314]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.960784, 0.921569, 0.862745, 0.95)
+theme_override_colors/font_color = Color(0.239216, 0.164706, 0.141176, 0.95)
 theme_override_font_sizes/font_size = 13
-text = "Yua · Connected · 20:22"
+text = ""
 
 [node name="DetailLine" type="Label" parent="OverlayLayer/HUD/CallStatusPill/Col" unique_id=455421898]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.901961, 0.811765, 0.682353, 0.7)
+theme_override_colors/font_color = Color(0.462745, 0.352941, 0.270588, 0.7)
 theme_override_font_sizes/font_size = 11
-text = "2026/03/12 · Thu · Evening"
+text = ""
 
 [node name="FocusCard" type="PanelContainer" parent="OverlayLayer/HUD" unique_id=2042264501]
 layout_mode = 1
@@ -403,14 +427,14 @@ theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="OverlayLayer/HUD/FocusCard/Col" unique_id=1004375872]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.901961, 0.811765, 0.682353, 0.85)
+theme_override_colors/font_color = Color(0.462745, 0.352941, 0.270588, 0.85)
 theme_override_font_sizes/font_size = 13
 text = "Focus Timer"
 horizontal_alignment = 1
 
 [node name="TimerDisplay" type="Label" parent="OverlayLayer/HUD/FocusCard/Col" unique_id=2074860113]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.960784, 0.921569, 0.862745, 1)
+theme_override_colors/font_color = Color(0.239216, 0.164706, 0.141176, 1)
 theme_override_font_sizes/font_size = 38
 text = "25:00"
 horizontal_alignment = 1
@@ -425,7 +449,7 @@ show_percentage = false
 [node name="TaskLine" type="Label" parent="OverlayLayer/HUD/FocusCard/Col" unique_id=685854014]
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.901961, 0.811765, 0.682353, 0.7)
+theme_override_colors/font_color = Color(0.462745, 0.352941, 0.270588, 0.7)
 theme_override_font_sizes/font_size = 13
 text = "Task"
 horizontal_alignment = 1
@@ -491,8 +515,11 @@ custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 theme_type_variation = &"PrimaryButton"
 theme_override_font_sizes/font_size = 24
-text = "▶"
+text = ""
 
+icon = ExtResource("ic_play")
+icon_alignment = 1
+expand_icon = true
 [node name="Tools" type="Control" parent="OverlayLayer" unique_id=1097670768]
 layout_mode = 1
 anchors_preset = 15
@@ -517,8 +544,9 @@ offset_right = -24.0
 offset_bottom = 52.0
 grow_horizontal = 0
 theme_type_variation = &"ChipButton"
-text = "Tasks 0"
+text = ""
 
+icon = ExtResource("ic_tasks")
 [node name="TasksPanel" type="PanelContainer" parent="OverlayLayer/Tools" unique_id=769982456]
 visible = false
 layout_mode = 1
@@ -526,7 +554,7 @@ anchors_preset = -1
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -339.0
+offset_left = -334.0
 offset_top = 523.0
 offset_right = -24.0
 offset_bottom = -28.0
@@ -545,7 +573,7 @@ theme_override_constants/separation = 8
 [node name="Title" type="Label" parent="OverlayLayer/Tools/TasksPanel/Col/Header" unique_id=421186982]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.960784, 0.921569, 0.862745, 0.95)
+theme_override_colors/font_color = Color(0.239216, 0.164706, 0.141176, 0.95)
 theme_override_font_sizes/font_size = 16
 text = "Tasks"
 
@@ -572,7 +600,7 @@ clear_button_enabled = true
 
 [node name="Counter" type="Label" parent="OverlayLayer/Tools/TasksPanel/Col" unique_id=1407683660]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.901961, 0.811765, 0.682353, 0.7)
+theme_override_colors/font_color = Color(0.462745, 0.352941, 0.270588, 0.7)
 theme_override_font_sizes/font_size = 11
 text = "· no tasks ·"
 horizontal_alignment = 1
@@ -610,23 +638,34 @@ mouse_filter = 2
 [node name="ChatHistoryButton" type="Button" parent="." unique_id=2038431833]
 layout_mode = 1
 anchors_preset = -1
-offset_left = 28.0
-offset_top = 200.0
-offset_right = 148.0
-offset_bottom = 236.0
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -72.0
+offset_top = -48.0
+offset_right = -24.0
+offset_bottom = -4.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_type_variation = &"ChipButton"
-text = "▤ Log"
+theme_type_variation = &"IconButton"
+text = ""
 
+icon = ExtResource("ic_book")
+icon_alignment = 1
+expand_icon = true
 [node name="ChatHistoryPanel" type="PanelContainer" parent="." unique_id=464568696]
 visible = false
 layout_mode = 1
 anchors_preset = -1
-offset_left = 28.0
-offset_top = 248.0
-offset_right = 428.0
-offset_bottom = 680.0
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -496.0
+offset_top = -180.0
+offset_right = -96.0
+offset_bottom = 252.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_type_variation = &"PanelGlass"
@@ -649,7 +688,7 @@ theme_override_constants/separation = 8
 [node name="HistoryTitle" type="Label" parent="ChatHistoryPanel/Margin/VBox/HeaderRow" unique_id=2084199844]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.960784, 0.921569, 0.862745, 0.92)
+theme_override_colors/font_color = Color(0.239216, 0.164706, 0.141176, 0.92)
 theme_override_font_sizes/font_size = 15
 text = "Chat Log"
 
@@ -667,6 +706,9 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
+
+[node name="CallIntro" parent="." unique_id=1830920417 instance=ExtResource("14_callintro")]
+layout_mode = 1
 
 [node name="ModalLayer" type="Control" parent="." unique_id=483952603]
 visible = false

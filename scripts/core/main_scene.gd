@@ -196,7 +196,23 @@ func _ready() -> void:
 	_refresh_focus_controls()
 	_highlight_duration_chip(int(round(focus_duration_seconds / 60.0)))
 	tasks_ui.refresh_controls()
+	_setup_call_intro()
 	_debug_timeline_setup()  # DEBUG_TIMELINE — remove this line for prod
+
+# The diegetic "incoming call" opener (art checklist D1). Answering is the one
+# tap browsers require before audio may play, so on web it is load-bearing.
+# Headless test runs (and any run without the overlay node) skip it instantly.
+func _setup_call_intro() -> void:
+	var intro := get_node_or_null("CallIntro")
+	if intro == null:
+		return
+	if DisplayServer.get_name() == "headless":
+		if intro.has_method("skip"):
+			intro.call("skip")
+		return
+	var is_returning := previous_last_seen_unix > 0 or has_seen_intro
+	if intro.has_method("setup"):
+		intro.call("setup", is_returning, not has_seen_intro)
 
 func _process(delta: float) -> void:
 	_update_dialogue_typewriter(delta)
@@ -556,7 +572,7 @@ func _zh(codes: Array) -> String:
 		text += String.chr(int(code))
 	return text
 func _refresh_ui_language() -> void:
-	if settings_button != null: settings_button.text = _ui_text("settings")
+	if settings_button != null: settings_button.tooltip_text = _ui_text("settings")  # icon-only since the journal restyle
 	if settings_title != null: settings_title.text = _ui_text("settings")
 	if language_button != null: language_button.text = _ui_text("language")
 	if speed_label != null: speed_label.text = _ui_text("text_speed")
@@ -565,7 +581,7 @@ func _refresh_ui_language() -> void:
 	if focus_custom_apply != null: focus_custom_apply.text = UiStrings.t("focus.custom.apply", ui_language)
 	if focus_chip_custom != null: focus_chip_custom.text = UiStrings.t("focus.custom", ui_language)
 	if send_button != null: send_button.text = _ui_text("send")
-	if chat_history_button != null: chat_history_button.text = _ui_text("history")
+	if chat_history_button != null: chat_history_button.tooltip_text = _ui_text("history")  # icon-only since the journal restyle
 	if ai_mode_toggle != null: ai_mode_toggle.text = _ui_text("type_mode")
 	_refresh_input_placeholder()
 	music_bar.apply_language(ui_language)
@@ -584,7 +600,9 @@ func _refresh_focus_controls() -> void:
 		var title_key := "focus.title.running" if focus_running else "focus.title.idle"
 		focus_title.text = UiStrings.t(title_key, ui_language)
 	if focus_timer_display != null:
-		var color_token := "honey_amber" if focus_running else "cream"
+		# Ink on paper when idle; honey while a session runs. ("cream" was the
+		# old dark-glass colour — invisible on the journal cards.)
+		var color_token := "honey_amber" if focus_running else "espresso_brown"
 		focus_timer_display.add_theme_color_override("font_color", get_theme_color(color_token, "Palette"))
 	if focus_progress != null:
 		focus_progress.visible = focus_running and focus_duration_seconds > 0.0
@@ -793,8 +811,12 @@ func _update_response_slot_visibility(has_visible_choices: bool = false) -> void
 	# The reply slot belongs to the buttons unless the player has switched Type
 	# Mode on. When a node offers no buttons at all, the type box stays available
 	# so there is always some way to answer her.
-	var show_type := ready and (type_mode_active or not has_visible_choices)
-	var show_choices := ready and has_visible_choices and not show_type
+	# Owner rule (2026-09-10): the type box exists only when Type Mode is on —
+	# EXCEPT at the beats that are literally asking the player to type (the Ep0
+	# name ask, the focus-task ask), where it appears alongside the buttons.
+	var node_needs_typing := _current_node_has_tag(NAME_INPUT_TAG) or current_node_id == "TASK_INPUT_001"
+	var show_type := ready and (type_mode_active or node_needs_typing)
+	var show_choices := ready and has_visible_choices and (not show_type or node_needs_typing)
 	if choice_list != null:
 		choice_list.visible = show_choices
 	# ResponseCard is a transparent container; keep it parent-visible while ready so
@@ -866,7 +888,7 @@ func _append_history_entry(text: String) -> void:
 	entry.text = text
 	entry.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	entry.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	entry.add_theme_color_override("font_color", Color(0.901961, 0.811765, 0.682353, 0.88))
+	entry.add_theme_color_override("font_color", Color(0.239216, 0.164706, 0.141176, 0.9))  # ink on the paper history panel
 	entry.add_theme_font_size_override("font_size", 13)
 	chat_history_rows.add_child(entry)
 	_scroll_history_to_bottom()

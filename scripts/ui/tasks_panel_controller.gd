@@ -33,6 +33,10 @@ var resize_start_mouse_position: Vector2 = Vector2.ZERO
 var resize_start_left: float = 0.0
 var resize_start_top: float = 0.0
 
+const ICON_CHECK: Texture2D = preload("res://assets/art/ui/icons/check.svg")
+const ICON_BOX: Texture2D = preload("res://assets/art/ui/icons/box.svg")
+const ICON_CLOSE: Texture2D = preload("res://assets/art/ui/icons/close.svg")
+
 func _ready() -> void:
 	if new_task_input != null:
 		new_task_input.clear_button_enabled = true
@@ -121,7 +125,10 @@ func refresh_controls() -> void:
 		for item in todo_items:
 			if not bool(item.get("completed", false)):
 				pending += 1
-		tasks_tab.text = "Tasks %d" % pending
+		# Journal restyle: the notebook icon carries the meaning, the number rides
+		# beside it. Empty list shows just the icon.
+		tasks_tab.text = ("%d" % pending) if pending > 0 else ""
+		tasks_tab.tooltip_text = UiStrings.t("tasks.tab.label", language)
 		tasks_tab.tooltip_text = UiStrings.t("tasks.tab.label", language)
 	if tasks_panel != null:
 		tasks_panel.visible = panel_visible
@@ -165,7 +172,7 @@ func render_tasks() -> void:
 		var ghost := Label.new()
 		ghost.text = UiStrings.t("tasks.empty", language)
 		ghost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		ghost.add_theme_color_override("font_color", Color(0.901961, 0.811765, 0.682353, 0.5))
+		ghost.add_theme_color_override("font_color", Color(0.462745, 0.352941, 0.270588, 0.6))  # soft ink on paper
 		ghost.add_theme_font_size_override("font_size", 13)
 		tasks_rows.add_child(ghost)
 		_update_counter()
@@ -186,7 +193,9 @@ func render_tasks() -> void:
 		done_toggle.toggle_mode = true
 		done_toggle.flat = true
 		done_toggle.custom_minimum_size = Vector2(34, 28)
-		done_toggle.text = "[x]" if completed else "[ ]"
+		done_toggle.icon = ICON_CHECK if completed else ICON_BOX
+		done_toggle.text = ""
+		done_toggle.flat = true
 		done_toggle.button_pressed = completed
 		done_toggle.tooltip_text = UiStrings.t("tasks.mark_done", language)
 		done_toggle.add_theme_font_size_override("font_size", 13)
@@ -204,13 +213,15 @@ func render_tasks() -> void:
 		text_field.flat = true
 		text_field.text_changed.connect(_on_todo_text_changed.bind(index))
 		if completed:
-			text_field.add_theme_color_override("font_color", Color(0.901961, 0.811765, 0.682353, 0.55))
+			text_field.add_theme_color_override("font_color", Color(0.462745, 0.352941, 0.270588, 0.5))  # done: faded ink
 		else:
-			text_field.add_theme_color_override("font_color", get_theme_color("cream", "Palette"))
+			text_field.add_theme_color_override("font_color", get_theme_color("espresso_brown", "Palette"))  # ink on paper
 		row.add_child(text_field)
 
 		var delete_button := Button.new()
-		delete_button.text = "X"
+		delete_button.icon = ICON_CLOSE
+		delete_button.text = ""
+		delete_button.flat = true
 		delete_button.custom_minimum_size = Vector2(30, 28)
 		delete_button.flat = true
 		delete_button.visible = true

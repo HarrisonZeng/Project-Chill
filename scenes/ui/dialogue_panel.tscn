@@ -1,27 +1,28 @@
 [gd_scene format=3 uid="uid://dlvbsxncwmeyp"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_subtitle_bg"]
-bg_color = Color(0.0, 0.0, 0.0, 0.46)
-border_width_left = 0
-border_width_top = 0
-border_width_right = 0
-border_width_bottom = 0
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+bg_color = Color(0.984314, 0.956863, 0.894118, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.611765, 0.474510, 0.352941, 0.6)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
 content_margin_bottom = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_input"]
-bg_color = Color(0.1, 0.075, 0.09, 0.82)
+bg_color = Color(0.996078, 0.980392, 0.941176, 0.96)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(1.0, 0.752941, 0.596078, 0.4)
+border_color = Color(0.611765, 0.474510, 0.352941, 0.7)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
@@ -47,7 +48,7 @@ anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 480.0
 offset_right = -488.0
-offset_top = -278.0
+offset_top = -208.0
 offset_bottom = -112.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -58,15 +59,26 @@ theme_override_styles/panel = SubResource("StyleBox_subtitle_bg")
 [node name="DialogueMargin" type="MarginContainer" parent="DialogueCard" unique_id=1273634983]
 layout_mode = 2
 theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 12
+theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 12
 
-[node name="DialogueText" type="RichTextLabel" parent="DialogueCard/DialogueMargin" unique_id=1283719266]
+[node name="VBox" type="VBoxContainer" parent="DialogueCard/DialogueMargin" unique_id=1943327605]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SpeakerTag" type="Label" parent="DialogueCard/DialogueMargin/VBox" unique_id=1738265429]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.878431, 0.643137, 0.345098, 0.95)
+theme_override_font_sizes/font_size = 13
+text = "Yua"
+horizontal_alignment = 1
+
+[node name="DialogueText" type="RichTextLabel" parent="DialogueCard/DialogueMargin/VBox" unique_id=1283719266]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/default_color = Color(0.960784, 0.921569, 0.862745, 1.0)
+theme_override_colors/default_color = Color(0.239216, 0.164706, 0.141176, 1.0)
 theme_override_font_sizes/normal_font_size = 20
 text = ""
 fit_content = true
@@ -94,7 +106,7 @@ layout_mode = 1
 anchor_right = 1.0
 offset_top = 4.0
 offset_bottom = 28.0
-theme_override_colors/font_color = Color(0.901961, 0.811765, 0.682353, 0.8)
+theme_override_colors/font_color = Color(0.462745, 0.352941, 0.270588, 0.8)
 theme_override_font_sizes/font_size = 13
 text = ""
 horizontal_alignment = 1
@@ -139,6 +151,8 @@ placeholder_text = "Type your reply"
 clear_button_enabled = true
 
 [node name="SendButton" type="Button" parent="InputRow" unique_id=1286230115]
-custom_minimum_size = Vector2(64, 46)
+custom_minimum_size = Vector2(72, 46)
 layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+theme_override_font_sizes/font_size = 16
 text = "发送"

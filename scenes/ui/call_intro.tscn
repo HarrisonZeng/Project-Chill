@@ -1,0 +1,159 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/call_intro_controller.gd" id="1_ctrl"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_avatar"]
+bg_color = Color(0.239216, 0.164706, 0.141176, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.878431, 0.643137, 0.345098, 0.7)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_answer_normal"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.478431, 0.658824, 0.517647, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.960784, 0.921569, 0.862745, 0.4)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_answer_hover"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.545098, 0.729412, 0.580392, 1.0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.960784, 0.921569, 0.862745, 0.6)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_hint"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.239216, 0.164706, 0.141176, 0.72)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[node name="CallIntro" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_ctrl")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.101961, 0.070588, 0.062745, 0.97)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Col" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="AvatarRow" type="CenterContainer" parent="Center/Col"]
+layout_mode = 2
+
+[node name="Avatar" type="PanelContainer" parent="Center/Col/AvatarRow"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_avatar")
+
+[node name="AvatarGlyph" type="Label" parent="Center/Col/AvatarRow/Avatar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.878431, 0.643137, 0.345098, 1)
+theme_override_font_sizes/font_size = 40
+text = "Y"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Center/Col"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.960784, 0.921569, 0.862745, 1)
+theme_override_font_sizes/font_size = 34
+text = "Yua"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="Center/Col"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.901961, 0.811765, 0.682353, 0.85)
+theme_override_font_sizes/font_size = 17
+text = "来电中…"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Center/Col"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+
+[node name="AnswerRow" type="CenterContainer" parent="Center/Col"]
+layout_mode = 2
+
+[node name="AnswerButton" type="Button" parent="Center/Col/AnswerRow"]
+custom_minimum_size = Vector2(84, 84)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.070588, 0.101961, 0.078431, 1)
+theme_override_colors/font_hover_color = Color(0.070588, 0.101961, 0.078431, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBox_answer_normal")
+theme_override_styles/hover = SubResource("StyleBox_answer_hover")
+theme_override_styles/pressed = SubResource("StyleBox_answer_hover")
+theme_override_styles/focus = SubResource("StyleBox_answer_hover")
+text = "接听"
+visible = false
+
+[node name="HintLabel" type="Label" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -140.0
+offset_top = -320.0
+offset_right = 140.0
+offset_bottom = -284.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.960784, 0.921569, 0.862745, 0.95)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBox_hint")
+text = "点她一下，打个招呼"
+horizontal_alignment = 1
+vertical_alignment = 1

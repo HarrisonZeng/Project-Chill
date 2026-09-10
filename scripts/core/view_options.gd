@@ -134,10 +134,12 @@ func _build_type_toggle() -> void:
 	_type_button.toggle_mode = true
 	_type_button.custom_minimum_size = Vector2(96, 32)
 	_type_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	# Sits in the reply row (level with the choice chips, right end) now that the
+	# dialogue card hugs its text; it used to float above the row over the card.
 	_type_button.offset_left = -104.0
-	_type_button.offset_right = -8.0
-	_type_button.offset_top = -40.0
-	_type_button.offset_bottom = -8.0
+	_type_button.offset_right = 0.0
+	_type_button.offset_top = 2.0
+	_type_button.offset_bottom = 34.0
 	_type_button.toggled.connect(_on_type_toggled)
 	card.add_child(_type_button)
 
