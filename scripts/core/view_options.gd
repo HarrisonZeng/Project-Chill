@@ -55,7 +55,9 @@ func setup(main: Node, weather: String, stance: String) -> void:
 	_weather = weather if weather in _views else String(_views[0])
 	_stance = stance if stance in STANCES else "at_player"
 	_build_settings_rows()
-	_build_type_toggle()
+	# No player-facing Type toggle any more (owner, 2026-09-10): the type box
+	# appears by itself at beats that ask for typing. A debug-only toggle lives
+	# on the DEBUG bar for testing while the script is still moving.
 	_build_collapse_toggles()
 	_refresh_labels()
 

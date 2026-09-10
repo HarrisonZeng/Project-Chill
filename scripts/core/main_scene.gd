@@ -2339,6 +2339,19 @@ func _debug_timeline_setup() -> void:
 	next_button.pressed.connect(_debug_timeline_next)
 	hbox.add_child(next_button)
 
+	# Debug-only Type Mode switch (owner, 2026-09-10): the player never sees a
+	# toggle — the type box appears by itself at beats that ask for typing.
+	# While the script is still moving, testers need to type anywhere, so the
+	# switch lives here, on the debug bar that release builds never show.
+	var type_toggle := Button.new()
+	type_toggle.text = "打字"
+	type_toggle.toggle_mode = true
+	type_toggle.button_pressed = type_mode_active
+	type_toggle.custom_minimum_size = Vector2(0, 24)
+	type_toggle.tooltip_text = "Debug: force the type box on everywhere"
+	type_toggle.toggled.connect(_on_type_mode_toggled)
+	hbox.add_child(type_toggle)
+
 	var reset_button := Button.new()
 	reset_button.text = "Reset Save"
 	reset_button.custom_minimum_size = Vector2(0, 24)

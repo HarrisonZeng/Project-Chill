@@ -35,3 +35,11 @@ assets/art/backgrounds/_*_preview.png*
 assets/art/backgrounds/chair.png
 assets/art/backgrounds/desk_back.png
 assets/art/backgrounds/room_shell.png
+
+# Working copies of renders/references for the art pipeline (not game assets)
+art_source/
+
+# Generated voice audio: the cache is rebuilt on demand, auditions are owner listening samples
+assets/audio/voice_cache/
+assets/audio/voice_auditions/
+tools/voice/*.log
