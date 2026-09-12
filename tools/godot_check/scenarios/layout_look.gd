@@ -34,10 +34,13 @@ func run(g) -> void:
 		g.check("three task rows", rows != null and rows.get_child_count() == 3)
 		if rows != null and rows.get_child_count() == 3:
 			var row = rows.get_child(0)
-			g.check("row = number, text, pencil, check", row.get_child_count() == 4)
+			# number, text, then a tight [pencil][check] pair at the right edge
+			g.check("row = number, text, actions", row.get_child_count() == 3)
 			var field: LineEdit = row.get_child(1)
 			g.check("text locked until pencil", not field.editable)
-			var pencil: Button = row.get_child(2)
+			var actions = row.get_child(2)
+			g.check("actions = pencil + check, no gap", actions.get_child_count() == 2 and actions.get_theme_constant("separation") == 0)
+			var pencil: Button = actions.get_child(0)
 			pencil.pressed.emit()
 			await g.frames(1)
 			g.check("pencil unlocks the line", field.editable)

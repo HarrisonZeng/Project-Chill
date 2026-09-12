@@ -223,27 +223,43 @@ func render_tasks() -> void:
 		text_field.add_theme_color_override("font_uneditable_color", ink)
 		row.add_child(text_field)
 
+		# Pencil and check packed side by side at the right edge (owner,
+		# 2026-09-13), so the text gets the width instead of the gaps.
+		var actions := HBoxContainer.new()
+		actions.add_theme_constant_override("separation", 0)
+		actions.size_flags_horizontal = Control.SIZE_SHRINK_END
+		row.add_child(actions)
+		# The theme's button style carries 14 px of side padding for text
+		# chips; on a bare icon that padding is what kept the pair apart.
+		var bare := StyleBoxEmpty.new()
+
 		var edit_button := Button.new()
 		edit_button.icon = ICON_PENCIL
 		edit_button.text = ""
 		edit_button.flat = true
-		edit_button.custom_minimum_size = Vector2(30, 28)
+		edit_button.custom_minimum_size = Vector2(26, 28)
 		edit_button.focus_mode = Control.FOCUS_NONE
 		edit_button.tooltip_text = UiStrings.t("tasks.edit", language)
 		edit_button.pressed.connect(_on_todo_edit_pressed.bind(text_field))
-		row.add_child(edit_button)
+		edit_button.expand_icon = true
+		for st in ["normal", "hover", "pressed", "focus"]:
+			edit_button.add_theme_stylebox_override(st, bare)
+		actions.add_child(edit_button)
 
 		var done_toggle := Button.new()
 		done_toggle.toggle_mode = true
 		done_toggle.flat = true
-		done_toggle.custom_minimum_size = Vector2(30, 28)
+		done_toggle.custom_minimum_size = Vector2(26, 28)
 		done_toggle.icon = ICON_CHECK if completed else ICON_BOX
 		done_toggle.text = ""
 		done_toggle.button_pressed = completed
 		done_toggle.focus_mode = Control.FOCUS_NONE
 		done_toggle.tooltip_text = UiStrings.t("tasks.mark_done", language)
 		done_toggle.toggled.connect(_on_todo_completed_toggled.bind(index))
-		row.add_child(done_toggle)
+		done_toggle.expand_icon = true
+		for st in ["normal", "hover", "pressed", "focus"]:
+			done_toggle.add_theme_stylebox_override(st, bare)
+		actions.add_child(done_toggle)
 
 		tasks_rows.add_child(row)
 
