@@ -30,13 +30,13 @@ const TASK_PANEL_LAYOUT_VERSION := 3
 
 @onready var dialogue_text: RichTextLabel = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/DialogueText
 @onready var dialogue_card: PanelContainer = $BottomPanel/DialoguePanel/DialogueCard
-@onready var response_card: Control = $BottomPanel/DialoguePanel/ResponseCard
-@onready var choice_list: Node = $BottomPanel/DialoguePanel/ResponseCard/ChoiceList
-@onready var input_row: Control = $BottomPanel/DialoguePanel/InputRow
-@onready var player_input: LineEdit = $BottomPanel/DialoguePanel/InputRow/PlayerInput
+@onready var response_card: Control = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/ResponseCard
+@onready var choice_list: Node = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/ResponseCard/ChoiceList
+@onready var input_row: Control = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/InputRow
+@onready var player_input: LineEdit = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/InputRow/PlayerInput
 @onready var ai_mode_toggle: CheckButton = null  # AIModeToggle removed from UI; all uses are null-checked
-@onready var status_label: Label = $BottomPanel/DialoguePanel/ResponseCard/StatusLabel
-@onready var send_button: Button = $BottomPanel/DialoguePanel/InputRow/SendButton
+@onready var status_label: Label = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/ResponseCard/StatusLabel
+@onready var send_button: Button = $BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/InputRow/SendButton
 @onready var chat_history_button: Button = $ChatHistoryButton
 @onready var chat_history_panel: Control = $ChatHistoryPanel
 @onready var chat_history_rows: VBoxContainer = $ChatHistoryPanel/Margin/VBox/Scroll/HistoryRows
@@ -835,8 +835,23 @@ func _update_response_slot_visibility(has_visible_choices: bool = false) -> void
 		response_card.visible = ready
 	if input_row != null:
 		input_row.visible = show_type
+	_refresh_response_card_height(show_choices)
 	if show_type and _should_autofocus_input() and player_input != null and not player_input.has_focus():
 		player_input.grab_focus()
+
+# The reply slot lives INSIDE the chat card (owner, 2026-09-13), which is
+# sized to match the music card. An empty slot must take no height, or the
+# card grows upward for nothing; it only needs room for the buttons, or for
+# the "Yua is thinking…" line while an AI reply is on its way.
+func _refresh_response_card_height(show_choices: bool) -> void:
+	if response_card == null:
+		return
+	var h := 0.0
+	if show_choices:
+		h = 36.0
+	elif status_label != null and status_label.visible:
+		h = 24.0
+	response_card.custom_minimum_size = Vector2(0, h)
 
 func _enter_scripted_mode() -> void:
 	current_ai_mode_id = ""
@@ -849,6 +864,7 @@ func _set_status_message(text: String) -> void:
 		return
 	status_label.text = text
 	status_label.visible = not text.is_empty()
+	_refresh_response_card_height(choice_list != null and choice_list.visible)
 
 func _show_system_status(text: String) -> void:
 	_hide_dialogue_text()

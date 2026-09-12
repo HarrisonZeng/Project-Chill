@@ -36,6 +36,7 @@ var resize_start_top: float = 0.0
 const ICON_CHECK: Texture2D = preload("res://assets/art/ui/icons/check.svg")
 const ICON_BOX: Texture2D = preload("res://assets/art/ui/icons/box.svg")
 const ICON_CLOSE: Texture2D = preload("res://assets/art/ui/icons/close.svg")
+const ICON_PENCIL: Texture2D = preload("res://assets/art/ui/icons/pencil.svg")
 
 func _ready() -> void:
 	if new_task_input != null:
@@ -189,21 +190,17 @@ func render_tasks() -> void:
 		row.mouse_entered.connect(_on_task_row_mouse_entered.bind(index))
 		row.mouse_exited.connect(_on_task_row_mouse_exited.bind(index))
 
-		var done_toggle := Button.new()
-		done_toggle.toggle_mode = true
-		done_toggle.flat = true
-		done_toggle.custom_minimum_size = Vector2(34, 28)
-		done_toggle.icon = ICON_CHECK if completed else ICON_BOX
-		done_toggle.text = ""
-		done_toggle.flat = true
-		done_toggle.button_pressed = completed
-		done_toggle.tooltip_text = UiStrings.t("tasks.mark_done", language)
-		done_toggle.add_theme_font_size_override("font_size", 13)
-		var done_color := get_theme_color("sage", "Palette") if completed else get_theme_color("sand", "Palette")
-		done_toggle.add_theme_color_override("font_color", done_color)
-		done_toggle.add_theme_color_override("font_hover_color", get_theme_color("honey_amber", "Palette"))
-		done_toggle.toggled.connect(_on_todo_completed_toggled.bind(index))
-		row.add_child(done_toggle)
+		# Notebook line (owner, 2026-09-13): a number on the left, the task text,
+		# then two small boxes on the right — a pencil to edit, a check to
+		# complete. No delete box: clear the text while editing and press Enter.
+		var number := Label.new()
+		number.text = "%d." % (index + 1)
+		number.custom_minimum_size = Vector2(26, 28)
+		number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		number.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		number.add_theme_font_size_override("font_size", 14)
+		number.add_theme_color_override("font_color", Color(0.462745, 0.352941, 0.270588, 0.55 if completed else 0.9))
+		row.add_child(number)
 
 		var text_field := LineEdit.new()
 		text_field.text = str(data.get("text", ""))
@@ -211,29 +208,42 @@ func render_tasks() -> void:
 		text_field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		text_field.placeholder_text = UiStrings.t("tasks.task_placeholder", language)
 		text_field.flat = true
+		# Read-only until the pencil is pressed, so a stray click does not put
+		# a caret in a task.
+		text_field.editable = false
+		text_field.selecting_enabled = false
+		text_field.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		text_field.text_changed.connect(_on_todo_text_changed.bind(index))
-		if completed:
-			text_field.add_theme_color_override("font_color", Color(0.462745, 0.352941, 0.270588, 0.5))  # done: faded ink
-		else:
-			text_field.add_theme_color_override("font_color", get_theme_color("espresso_brown", "Palette"))  # ink on paper
+		text_field.text_submitted.connect(_on_todo_text_submitted.bind(text_field))
+		text_field.focus_exited.connect(_on_todo_edit_finished.bind(text_field))
+		# The line is read-only most of the time, and a read-only LineEdit draws
+		# with font_uneditable_color (near-invisible by default) — so set both.
+		var ink := Color(0.462745, 0.352941, 0.270588, 0.5) if completed else get_theme_color("espresso_brown", "Palette")
+		text_field.add_theme_color_override("font_color", ink)
+		text_field.add_theme_color_override("font_uneditable_color", ink)
 		row.add_child(text_field)
 
-		var delete_button := Button.new()
-		delete_button.icon = ICON_CLOSE
-		delete_button.text = ""
-		delete_button.flat = true
-		delete_button.custom_minimum_size = Vector2(30, 28)
-		delete_button.flat = true
-		delete_button.visible = true
-		delete_button.focus_mode = Control.FOCUS_NONE
-		delete_button.mouse_filter = Control.MOUSE_FILTER_STOP
-		delete_button.tooltip_text = UiStrings.t("tasks.delete", language)
-		delete_button.add_theme_font_size_override("font_size", 14)
-		delete_button.add_theme_color_override("font_color", get_theme_color("brick_warm", "Palette"))
-		delete_button.add_theme_color_override("font_hover_color", get_theme_color("cream", "Palette"))
-		delete_button.pressed.connect(_on_todo_delete_pressed_from_button.bind(delete_button))
-		row.add_child(delete_button)
-		row.set_meta("delete_button", delete_button)
+		var edit_button := Button.new()
+		edit_button.icon = ICON_PENCIL
+		edit_button.text = ""
+		edit_button.flat = true
+		edit_button.custom_minimum_size = Vector2(30, 28)
+		edit_button.focus_mode = Control.FOCUS_NONE
+		edit_button.tooltip_text = UiStrings.t("tasks.edit", language)
+		edit_button.pressed.connect(_on_todo_edit_pressed.bind(text_field))
+		row.add_child(edit_button)
+
+		var done_toggle := Button.new()
+		done_toggle.toggle_mode = true
+		done_toggle.flat = true
+		done_toggle.custom_minimum_size = Vector2(30, 28)
+		done_toggle.icon = ICON_CHECK if completed else ICON_BOX
+		done_toggle.text = ""
+		done_toggle.button_pressed = completed
+		done_toggle.focus_mode = Control.FOCUS_NONE
+		done_toggle.tooltip_text = UiStrings.t("tasks.mark_done", language)
+		done_toggle.toggled.connect(_on_todo_completed_toggled.bind(index))
+		row.add_child(done_toggle)
 
 		tasks_rows.add_child(row)
 
@@ -345,6 +355,43 @@ func _update_task_row_delete_visibility(index: int, visible: bool) -> void:
 	var btn: Button = row.get_meta("delete_button")
 	if btn != null:
 		btn.visible = visible
+
+# Pencil: unlock the line for typing and put the caret at the end.
+func _on_todo_edit_pressed(text_field: LineEdit) -> void:
+	if text_field == null:
+		return
+	if text_field.editable:
+		_lock_task_line(text_field)
+		return
+	text_field.editable = true
+	text_field.selecting_enabled = true
+	text_field.mouse_filter = Control.MOUSE_FILTER_STOP
+	text_field.grab_focus()
+	text_field.caret_column = text_field.text.length()
+
+# Enter while editing: an empty line means "delete this task"; anything else
+# is kept and the line locks again.
+func _on_todo_text_submitted(new_text: String, text_field: LineEdit) -> void:
+	if text_field == null or tasks_rows == null:
+		return
+	if new_text.strip_edges().is_empty():
+		var row := text_field.get_parent()
+		var index := tasks_rows.get_children().find(row)
+		_on_todo_delete_pressed(index)
+		return
+	_lock_task_line(text_field)
+	save_requested.emit()
+
+func _on_todo_edit_finished(text_field: LineEdit) -> void:
+	if text_field != null and text_field.editable:
+		_lock_task_line(text_field)
+
+func _lock_task_line(text_field: LineEdit) -> void:
+	text_field.editable = false
+	text_field.selecting_enabled = false
+	text_field.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if text_field.has_focus():
+		text_field.release_focus()
 
 func _on_todo_text_changed(new_text: String, index: int) -> void:
 	if index < 0 or index >= todo_items.size():

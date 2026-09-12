@@ -35,6 +35,7 @@ const STRINGS := {
 	"tasks.task_placeholder": {"zh": "任务", "en": "Task"},
 	"tasks.delete": {"zh": "删除", "en": "Delete"},
 	"tasks.mark_done": {"zh": "标记完成", "en": "Mark done"},
+	"tasks.edit": {"zh": "编辑（清空后回车即删除）", "en": "Edit (clear + Enter deletes)"},
 	"tasks.close": {"zh": "关闭", "en": "Close"},
 	"tasks.counter": {"zh": "· %d 项 · %d 已完成 ·", "en": "· %d items · %d done ·"},
 	"tasks.counter_empty": {"zh": "· 还没有任务 ·", "en": "· no tasks ·"},

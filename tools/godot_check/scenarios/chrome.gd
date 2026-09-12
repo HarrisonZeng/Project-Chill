@@ -44,7 +44,7 @@ func run(g) -> void:
 		settings.visible = false
 
 	# Type mode on: the type box should appear only now.
-	var input_row = game.get_node_or_null("BottomPanel/DialoguePanel/InputRow")
+	var input_row = game.get_node_or_null("BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/InputRow")
 	g.check("type box hidden while Type Mode is off", input_row != null and not input_row.visible)
 	if game.has_method("_on_type_mode_toggled"):
 		game._on_type_mode_toggled(true)

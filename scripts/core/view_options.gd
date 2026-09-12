@@ -101,7 +101,8 @@ func _build_settings_rows() -> void:
 	var panel := _main.get_node_or_null("SettingsPanel")
 	if panel is Control:
 		var p := panel as Control
-		p.offset_top += 72.0
+		# Panel now opens under the status pill (top-left); only grow it for
+		# the extra rows.
 		p.offset_bottom += 204.0
 
 const FRAMES := ["smile", "shy", "surprised", "thinking", "rest", "focus", "sleepy",
@@ -129,7 +130,7 @@ func _on_stance_pressed() -> void:
 # ── type mode ─────────────────────────────────────────────────────────────────
 # Sits in the reply band. Off by default so the reply buttons get the space.
 func _build_type_toggle() -> void:
-	var card := _main.get_node_or_null("BottomPanel/DialoguePanel/ResponseCard")
+	var card := _main.get_node_or_null("BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/ResponseCard")
 	if card == null:
 		return
 	_type_button = Button.new()
@@ -178,10 +179,12 @@ func _build_collapse_toggles() -> void:
 	_chrome_toggle.pressed.connect(_on_chrome_collapse)
 	_main.add_child(_chrome_toggle)
 	_chrome_toggle.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_chrome_toggle.offset_left = 28.0
-	_chrome_toggle.offset_right = 60.0
-	_chrome_toggle.offset_top = 108.0
-	_chrome_toggle.offset_bottom = 136.0
+	# Sits to the right of the Settings button, which now lives under the
+	# status pill (top-left) — same row, so the two never overlap.
+	_chrome_toggle.offset_left = 84.0
+	_chrome_toggle.offset_right = 116.0
+	_chrome_toggle.offset_top = 98.0
+	_chrome_toggle.offset_bottom = 126.0
 
 func _small_button(size: Vector2) -> Button:
 	var b := Button.new()
