@@ -83,7 +83,7 @@ var focus_time_left: float = FOCUS_DURATION_SECONDS
 var focus_running: bool = false
 var focus_last_tick_ms: int = 0
 var last_saved_second: int = -1
-var voice_enabled: bool = true
+var voice_enabled: bool = false  # voice is off until a voice is cast (voice_manager.VOICE_FEATURE_ENABLED)
 
 var memory_manager: Node
 var ai_dialogue_service: Node
@@ -2131,7 +2131,7 @@ func _load_persistent_state() -> void:
 	var loaded_music_index := int(data.get("music_track_index", 0))
 	var loaded_music_paused := bool(data.get("music_paused", true))
 	var loaded_music_mode := int(data.get("music_playback_mode", 0))
-	voice_enabled = bool(data.get("voice_enabled", true))
+	voice_enabled = bool(data.get("voice_enabled", false))
 	ui_language = str(data.get("ui_language", "zh"))
 	if ui_language != "zh":
 		ui_language = "en"

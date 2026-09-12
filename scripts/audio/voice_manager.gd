@@ -7,6 +7,13 @@ signal voice_missing(line_id: String, expected_path: String)
 signal voice_failed(line_id: String, error: String)
 
 const Provider = preload("res://scripts/audio/minimax_voice_provider.gd")
+
+# HARD KILL SWITCH (owner, 2026-09-13): the audition-grade MiniMax clips are not
+# good enough to ship, so Yua's voice is OFF everywhere — pre-generated cache,
+# runtime TTS, and the per-save `voice_enabled` toggle are all ignored while this
+# is false. Flip to true when a voice is actually cast (Demo_Art_Checklist §E).
+# The audition tool (scenes/tools/voice_audition.tscn) is unaffected.
+const VOICE_FEATURE_ENABLED := false
 const PREGENERATED_DIR := "res://assets/audio/voice_cache"
 const MANIFEST_PATH := "res://data/dialogue/voice_manifest.json"
 const RUNTIME_CACHE_DIR := "user://voice_cache"
@@ -61,6 +68,10 @@ func _load_manifest() -> void:
 		voice_id = str(value.get("provisional_voice_id", voice_id))
 
 func _bind_main() -> void:
+	if not VOICE_FEATURE_ENABLED:
+		_enabled = false
+		set_process(false)
+		return
 	var parent := get_parent()
 	if follow_main_subtitles and parent != null and parent.has_method("_set_dialogue_text"):
 		_main = parent
@@ -95,7 +106,7 @@ func set_voice_enabled(value: bool) -> void:
 		stop_voice()
 
 func play_voice_for_line(line_id: String, line_text: String) -> bool:
-	if not _enabled or line_id == "idle":
+	if not VOICE_FEATURE_ENABLED or not _enabled or line_id == "idle":
 		return false
 	if _subtitle != null:
 		# The coordinator calls with whole-node text; _process follows only the
@@ -104,7 +115,7 @@ func play_voice_for_line(line_id: String, line_text: String) -> bool:
 	return _play_line(line_id, line_text.strip_edges(), true, false)
 
 func _play_line(line_id: String, text: String, network_allowed: bool, exact_only: bool) -> bool:
-	if text.is_empty():
+	if not VOICE_FEATURE_ENABLED or text.is_empty():
 		return false
 	if stop_previous_line:
 		stop_voice()
