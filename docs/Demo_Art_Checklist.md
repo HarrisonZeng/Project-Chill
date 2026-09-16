@@ -37,6 +37,7 @@ Legend: ✅ done · 🔧 in progress · ⬜ not started · 🅾 owner decides/ac
 | B6 | Expressions driven by dialogue mood | ⬜ | Needs a `mood` field per line in `scripted_nodes.json` — none exists yet. Do with the v10 script pass. |
 | B7 | Breathing bob | ⏸ | Deliberately not added after the twitching complaint. Try only if the video still reads as static. |
 | B8 | VRoid / Live2D / Blue-Archive rigging | ⏸ | After demo. Blink + expressions cover the "she's alive" bar for a 30 s clip. |
+| B9 | **Yua's design is generic** — owner's sister, 2026-09-16: "too bland, not much connection to her personality or anything rememberable" | 🅾 owner picks a direction | She fails the silhouette test (bob + glasses + cardigan is a hundred characters) and the story test (bookshop, sea town, secret manuscript — none of it is on her). Reference library of 86 designs, filterable, with four assembled build options: **[The Borrow List](https://claude.ai/code/artifact/d059d298-d4e1-4fd9-a9cd-44ba44709362)**. **🅾 Owner: pick a build (Sea-glass / shop apron / night shift / unpublished writer), or mix.** Quick wins (plush→小七, teal ribbon, glasses chain, ahoge, sleeve paws) are a day of grafts on the existing frames; a full redesign rebuilds all 16 frames and should happen *now* if ever, since every new frame multiplies the cost. |
 
 ## C. Sound
 
