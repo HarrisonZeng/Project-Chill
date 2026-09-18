@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ckjpfd8vrb0jg"
-path="res://.godot/imported/yua_blink.png-16b5d7dc173a67cf6be002989e40ef25.ctex"
+uid="uid://b0m8ijivnqk05"
+path="res://.godot/imported/yua_smile.png-8c70d8a42cfd004a3a8590667576f9cd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/character/yua_blink.png"
-dest_files=["res://.godot/imported/yua_blink.png-16b5d7dc173a67cf6be002989e40ef25.ctex"]
+source_file="res://assets/art/character/legacy_brown/yua_smile.png"
+dest_files=["res://.godot/imported/yua_smile.png-8c70d8a42cfd004a3a8590667576f9cd.ctex"]
 
 [params]
 
