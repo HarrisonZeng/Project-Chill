@@ -149,6 +149,24 @@ func _mount_game() -> bool:
 	# _ready reaches the provider, so that frame is not an exposure.
 	await frames(1)
 	game.set_ai_features_enabled(_ai_enabled)
+	# Story episodes are capped per real day in the shipped game; tests walk
+	# many sessions in one run, so lift the cap unless a scenario asks for it.
+	if not _opts.has("cap"):
+		game.daily_episode_cap = 0
+	# The launch questionnaire (Intake) also only auto-skips headless, and in a
+	# windowed run it is created INSTEAD of the call intro, which is set up only
+	# once the questionnaire finishes. So: answer the questionnaire with test
+	# values, wait for the call intro to be created, then skip that too. Then
+	# clear the "questionnaire ran this launch" flag — otherwise the answered
+	# call auto-opens Ep0 on top of whatever node the scenario asked for, which
+	# is exactly what made every -Mode shot of Yua come out as a black question
+	# screen on 2026-09-23.
+	var intake: Node = game.get_node_or_null("Intake")
+	if intake != null and intake.has_method("skip_with"):
+		intake.call("skip_with", "测试", "")
+		await frames(2)
+		if "_intake_ran_this_launch" in game:
+			game.set("_intake_ran_this_launch", false)
 	# Answer the incoming-call overlay instantly so scenarios (and -Mode shot,
 	# which runs windowed and therefore skips the headless auto-skip) start on
 	# the live room, exactly as before the overlay existed.
