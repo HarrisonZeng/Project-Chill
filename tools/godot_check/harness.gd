@@ -164,6 +164,13 @@ func _mount_game() -> bool:
 	var intake: Node = game.get_node_or_null("Intake")
 	if intake != null and intake.has_method("skip_with"):
 		intake.call("skip_with", "测试", "")
+		# skip_with emits `finished` synchronously, then fades the overlay out
+		# over 0.6 s before freeing it. Everything downstream (the call intro
+		# being set up) has already happened, so hide it now rather than wait
+		# out a tween whose length is in wall-clock seconds, not frames — the
+		# first shots after the skip still had the dimmed question screen on top.
+		if intake is CanvasItem:
+			(intake as CanvasItem).visible = false
 		await frames(2)
 		if "_intake_ran_this_launch" in game:
 			game.set("_intake_ran_this_launch", false)
