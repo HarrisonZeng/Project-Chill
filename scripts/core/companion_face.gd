@@ -63,6 +63,7 @@ func setup(portrait: TextureRect, above_desk_parent: Node = null, above_desk_ind
 		_hands_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_hands_layer.expand_mode = _portrait.expand_mode
 		_hands_layer.stretch_mode = _portrait.stretch_mode
+		_hands_layer.texture_filter = _portrait.texture_filter
 		above_desk_parent.add_child(_hands_layer)
 		if above_desk_index >= 0:
 			above_desk_parent.move_child(_hands_layer, mini(above_desk_index, above_desk_parent.get_child_count() - 1))
@@ -242,6 +243,12 @@ func _make_overlay(overlay_name: String) -> TextureRect:
 	t.grow_vertical = _portrait.grow_vertical
 	t.expand_mode = _portrait.expand_mode
 	t.stretch_mode = _portrait.stretch_mode
+	# Her art is 1536 wide and drawn at 750, so it is downscaled about 2x. Without
+	# mipmap filtering that undersamples — it reads as a soft, slightly smeared
+	# "filter" over her. The portrait carries LINEAR_WITH_MIPMAPS; every overlay
+	# stacked on it must match, or the blink and expression frames would resample
+	# differently from the base and shimmer as they fade in.
+	t.texture_filter = _portrait.texture_filter
 	t.modulate.a = 0.0
 	_portrait.get_parent().add_child(t)
 	_portrait.get_parent().move_child(t, _portrait.get_index() + 1)

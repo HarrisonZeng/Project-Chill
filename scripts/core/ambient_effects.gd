@@ -41,11 +41,18 @@ const OUTSIDE_BY_WEATHER := {
 # tint, dust density, which ROOM lighting to use ("day" art or the lamp-lit
 # "night" repaint), and a modulate for Yua so she is lit like the room she is
 # in rather than in flat daylight against a night window.
+#
+# That "yua" modulate is WHITE for every daylight view on purpose (owner,
+# 2026-09-24: "her image still feels like there is a weird 滤镜"). The
+# whole-frame `tint` ColorRect already draws OVER her, so a second cool cast on
+# top of it double-tinted her face and read as a haze. Only the night and
+# sunset views keep one, where the room really does change colour enough that
+# an unlit character would look pasted on.
 static func view_defs() -> Array:
 	return [
 		{"key": "rain", "tex": "view_city_rain.png", "alt": "outside_rain.png",
 			"rain": 0.8, "overcast": 0.62, "tint": Color(0.44, 0.50, 0.66, 0.10), "dust": 0.30,
-			"room": "day", "yua": Color(0.93, 0.95, 1.0)},
+			"room": "day", "yua": Color.WHITE},
 		{"key": "clear", "tex": "view_city_day.png", "alt": "outside_day.png",
 			"rain": 0.0, "overcast": 0.0, "tint": Color(0, 0, 0, 0), "dust": 0.55,
 			"room": "day", "yua": Color.WHITE},
@@ -60,7 +67,7 @@ static func view_defs() -> Array:
 			"room": "day", "yua": Color.WHITE},
 		{"key": "treetops", "tex": "view_treetops.png", "alt": "",
 			"rain": 0.0, "overcast": 0.0, "tint": Color(0.40, 0.60, 0.35, 0.10), "dust": 0.45,
-			"room": "day", "yua": Color(0.96, 1.0, 0.94)},
+			"room": "day", "yua": Color.WHITE},
 	]
 
 # Room art per lighting state. The night files are Codex EDITS of the day

@@ -64,6 +64,7 @@ offset_right = 375.0
 offset_bottom = 500.0
 grow_horizontal = 2
 grow_vertical = 2
+texture_filter = 3
 texture = ExtResource("1_kb4hv")
 expand_mode = 3
 stretch_mode = 5
