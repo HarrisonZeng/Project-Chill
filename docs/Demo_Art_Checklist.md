@@ -31,14 +31,14 @@ Legend: ✅ done · 🔧 in progress · ⬜ not started · 🅾 owner decides/ac
 |---|---|---|---|
 | B1 | Complete, uncut character silhouette | ✅ | Replaced the botched cutout with Codex's complete figure (same bounding box). |
 | B2 | Two stances — looking at me / at her screen — switchable in Settings, saved | ✅ | `yua_at_player.png`, `yua_at_work.png` |
-| B3 | Blink (every 3–6 s, sometimes double) | ✅ | `companion_face.gd`; `face` scenario photographs mid-blink. `at_player` only — see B5. |
+| B3 | Blink (every 3–6 s, sometimes double) | ✅ | `companion_face.gd`; `face` scenario photographs mid-blink. Both stances (B10). Held off during drink/chin poses, which carry their own face. |
 | B4 | Smile when clicked | ✅ | 2.5 s crossfade. Also usable: `shy` (came out as happy-eyes-closed). |
-| B5 | Expression variants that failed and need a stricter retry: **surprised** (mouth was a drawn ring), **thinking** (near no-op + stray dot), **at_work_blink** (unedited copy) | ⬜ | Retry brief must say: *redraw both eyes / the whole mouth; a change under 0.002 mean diff is a failure*. Not blocking. |
+| B5 | ~~Expression variants that failed~~ | ✅ superseded | All rebuilt in B10; surprised now a real open mouth, thinking a clear upward glance. |
 | B6 | Expressions driven by dialogue mood | ⬜ | Needs a `mood` field per line in `scripted_nodes.json` — none exists yet. Do with the v10 script pass. |
 | B7 | Breathing bob | ⏸ | Deliberately not added after the twitching complaint. Try only if the video still reads as static. |
 | B8 | VRoid / Live2D / Blue-Archive rigging | ⏸ | After demo. Blink + expressions cover the "she's alive" bar for a 30 s clip. |
 | B9 | ~~Yua's design is generic~~ | ✅ **decided 2026-09-23** | Final base installed: plum 高马尾 fading to dusty rose, tasselled bookmark in the tie, round glasses, loose cream sweatshirt with grey porpoise print, sapphire enamel butterfly. Reached over nine rounds (`art_source/yua_redesign/`, sheets in `_sheets/`, provenance in `9_final/README.md`). Passes silhouette, story and colour tests at thumbnail scale. |
-| B10 | **Rebuild the 16-frame set from the final base** — blink, 7 expressions, at-work stance, typing hands, drink/chin poses | ⬜ next | All overlays currently point at the single base or at blanks; old brown-haired frames parked in `assets/art/character/legacy_brown/`. Same graft pipeline as before: Codex edits of `9_final/yua_final.png`, face-region grafts, hands re-cut per frame, `armcheck` + forearm crop on every batch. About a day. |
+| B10 | **Rebuild the frame set from the final base** | ✅ 2026-09-25 | 17 Codex edits of the clean base: blink, smile, shy, surprised, thinking, rest, focus, sleepy, giggle, wink, pout, delighted, window, at_work (eyes on her screen — also the at-work stance base), typing_b, drink, chin. Each grafted onto the base inside its region only, then hair-recoloured to match; face frames measure 0.003–0.008 against the installed base. At-work stance reuses the reactions (she looks up at you) and grafts the typing fingers onto its own face. Hands overlays re-cut per pose. `face` scenario checks every frame exists in both stances and photographs each one. Sources + briefs: `art_source/yua_redesign/11_frames/`. Also fixed: blink/expression overlays used to cover a pose (phantom arms-down flash). |
 
 ## C. Sound
 
@@ -60,7 +60,7 @@ Legend: ✅ done · 🔧 in progress · ⬜ not started · 🅾 owner decides/ac
 | D3 | App icon (still Godot's default robot) | ⬜ | Trivial; Codex generates (her face or the dino plush). Also set in export presets. |
 | D4 | itch cover image + 小红书 thumbnail | ⏸ later | One good screenshot + title treatment. |
 | D5 | Vertical (9:16) crop plan before recording | ⏸ later | Decide the crop first — frame on her + the window. |
-| D6 | Web export size | ✅ watched | Views 2.1 MB; magenta `*_keyed.png` sources excluded from export. Keep an eye when adding art. |
+| D6 | Web export size | ✅ watched | Views 2.1 MB; magenta `*_keyed.png` sources and `assets/art/character/legacy_brown/` excluded from the web export. Yua's ~38 frames are lossless 1536×1024 on purpose (lossy brought the blur back) — the biggest item in the build; revisit only if load time hurts. |
 
 ## E. Voice — how to start, once the script is final
 

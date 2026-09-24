@@ -50,6 +50,66 @@ func run(g) -> void:
 			await g.shot("hands-over-arms-no-desk")
 			desk.visible = true
 
+	# Every frame the Settings flip-through offers must exist in both stances —
+	# a missing file is skipped silently in play, so only this catches it.
+	# Expressions are photographed at full strength; poses swap the base.
+	var expressions := ["smile", "shy", "surprised", "thinking", "rest", "focus", "sleepy",
+		"giggle", "wink", "pout", "delighted", "window"]
+	var frames_needed: Array = expressions + ["blink", "hands", "typing_b", "hands_b",
+		"drink", "drink_hands", "chin", "chin_hands"]
+	var first_stance = game.get("yua_stance")
+	for stance in ["at_player", "at_work"]:
+		game._on_stance_picked(stance)
+		await g.frames(2)
+		var missing: Array = []
+		for f in frames_needed:
+			if face._variant_for(f) == null:
+				missing.append(f)
+		g.check("%s stance has every frame" % stance, missing.is_empty(), "missing: %s" % [missing])
+	game._on_stance_picked("at_player")
+	await g.frames(2)
+
+	# A pose redraws her arms; blink and expression frames are arms-down
+	# drawings, so any of them showing over a pose puts a phantom pair of arms
+	# on screen. A pose must clear them and hold them off until it ends.
+	var expr_layer = game.get_node_or_null("CompanionStage/CompanionView/ExpressionLayer")
+	face.show_expression("smile", 5.0)
+	await g.frames(24)
+	face.show_pose("drink", 1.0)
+	face.blink_now()
+	face.show_expression("wink", 2.0)
+	await g.frames(12)
+	g.check("pose clears and holds off face overlays",
+		expr_layer != null and expr_layer.modulate.a == 0.0 and blink.modulate.a == 0.0,
+		"expression %.2f blink %.2f" % [expr_layer.modulate.a if expr_layer else -1.0, blink.modulate.a])
+	await g.frames(90)
+
+	if g.shooting():
+		for e in expressions:
+			face.show_expression(e, 2.0)
+			await g.frames(24)
+			await g.shot("expr-" + e)
+			await g.frames(60)
+		for p in ["drink", "chin"]:
+			while face._pose_active:
+				await g.frames(1)
+			face.show_pose(p, 1.0)
+			await g.frames(3)
+			await g.shot("pose-" + p)
+		while face._pose_active:
+			await g.frames(1)
+		# Typing only runs while focus does — main_scene drives set_working
+		# from focus_running every frame.
+		game.focus_running = true
+		await g.frames(1)
+		face._on_type_timer()
+		await g.frames(2)
+		await g.shot("typing-b")
+		game.focus_running = false
+		await g.frames(1)
+	game._on_stance_picked(first_stance)
+	await g.frames(2)
+
 	# The other stance is a different pose with its own hands cut. Switch to it
 	# the way Settings does, photograph it, and confirm a hands texture is set
 	# — a missing one would leave her hands under the desk.

@@ -26,6 +26,7 @@ var _blink_timer: Timer = null
 var _rng := RandomNumberGenerator.new()
 var _expr_tween: Tween = null
 var _blinking := false
+var _blink_tween: Tween = null
 
 # Her forearms and hands, drawn ABOVE the desk. The desk layer sits in front of
 # her (so it hides her lap); this puts her hands back on top of the keyboard.
@@ -107,18 +108,21 @@ func _sync_hands_rect() -> void:
 	_hands_layer.size = r.size
 
 func blink_now() -> void:
-	if _blinking or _blink_layer.texture == null:
+	# Blink and expression frames are whole drawings of the arms-down pose, so
+	# over a pose they would flash her arms back to the keyboard. Poses carry
+	# their own face; overlays stand aside until the pose ends.
+	if _blinking or _blink_layer.texture == null or _pose_active:
 		return
 	_blinking = true
-	var tw := create_tween()
-	tw.tween_property(_blink_layer, "modulate:a", 1.0, 0.06)
-	tw.tween_interval(0.09)
-	tw.tween_property(_blink_layer, "modulate:a", 0.0, 0.11)
-	tw.tween_callback(func(): _blinking = false)
+	_blink_tween = create_tween()
+	_blink_tween.tween_property(_blink_layer, "modulate:a", 1.0, 0.06)
+	_blink_tween.tween_interval(0.09)
+	_blink_tween.tween_property(_blink_layer, "modulate:a", 0.0, 0.11)
+	_blink_tween.tween_callback(func(): _blinking = false)
 
 func show_expression(expr_name: String, hold_seconds: float = 2.5) -> void:
 	var tex := _variant_for(expr_name)
-	if tex == null:
+	if tex == null or _pose_active:
 		return
 	if _expr_tween != null and _expr_tween.is_valid():
 		_expr_tween.kill()
@@ -186,6 +190,14 @@ func show_pose(pose_name: String, hold_seconds: float = 4.0) -> void:
 	if tex == null or _pose_active:
 		return
 	_pose_active = true
+	# Clear any expression or blink still showing, or it would cover the pose.
+	if _expr_tween != null and _expr_tween.is_valid():
+		_expr_tween.kill()
+	_expr_layer.modulate.a = 0.0
+	if _blink_tween != null and _blink_tween.is_valid():
+		_blink_tween.kill()
+	_blinking = false
+	_blink_layer.modulate.a = 0.0
 	var base_tex := _portrait.texture
 	var base_hands: Texture2D = _hands_layer.texture if _hands_layer != null else null
 	_portrait.texture = tex
