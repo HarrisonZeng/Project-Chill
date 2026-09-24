@@ -77,12 +77,13 @@ static func select_focus_complete_node(state: Dictionary, episodes: Array) -> St
 		var seen_flag := str(ep.get("seen_flag", ""))
 		var flag_guarded := not unlock.is_empty() or not seen_flag.is_empty()
 		if flag_guarded:
-			if completed < gate:
-				continue
 			if not seen_flag.is_empty() and bool(flags.get(seen_flag, false)):
 				continue
-			if not is_unlocked(unlock, state):
-				continue
+			# The story is strictly in order: the lowest unseen episode is the
+			# only candidate. If it is not open yet (session gate or an unlock
+			# like Ep12's focus time), nothing later may step over it.
+			if completed < gate or not is_unlocked(unlock, state):
+				return BEAT_NONE
 			return node_id  # lowest-gate eligible beat
 		else:
 			# Legacy: fire only on the completion that exactly reaches this gate.

@@ -177,6 +177,9 @@ func _mount_game() -> bool:
 	# Answer the incoming-call overlay instantly so scenarios (and -Mode shot,
 	# which runs windowed and therefore skips the headless auto-skip) start on
 	# the live room, exactly as before the overlay existed.
+	if game.has_method("skip_intake_for_tests"):
+		game.call("skip_intake_for_tests")
+		await frames(1)
 	var call_intro: Node = game.get_node_or_null("CallIntro")
 	if call_intro != null and call_intro.has_method("skip"):
 		call_intro.call("skip")
@@ -423,6 +426,10 @@ func check_line_lacks(label: String, needle: String) -> bool:
 # ---------------------------------------------------------------------------
 # Screenshots (only when the run is windowed — headless renders nothing)
 # ---------------------------------------------------------------------------
+
+## True under -Mode shot — for scenarios that only wait around to be photographed.
+func shooting() -> bool:
+	return not _shot_dir.is_empty()
 
 ## Capture whatever is on screen right now. Call it from anywhere in a scenario,
 ## as often as you like — each call writes its own file:

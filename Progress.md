@@ -50,7 +50,7 @@ is look (UI chrome / call-frame), script depth (Ep3+ arena), and packaging/marke
 
 | Gap | Priority | Owner | Notes |
 |---|---|---|---|
-| Script depth: Ep4+ canon (Ep0–Ep3 ✅ in game, v11 2026-09-06) | 🔴 | Claude (arena or owner structure) | Ep3 landed from the owner's own structure, no arena; next: Ep4 = 偷听写作 beat |
+| Script depth: Ep16+ (Ep0–Ep15 ✅ in game as v12 drafts, 2026-09-24) | 🟡 | Claude | Beat sheet v3 章回版; Ep2–Ep15 drafted + playable; language passes pending |
 | UI chrome / call-frame look (D2 pick + restyle) | 🔴 | Claude implements; owner picks direction | Biggest lever for 小红书 scroll-appeal; basic pass due with sister build |
 | Windows export preset (only Xogot/iPad/Web exist) | 🟡 | Claude writes preset; owner exports | NOT needed for sister review (web link); needed for the public post |
 | ~~itch.io page + `BUTLER_API_KEY` secret~~ | ✅ | Owner, done 2026-08-13 | Demo live and password-restricted |
@@ -183,6 +183,154 @@ either. What still does: feel, pacing, animation, audio.
 ---
 
 ## Session Log
+
+- **2026-09-24 (review fixes · her notebook card · calendar):** From the GPT holistic review
+  (`docs/Holistic_Review_2026-09-24.md`) + owner asks. All uncommitted; `check.ps1` green, 26 scenarios.
+  - **Story order bug fixed** (`progression_gate.gd`): the lowest unseen episode is now the only
+    candidate, so a locked Ep12 (needs 1.5 h focus) can no longer be stepped over by Ep13 with short
+    custom sessions. `story_flow` got the failing case first (proved red: Ep13 at session 13), then green.
+  - **Ep7 AI prompt contradiction** (`ai_modes.json` AI_MODE_DOOR_IDEA): kept the authored intent
+    (「明天试，试完告诉你」 is her own plan, and the next-visit door report depends on it); the hard rule
+    now forbids scheduling the *player* (明天见/下次来/等你) instead of forbidding 明天 outright.
+  - **Daily cap parked** (owner: "can be implemented later"): `daily_episode_cap` default 2 → 0. Code,
+    counter and the `daily_cap` scenario stay; set it back to 2 to switch on.
+  - **Her notebook is its own card** (`HerNotebookPanel` in `main_scene.tscn`, `tasks_panel_controller.gd`):
+    stacked above the player's tasks, same width, fitted to her lines, opens/closes with the tasks tab;
+    the player's panel gives way if her card needs room and returns to its own spot after. Espresso ink
+    (was pale), top goal a size up, and a hand-drawn strike for done chores — BBCode `[s]` had never
+    drawn anything with the bundled CJK font (pre-existing bug). Tape strip via `journal_decor.gd`.
+  - **Calendar card on the left** (`scripts/ui/calendar_controller.gd`, `OverlayLayer/Calendar`, icon
+    `assets/art/ui/icons/calendar.svg`): button beside the settings gear; month grid Monday-first,
+    today ringed in honey, days with a completed focus stamped sage, small dot + hover text for festivals
+    (元旦/情人节/劳动节/国庆/平安夜/圣诞/跨年 + lunar 春节/中秋 2026–28), the first-focus day, and her 房租 on
+    the 1st after Ep9. Footer: 「明天是中秋」 etc. No streak counts, nothing for missed days (not 打卡).
+    New save fields `focus_days` (date → minutes) and `calendar_visible`; hidden by the ◱ tidy toggle.
+    New scenario `calendar` (15 checks: stamps, marks, fold + relaunch, her card above tasks and clear
+    of the timer).
+  - **Text box** (`dialogue_panel.tscn`, `journal_decor.gd`): Yua tag moved up onto the top edge (it
+    covered the first line), leaf sprig removed, card now uses the shared stitched `PanelGlass` edge.
+    Owner asked whether matching every card is repetitive → mockups B (her notebook page: ruled lines,
+    red margin, tape) and C (translucent call subtitle) via `-Mode shot -Scenario dialogue_styles_look`;
+    Claude recommends B. Awaiting owner pick.
+  - **Calendar research** (owner: why do players want it, what should it do): top 5 = click a past day
+    → shared diary page (what you did + her line that day); her own marks written by episodes (shifts,
+    新人奖 deadline, "第一章 ✓"); player events with ≤2 gentle mentions (never 查岗); optional birthday +
+    festival scenes (always replayable later); month-end page + share image. Rules: no streaks, blank
+    days stay plain paper, never compare weeks, she never mentions gaps. Awaiting owner pick.
+
+- **2026-09-23/24 (BUILD: launch questionnaire · script v12 Ep2–Ep15 · daily cap · greeting selector ·
+  living notebook · AI modes on MiniMax):** Owner: «just implement, make sure AI mode is linked to the
+  MiniMax API». Everything below is in the main tree, `check.ps1` fully green (25 scenarios), nothing
+  committed (owner did not ask).
+  - **Launch questionnaire** `scenes/ui/intake.tscn` + `scripts/ui/intake_controller.gd`: black screen,
+    app voice, owner copy (「先回答几个问题。」「你的昵称是」「你是来——」一起学习/一起工作/其他, 「正在匹配…」
+    「已匹配 · Yua（也是第一次使用）」; no 搭子/合拍). Runs once before the call; saves `player_nickname`
+    / `player_role` / `player_role_text` / `intake_done`; on that launch Ep0 opens by itself when the
+    call connects. **Ep0 now reacts to the profile name** (new node `ep00_react` → `ACTION_NAME_REACT`;
+    blank nickname falls back to the old asking node). Fun-question slot reserved, not asked.
+  - **Script v12** (`scripted_nodes.json`, 134 nodes, `demo_script_version` 12): Ep2 我在写小说 (direct
+    reveal, sets `writing_disclosed`), 你听 → Ep3, Ep4 第一句, Ep5 你最近在忙什么 (AI), 脑子飞了 → Ep6,
+    Ep7 自动门 (typed idea + next-visit report), Ep8 主角的毛病, Ep9 店长减班, Ep10 写不动 (AI + 类型),
+    Ep11 四张桌子 (branches on the Ep6 platform), Ep12 第一章 (gate ≥ 1.5 h focus, chapter text in
+    dialogue for now), Ep13 水族馆 (chapter 2 flag), Ep14 饮料, Ep15 主角名字 (AI). Old v9 Ep4–Ep14 removed.
+    New choice/node fields: `remember`, `next_by_memory {key,map,default}`, `typed_routes.remember_said`
+    (feeds `player_said` for 「上次你说」). `_start_focus_from_script` now also writes `intro_seen` when
+    Ep0 ends through the task-input route (pre-existing split-brain gap).
+  - **Daily cap**: `daily_episode_cap` (default 2 story episodes per real day; 0 = unlimited, which the
+    harness sets); counters persisted; focus unlimited.
+  - **Greeting selector** `scripts/core/greeting_selector.gd` (pure) + `data/dialogue/greeting_pools.json`:
+    special date > away 30/7/3 > door report (Ep7 idea, one-shot) > 「上次你说」 (AI_MODE_LAST_TIME, fallback
+    line first, model line replaces it) > notebook mention > same-day return > time × chapter (40 lines).
+    15 date hooks (lunar 春节/中秋 pre-computed 2026–28; 高考/期末 students only; 周一/周五 workers only;
+    30/100/365 days since first focus; 凌晨). Chapter derived from episode flags. Per-chapter idle-click
+    pools (`idle_click_ch2..5`). First-focus stamp, returns-today counter, fired map persisted.
+  - **Living notebook** `scripts/core/notebook_manager.gd` + `data/dialogue/notebook_pools.json` +
+    「她的本子」 section in the tasks panel (RichTextLabel strike-through, "…" for stalled, ▮▯ bars):
+    top line follows flags (我的小项目 → 写一章 → 写第二章 → … → 第二本), 2–3 chores per chapter pool + life
+    pool, standing 别打游戏 (flips) and 不催{name} (always done, after Ep5), long goal 攒电脑 (after Ep20,
+    done at Ep49), 房租 on the 1st–3rd, roll once per real day, ONE mention into the greeting ladder.
+  - **AI on MiniMax**: provider selection unchanged (MINIMAX_API_KEY → api.minimaxi.com, MiniMax-M3);
+    5 new modes (YOUR_THING, DOOR_IDEA, STUCK, HERO_NAME, LAST_TIME) + mock lines; world layer updated
+    (Ep2 reveal, chapter spine, runtime fields). Live probe `scratchpad/probe_v12_modes.py`: 12/12 clean,
+    avg 5.4 s. **In-game live check `ai_live` (run with `-Ai`) passes 11/11**: Ep5's typed answer and a free
+    chat come back from MiniMax-M3 in her voice. It caught two real bugs on the way, both fixed: (1) the
+    service shared ONE HTTPRequest, so any call abandoned by a timeout made every later call fail with
+    "HTTPRequest is processing a request" — now one node per call; (2) `_await_with_timeout` took the
+    coroutine call as an argument, which GDScript rejects ("Trying to call an async function without
+    await"), so the name reaction / typed routes / greeting callback never actually reached the model —
+    replaced by `_route_with_timeout` (fire the request as a statement, poll a box). Timeouts 16 s.
+  - **Tests**: new `intake`, `story_flow` (46 checks, Ep1–Ep15 with AI off), `daily_cap`, `greeting` (36),
+    `notebook` (22), `ai_live` (opt-in), `intake_look` / `notebook_look` (shots); `ep3_platform` →
+    `ep6_platform`. Harness lifts the cap and skips the questionnaire. Restored `bgm_manager.gd` from git
+    (two stray "780" lines from another session broke every boot).
+  - **Not done (next)**: the fun question; 「她的稿子」 reader panel (Ep12 text is inline for now);
+    工作中自语 pool; per-chapter scene art; Ep16+; language passes (all new lines are 草稿).
+
+- **2026-09-23 (ambient + systems draft v1):** Owner asked for drafts of everything outside the main
+  line: launch questionnaire, greeting/idle lines driven by memory / time / date and tied to the plot,
+  and Yua's notebook. → `docs/Ambient_and_Systems_Draft_v1.md` (+ phone page
+  `artifacts/yua_ambient_draft.html`): **A** 匹配问卷 (3 questions: 称呼 / 学生·上班 / 惯常时段; name
+  reaction now reads the profile; role gates student/worker-only greetings; no age/gender); **B** a
+  priority selector for the first line (special date > ≥7d > 3–6d > 「上次你说」AI callback > notebook
+  change > same-day return > 时段×章) with 40 chapter-aware greetings, same-day/return-after-days pools,
+  and 15 date hooks (春节/中秋/跨年/高考/期末/周一/周五/梅雨/台风/30·100 天/周年/改名/凌晨); **C**
+  per-chapter idle-click, 自语 pools, Nth-session sign-offs, focus-click and exit variants; **D** notebook
+  v2 for the chapter structure: top line evolves with the plot (我的小项目 → 写一章 → … → 第二本), long-line
+  goals (攒电脑 progress bar Ep20–49, 房租 monthly), per-chapter chore pools, the 「不催{name}」 standing
+  item, dice rules, one-mention lines per item, UI and a ~200-line manager sketch. All lines marked 草稿.
+  Suggested build order A → B → D → C → B4. Awaiting owner markup.
+
+- **2026-09-22 (beat sheet v3 — 章回版):** Owner on v2: move 「第一句」 to Ep4/5, bring AI in much
+  earlier, and — the structural one — a bookstore can't carry 60 episodes, so make it chapter-styled:
+  bookstore first, then stints at 水族馆, 咖啡店, etc., while the novel main line runs through.
+  → `docs/Story_Beat_Sheet_v3.md` (v1/v2 kept): five chapters × 12 eps — 书店 (1–12) → 水族馆 (13–24)
+  → 咖啡店 (25–36, a neighbouring shop whose owner broke an arm and "borrowed" her for three weeks)
+  → 花店·天文馆·民宿 (37–48, seasonal stints) → 回书店 (49–60). New causal spine: Ep9 the 店长 cuts her
+  winter hours → she chases shifts for rent and a laptop that doesn't black-screen → Ep48 he calls her
+  back. 「第一句」 = Ep4, first AI-core episode = Ep5 (「你最近在忙什么」, stores 你的事, paid off at
+  Ep32/Ep47 + 「上次你说」); 13 AI-core eps; gates 12/24/47/60; hero thread 8→15→21→44→54→60; 9 忧愁集
+  incl. money. Weekend-番外 category dropped (the aquarium is its own chapter). New system #4: per-chapter
+  scene swap (background/desk props), the visible proof of the chapter structure. Canon impact: Ep2/4/5
+  new, 你听 stays Ep3, 脑子飞了 → Ep6 (ids only). Page republished at the same URL; awaiting markup.
+
+- **2026-09-19 (beat sheet v2):** Owner's notes on v1: reveal the novel by Ep1/2 (no hiding), a main-story
+  episode every 2–3, a real ending with actual content, add 忧愁 / "she needs the player" episodes, diversify
+  topics, and (mid-turn) episodes built around the AI responding to what the player typed now or before.
+  → `docs/Story_Beat_Sheet_v2.md` (v1 kept for record): Ep2 = 「我在写小说」 direct reveal (你听→Ep3,
+  脑子飞了→Ep4, ids only); 37 主线 / 19 日常 / 4 周末番外 with no two non-main in a row except around
+  real-weekend 番外; 9 忧愁集 (妈妈 17/28, 电脑死了 20, 不然算了 29, 店要关 35, 结局你选 41, 网上评论 49,
+  退稿 55); 12 AI-core episodes + a 「上次你说」 AI callback system; the novel itself becomes readable
+  content (第一章 Ep14 ~800字, 台风段 Ep31, 第二章 Ep32, 结局 A/B Ep60 by the player's Ep41 choice, 主角 says
+  the player's Ep54 line); topic idea list (吃/天气/家人/镇上的人/游戏/书/身体/钱/电脑/过去/怕的); systems
+  list now 18 (adds 她的稿子 reader, 玩家决定存档, 上次你说, AI 兜底表). Phone page republished at the
+  same URL (v1's 铃响了她没停 overhear beat and arena round 10 are dropped). Awaiting owner+sister markup.
+
+- **2026-09-18 (sister feedback → 60-episode beat sheet):** Owner relayed five suggestions from their sister
+  (lock scope at 60/120 eps with a daily cap; a matching scene collecting player info; goal-setting /
+  打卡 plan then paid AI credits; punishment for missed days; the novel is about the player) and their
+  own call to stop grinding line-level language and build the whole 主线 + systems first. My verdicts:
+  yes to scope lock + daily cap (story eps capped, focus unlimited), yes to matching intake (3 questions,
+  no age/gender), 打卡 = focus habit not story quota, **no punishment** (symmetric absence instead), and
+  the novel absorbs the player gradually rather than being "about" them. Wrote
+  `docs/Story_Beat_Sheet_v1.md`: Ep0 prologue + Ep1–Ep60 (31 主线 / 25 日常 / 4 周末番外), three
+  threads (her novel; 主人公是你 14→22→30→44→60; she remembers — a memory ledger table of every question
+  asked and where it pays off), four intimacy gates on real focus time (Ep8/32/48/60), a ranked list of
+  15 systems to add (focus calendar first, daily cap, intake, living notebook, "她记得的事" page,
+  symmetric absence, weekend/seasonal triggers, 自语, 第N段, 荐书卡 HUD, 她也下班, afterstory mode).
+  Published as a phone page (`artifacts/yua_beat_sheet.html`). Next: owner + sister mark up the
+  outline → one-pass draft generation of Ep4–Ep60 → systems 1–8 → language passes last.
+
+- **2026-09-16 (competitor research — Memory of Memorie):** Owner flagged «Memory of Memories» as a
+  reported 1:1 CWYL copy. Findings in `docs/Memory_of_Memorie_Research_2026-09-16.md`: it is BeXide's
+  (JP) «Memory of Memorie: A Chill Story», 2026-07-22, Steam+Switch, ¥1,200, 98% of 244 reviews, ~5–15k
+  Steam owners, full zh-CN audio; **not a rip-off — Nestopi and BeXide sell an official CWYL×MoM
+  bundle**; the format is now a genre. Players punish it for no to-do/calendar-less-depth ("做了一半就放
+  出来了吗"), thin content, slow unlocks, distracting SFX, and "localization inadequate" despite
+  Chinese voice; they praise focus-only unlocks (no paywall), timestamped achievements, focus-history
+  calendar, camera/weather variety. Takeaways logged in the doc: our three differentiators hold (no
+  competitor has AI chat, memory, or a companion arc); add a **focus-history calendar** before the
+  public post (cheap, loved); keep per-session pacing; keep ambient SFX sparse; positioning = "the one
+  who remembers you".
 
 - **2026-09-06 (audit fixes §7-A/B applied + coverage fills + completeness proposal):** Applied
   the daily-surface fixes from `docs/Script_Audit_2026-09-06.md` without touching the other

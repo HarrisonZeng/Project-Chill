@@ -21,6 +21,8 @@ const DEFAULT_DEMO_SCRIPT_VERSION := 5
 const DEFAULT_INTRO_NODE_ID := "ep00_01"
 const REACTIVE_LINES_PATH := "res://data/dialogue/reactive_lines.json"
 const AI_MODES_PATH := "res://data/dialogue/ai_modes.json"
+const GREETING_POOLS_PATH := "res://data/dialogue/greeting_pools.json"
+const GreetingSelector = preload("res://scripts/core/greeting_selector.gd")
 const QUICK_TEST_SECONDS := 3.0
 const DEFAULT_DIALOGUE_TYPEWRITER_CHARS_PER_SECOND := 34.0
 const TASK_PANEL_LAYOUT_VERSION := 3
@@ -60,6 +62,7 @@ const TASK_PANEL_LAYOUT_VERSION := 3
 @onready var focus_custom_apply: Button = $OverlayLayer/HUD/FocusCard/Col/CustomRow/ApplyButton
 @onready var focus_primary_button: Button = $OverlayLayer/HUD/FocusCard/Col/PrimaryRow/StartButton
 @onready var tasks_ui: Node = $OverlayLayer/Tools
+@onready var calendar_ui: Node = get_node_or_null("OverlayLayer/Calendar")
 @onready var music_bar: Node = $BottomLeftMusicBar
 @onready var settings_button: Button = $SettingsButton
 @onready var settings_panel: PanelContainer = $SettingsPanel
@@ -134,6 +137,13 @@ var return_count: int = 0
 var yua_openness: int = 0
 var current_story_milestone: String = ""
 var player_nickname: String = ""
+# Launch questionnaire (owner spec 2026-09-23): asked once by the app itself,
+# never by Yua. role ∈ {"study", "work", "other", ""}; role_text is the free
+# answer behind 其他. intake_done gates the overlay; the harness never sees it.
+var player_role: String = ""
+var player_role_text: String = ""
+var intake_done: bool = false
+var _intake_ran_this_launch: bool = false
 # Player-chosen scene look, persisted with the rest of the profile.
 var window_weather: String = "rain"
 var yua_stance: String = "at_player"
@@ -141,6 +151,7 @@ var yua_stance: String = "at_player"
 # so scripted reply buttons get that space the rest of the time.
 var type_mode_active: bool = false
 var ambient_effects: Node = null
+var notebook_manager: Node = null
 var view_options: Node = null
 var companion_face: Node = null
 
@@ -161,6 +172,19 @@ var episode_start_nodes: PackedStringArray = PackedStringArray()
 var episode_metadata: Array = []
 var reactive_lines: Dictionary = {}
 var ai_modes: Dictionary = {}
+var greeting_pools: Dictionary = {}
+# Greeting selector state (docs/Ambient_and_Systems_Draft_v1.md §B). All
+# persisted; none of it advances the story.
+var greeting_fired: Dictionary = {}     # special id -> date it last fired
+var returns_today_key: String = ""
+var returns_today: int = 0               # launches today, including this one
+var first_focus_unix: int = 0
+var last_callback_unix: int = 0
+# The calendar card's stamps (2026-09-24): "YYYY-MM-DD" -> minutes of completed
+# focus that day. Display only — never read by progression.
+var focus_days: Dictionary = {}
+const CALLBACK_MIN_AGE_SECONDS := 3 * 86400
+const GREETING_AI_TIMEOUT_SECONDS := 12.0
 
 func _ready() -> void:
 	music_bar.setup(bgm_manager)
@@ -176,6 +200,11 @@ func _ready() -> void:
 	_configure_companion_controls()
 	_setup_memory_profile()  # must exist before _load_persistent_state (single profile store)
 	_load_persistent_state()
+	notebook_manager = preload("res://scripts/core/notebook_manager.gd").new()
+	notebook_manager.name = "NotebookManager"
+	add_child(notebook_manager)
+	notebook_manager.setup(memory_manager)
+	_refresh_yua_notebook()
 	_setup_view_options()
 	_load_prompt_assets()
 	call_status.refresh(ui_language, focus_running)
@@ -185,6 +214,7 @@ func _ready() -> void:
 	_load_episode_metadata_from_manager()
 	_load_reactive_lines()
 	_load_ai_modes()
+	greeting_pools = _load_json_dict(GREETING_POOLS_PATH)
 	# Co-presence-first: land on idle (Yua quietly working). Do NOT auto-open the
 	# greeting/return dialogue — that surfaces on the FIRST click of Yua (see
 	# _on_character_clicked). The idle node's line is the gentle "click to talk"
@@ -196,8 +226,67 @@ func _ready() -> void:
 	_refresh_focus_controls()
 	_highlight_duration_chip(int(round(focus_duration_seconds / 60.0)))
 	tasks_ui.refresh_controls()
-	_setup_call_intro()
+	_setup_launch_flow()
 	_debug_timeline_setup()  # DEBUG_TIMELINE — remove this line for prod
+
+# First launch: the questionnaire runs BEFORE the incoming call, so the match
+# reads as the reason the call happens. Later launches go straight to the call.
+# Headless runs (the check harness) skip the questionnaire entirely — tests that
+# need answers call the overlay's skip_with() themselves.
+func _setup_launch_flow() -> void:
+	var needs_intake := not intake_done and not _intro_already_seen()
+	if needs_intake and DisplayServer.get_name() != "headless":
+		var call_intro := get_node_or_null("CallIntro")
+		if call_intro != null:
+			call_intro.visible = false
+		var intake: Control = preload("res://scenes/ui/intake.tscn").instantiate()
+		intake.name = "Intake"
+		intake.z_index = 900
+		add_child(intake)
+		intake.finished.connect(_on_intake_finished)
+		intake.call("start")
+		return
+	_setup_call_intro()
+
+# Test hook: windowed harness runs (-Mode shot) are not headless, so a fresh
+# save would show the questionnaire over every screenshot. Drop it without
+# answering and continue to the call, exactly as a headless run does.
+func skip_intake_for_tests() -> void:
+	var intake := get_node_or_null("Intake")
+	if intake == null:
+		return
+	intake.queue_free()
+	var call_intro := get_node_or_null("CallIntro")
+	if call_intro != null:
+		call_intro.visible = true
+	_setup_call_intro()
+
+func _on_intake_finished(answers: Dictionary) -> void:
+	player_nickname = str(answers.get("nickname", "")).strip_edges()
+	player_role = str(answers.get("role", ""))
+	player_role_text = str(answers.get("role_text", "")).strip_edges()
+	intake_done = true
+	_intake_ran_this_launch = true
+	if memory_manager != null and memory_manager.has_method("set_player_nickname"):
+		memory_manager.call("set_player_nickname", player_nickname)
+	_save_persistent_state()
+	var call_intro := get_node_or_null("CallIntro")
+	if call_intro != null:
+		call_intro.visible = true
+	_setup_call_intro()
+
+# The match just happened and the call just connected: open Ep0 by itself so
+# the first thing the player hears is her losing the game. Only on the launch
+# the questionnaire ran — every other launch lands on quiet idle as before.
+func _on_call_answered() -> void:
+	if not _intake_ran_this_launch:
+		return
+	if _intro_already_seen():
+		return
+	var t := get_tree().create_timer(0.9)
+	t.timeout.connect(func():
+		if current_node_id == "idle" and not _conversation_opened_this_session:
+			_on_character_clicked())
 
 # The diegetic "incoming call" opener (art checklist D1). Answering is the one
 # tap browsers require before audio may play, so on web it is load-bearing.
@@ -211,6 +300,8 @@ func _setup_call_intro() -> void:
 			intro.call("skip")
 		return
 	var is_returning := previous_last_seen_unix > 0 or has_seen_intro
+	if intro.has_signal("answered") and not intro.is_connected("answered", _on_call_answered):
+		intro.connect("answered", _on_call_answered)
 	if intro.has_method("setup"):
 		intro.call("setup", is_returning, not has_seen_intro)
 
@@ -337,6 +428,8 @@ func _wire_signals() -> void:
 			var minutes := int(btn.text)
 			btn.pressed.connect(_on_duration_chip_pressed.bind(minutes))
 	tasks_ui.save_requested.connect(_save_persistent_state)
+	if calendar_ui != null:
+		calendar_ui.save_requested.connect(_save_persistent_state)
 	if dialogue_card != null:
 		dialogue_card.mouse_filter = Control.MOUSE_FILTER_STOP
 		dialogue_card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -596,6 +689,8 @@ func _refresh_ui_language() -> void:
 	call_status.refresh(ui_language, focus_running)
 	_refresh_focus_controls()
 	tasks_ui.apply_language(ui_language)
+	if calendar_ui != null:
+		calendar_ui.apply_language(ui_language)
 
 func _refresh_focus_controls() -> void:
 	if focus_card != null:
@@ -1123,6 +1218,7 @@ func _on_character_clicked() -> void:
 			_show_idle_click_line()
 			return
 		_conversation_opened_this_session = true
+		_roll_yua_notebook()
 		var start_id := _resolve_start_node_id()
 		if start_id == "idle" or not scripted_dialogue_manager.has_dialogue_node(start_id):
 			# Never fall back into the intro for a returning player. Checks BOTH
@@ -1131,6 +1227,12 @@ func _on_character_clicked() -> void:
 				start_id = intro_node_id
 			else:
 				start_id = "return_open_01"
+		# A returning player gets the greeting selector (date / days away / her
+		# notebook / 「上次你说」 / time × chapter); the authored greeting nodes
+		# remain the fallback when the pools are missing.
+		if start_id != intro_node_id and _open_with_greeting():
+			_maybe_show_follow_up()
+			return
 		_show_node(start_id)
 		_maybe_show_follow_up()
 		return
@@ -1149,6 +1251,167 @@ func _on_character_clicked() -> void:
 		_set_dialogue_text("我在。\n\n你慢慢想，不急。我先写我这段。")
 		_play_voice_for_line("prompt_pick_response", dialogue_text.text)
 
+# --- greeting selector ---------------------------------------------------------
+
+# 1 书店 · 2 水族馆 · 3 咖啡店 · 4 花店/天文馆/民宿 · 5 回书店 (beat sheet v3).
+# Derived from episode flags every time, never stored.
+func _current_chapter() -> int:
+	if not _intro_already_seen():
+		return 0
+	var flags: Dictionary = {}
+	if memory_manager != null and memory_manager.has_method("get_story_flags"):
+		flags = memory_manager.call("get_story_flags")
+	if bool(flags.get("ep49_seen", false)):
+		return 5
+	if bool(flags.get("ep37_seen", false)):
+		return 4
+	if bool(flags.get("ep25_seen", false)):
+		return 3
+	if bool(flags.get("ep13_seen", false)):
+		return 2
+	return 1
+
+# The oldest un-echoed thing the player typed at least 3 days ago, if the last
+# echo was itself ≥ 3 days ago. {} when there is nothing to bring up.
+func _callback_candidate() -> Dictionary:
+	if memory_manager == null:
+		return {}
+	var now_unix := int(Time.get_unix_time_from_system())
+	if last_callback_unix > 0 and now_unix - last_callback_unix < CALLBACK_MIN_AGE_SECONDS:
+		return {}
+	var said: Array = memory_manager.get_value("player_said", [])
+	if typeof(said) != TYPE_ARRAY:
+		return {}
+	for entry in said:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		if bool(entry.get("echoed", false)):
+			continue
+		if now_unix - int(entry.get("unix", now_unix)) < CALLBACK_MIN_AGE_SECONDS:
+			continue
+		return entry
+	return {}
+
+func _mark_callback_echoed(entry: Dictionary) -> void:
+	if memory_manager == null:
+		return
+	var said: Array = memory_manager.get_value("player_said", [])
+	if typeof(said) != TYPE_ARRAY:
+		return
+	for i in said.size():
+		var e = said[i]
+		if typeof(e) == TYPE_DICTIONARY and int(e.get("unix", -1)) == int(entry.get("unix", -2)) and str(e.get("text", "")) == str(entry.get("text", "")):
+			e["echoed"] = true
+			said[i] = e
+	memory_manager.set_value("player_said", said)
+	last_callback_unix = int(Time.get_unix_time_from_system())
+
+func _greeting_state() -> Dictionary:
+	var now: Dictionary = Time.get_datetime_dict_from_system()
+	var now_unix := int(Time.get_unix_time_from_system())
+	var elapsed := -1
+	if previous_last_seen_unix > 0:
+		elapsed = maxi(0, now_unix - previous_last_seen_unix)
+	return {
+		"now": now,
+		"now_unix": now_unix,
+		"days_since": _days_since_previous_visit(),
+		"elapsed_seconds": elapsed,
+		"returns_today": returns_today,
+		"chapter": _current_chapter(),
+		"role": player_role,
+		"fired": greeting_fired,
+		"first_focus_unix": first_focus_unix,
+		"door_idea": _remembered_player_value("door_idea"),
+		"door_reported": _remembered_player_value("door_reported") == "yes",
+		"notebook_mention": _notebook_mention_for_today(),
+		"callback": _callback_candidate(),
+		"ai_enabled": ai_features_enabled and dialogue_router != null,
+		"rng": randf(),
+	}
+
+# Her notebook: roll once per real day (crossing out / stalling / new lines),
+# then push the rows to the panel. Nothing in it touches progression.
+func _roll_yua_notebook() -> void:
+	if notebook_manager == null or not _intro_already_seen():
+		return
+	var flags: Dictionary = {}
+	if memory_manager != null and memory_manager.has_method("get_story_flags"):
+		flags = memory_manager.call("get_story_flags")
+	notebook_manager.roll_for_today(_current_chapter(), flags, player_nickname)
+	_refresh_yua_notebook()
+
+func _refresh_yua_notebook() -> void:
+	if notebook_manager == null:
+		return
+	var flags: Dictionary = {}
+	if memory_manager != null and memory_manager.has_method("get_story_flags"):
+		flags = memory_manager.call("get_story_flags")
+	notebook_manager.refresh_top_line(flags)
+	# First seeding: the moment the intro is done she has a notebook to show
+	# (the per-session roll runs on the first click, which the intro click was).
+	if _intro_already_seen() and str(notebook_manager.state.get("last_roll", "")).is_empty():
+		notebook_manager.roll_for_today(_current_chapter(), flags, player_nickname)
+	if tasks_ui != null and tasks_ui.has_method("set_yua_items"):
+		tasks_ui.set_yua_items(notebook_manager.get_render_items())
+
+func _notebook_mention_for_today() -> String:
+	if notebook_manager != null and notebook_manager.has_method("pick_mention"):
+		return str(notebook_manager.call("pick_mention", _current_chapter(), player_nickname))
+	return ""
+
+# Speaks the selected first line as a synthetic node. Returns false when the
+# pools are missing or nothing matched, so the caller can use the old nodes.
+func _open_with_greeting() -> bool:
+	if greeting_pools.is_empty():
+		return false
+	var state := _greeting_state()
+	var decision: Dictionary = GreetingSelector.pick(state, greeting_pools)
+	if decision.is_empty():
+		return false
+	var line := str(decision.get("line", "")).strip_edges()
+	if line.is_empty():
+		return false
+	# Side effects the decision names.
+	match str(decision.get("kind", "")):
+		"special":
+			greeting_fired[str(decision.get("id", ""))] = GreetingSelector.date_key(state["now"])
+		"door_report":
+			_remember_player_value("door_reported", "yes")
+			_remember_player_value("door_result", str(decision.get("door_result", "")))
+		"callback":
+			_mark_callback_echoed(decision.get("said", {}))
+		"notebook":
+			if notebook_manager != null and notebook_manager.has_method("consume_mention"):
+				notebook_manager.call("consume_mention")
+	_enter_scripted_mode()
+	current_node_id = "greeting"
+	last_greeting_id = str(decision.get("id", ""))
+	_set_dialogue_text(line)
+	_set_status_message("")
+	_render_choices([])
+	_play_voice_for_line("greeting", line)
+	_save_persistent_state()
+	if str(decision.get("kind", "")) == "callback":
+		_play_greeting_callback(str(decision.get("said", {}).get("text", "")))
+	return true
+
+var last_greeting_id: String = ""
+
+# 「上次你说」: the scripted fallback is already on screen; if the model answers
+# in time, its line replaces it. Never blocks, never steers the story.
+func _play_greeting_callback(said: String) -> void:
+	if said.is_empty() or dialogue_router == null or not dialogue_router.has_method("route_player_text_async"):
+		return
+	var my_node := current_node_id
+	var route: Dictionary = await _route_with_timeout("上次你说：" + said, "AI_MODE_LAST_TIME", GREETING_AI_TIMEOUT_SECONDS)
+	if current_node_id != my_node:
+		return  # the player moved on
+	var reply := str(route.get("text", "")).strip_edges()
+	if str(route.get("mode", "")) == "ai" and bool(route.get("success", false)) and not reply.is_empty():
+		_set_dialogue_text(reply)
+		_play_voice_for_line("greeting_callback", reply)
+
 # A short presence line for clicking Yua while no conversation is open (and no
 # focus running). Pool choice: before the first-ever completed focus we nudge
 # softly toward trying the timer; afterwards, plain co-presence lines. These are
@@ -1159,6 +1422,12 @@ func _show_idle_click_line() -> void:
 	var pool: PackedStringArray = _reactive_pool(category)
 	if pool.is_empty():
 		pool = _reactive_pool("idle_click")
+	# Later chapters have their own flavour half the time (aquarium, café …).
+	var chapter := _current_chapter()
+	if chapter >= 2 and completed_focus_sessions > 0 and randf() < 0.5:
+		var ch_pool: PackedStringArray = _reactive_pool("idle_click_ch%d" % chapter)
+		if not ch_pool.is_empty():
+			pool = ch_pool
 	if pool.is_empty():
 		return
 	# About a third of idle clicks, she reacts to what is outside the window
@@ -1199,6 +1468,19 @@ func _on_choice_selected(choice_data: Dictionary) -> void:
 	_apply_choice_flags(choice_data)
 	_apply_choice_memory(choice_data)
 	var next_node_id := str(choice_data.get("next", "greeting_01"))
+	var by_memory = choice_data.get("next_by_memory", null)
+	if typeof(by_memory) == TYPE_DICTIONARY:
+		var remembered := _remembered_player_value(str(by_memory.get("key", "")))
+		var map: Dictionary = by_memory.get("map", {})
+		var target := str(map.get(remembered, by_memory.get("default", next_node_id)))
+		if scripted_dialogue_manager.has_dialogue_node(target):
+			next_node_id = target
+			# The authored "next" is the validated transition; a memory target
+			# is authored too, so show it directly.
+			if _handle_special_choice(next_node_id):
+				return
+			_show_node(next_node_id)
+			return
 	var internal_return := bool(choice_data.get("internal_return", false))
 	if internal_return:
 		_return_to_scripted_node(next_node_id)
@@ -1249,6 +1531,21 @@ func _remembered_player_value(key: String) -> String:
 		return ""
 	return str(memory_manager.get_value(key, "")).strip_edges()
 
+# Things the player TYPED that she may bring up later (「上次你说」). Kept short
+# and capped; each entry is echoed at most once. Never used for progression.
+const PLAYER_SAID_MAX := 12
+func _remember_player_said(key: String, text: String) -> void:
+	var clean := text.strip_edges().left(60)
+	if clean.is_empty() or memory_manager == null:
+		return
+	var said: Array = memory_manager.get_value("player_said", [])
+	if typeof(said) != TYPE_ARRAY:
+		said = []
+	said.append({"key": key, "text": clean, "unix": int(Time.get_unix_time_from_system()), "echoed": false})
+	while said.size() > PLAYER_SAID_MAX:
+		said.pop_front()
+	memory_manager.set_value("player_said", said)
+
 # Apply node-level `set_flags` (preserved by ScriptedDialogueManager) when a node
 # is shown. This is how authored milestones mark themselves, e.g. ep00_close sets
 # `intro_seen`. AI never reaches this path — only authored nodes set flags.
@@ -1267,6 +1564,7 @@ func _apply_node_flags(node_data: Dictionary) -> void:
 		TYPE_ARRAY:
 			for key in flags:
 				memory_manager.call("set_story_flag", str(key), true)
+	_refresh_yua_notebook()
 
 func _current_node_has_tag(tag: String) -> bool:
 	if scripted_dialogue_manager == null:
@@ -1321,7 +1619,7 @@ func _capture_player_nickname(nickname: String) -> void:
 	_play_name_reaction_then(clean, next_id)
 
 # --- Ep0 name reaction -------------------------------------------------------
-const NAME_REACT_TIMEOUT_SECONDS := 12.0
+const NAME_REACT_TIMEOUT_SECONDS := 16.0
 var _name_react_token: int = 0
 
 func _play_name_reaction_then(nickname: String, next_id: String) -> void:
@@ -1336,10 +1634,7 @@ func _play_name_reaction_then(nickname: String, next_id: String) -> void:
 	var reaction := ""
 	var ai_ok := false
 	if ai_features_enabled and dialogue_router != null and dialogue_router.has_method("route_player_text_async"):
-		var packet := _build_context_packet("AI_MODE_NAME_REACT")
-		var route: Dictionary = await _await_with_timeout(
-			dialogue_router.route_player_text_async(nickname, true, persona_text, packet, runtime_rules_text, "AI_MODE_NAME_REACT"),
-			NAME_REACT_TIMEOUT_SECONDS)
+		var route: Dictionary = await _route_with_timeout(nickname, "AI_MODE_NAME_REACT", NAME_REACT_TIMEOUT_SECONDS)
 		if my_token != _name_react_token:
 			return  # superseded (player reset mid-await)
 		if bool(route.get("success", false)) and not bool(route.get("fallback_used", false)):
@@ -1353,20 +1648,28 @@ func _play_name_reaction_then(nickname: String, next_id: String) -> void:
 	_render_choices([{"text": "继续", "next": next_id, "internal_return": true}])
 	_play_voice_for_line("name_react", reaction)
 
-# Awaits a coroutine but gives up after `seconds`; returns {} on timeout.
-func _await_with_timeout(coro, seconds: float) -> Dictionary:
-	var done := [false]
-	var result := [{}]
-	var runner := func() -> void:
-		var r = await coro
-		result[0] = r if typeof(r) == TYPE_DICTIONARY else {}
-		done[0] = true
-	runner.call()
+# Routes `text` through the AI for `mode_id` but gives up after `seconds`;
+# returns {} on timeout. The request is started as a standalone statement (a
+# coroutine may be fired that way) and reports back through `box` — passing the
+# coroutine call as an argument, as the first version did, is rejected by
+# GDScript ("Trying to call an async function without await") and never
+# actually reached the model; the live check (ai_live) caught it.
+func _route_with_timeout(text: String, mode_id: String, seconds: float) -> Dictionary:
+	if dialogue_router == null or not dialogue_router.has_method("route_player_text_async"):
+		return {}
+	var box := {"done": false, "route": {}}
+	_route_into_box(text, mode_id, box)
 	var elapsed := 0.0
-	while not done[0] and elapsed < seconds:
+	while not bool(box["done"]) and elapsed < seconds:
 		await get_tree().process_frame
 		elapsed += get_process_delta_time()
-	return result[0] if done[0] else {}
+	return box["route"] if bool(box["done"]) else {}
+
+func _route_into_box(text: String, mode_id: String, box: Dictionary) -> void:
+	var packet := _build_context_packet(mode_id)
+	var r = await dialogue_router.route_player_text_async(text, true, persona_text, packet, runtime_rules_text, mode_id)
+	box["route"] = r if typeof(r) == TYPE_DICTIONARY else {}
+	box["done"] = true
 
 # Heuristic fallback buckets (mirror the AI brief): 整活 / net-name / real-name.
 func _scripted_name_reaction(nickname: String) -> String:
@@ -1397,11 +1700,30 @@ func _scripted_name_reaction(nickname: String) -> String:
 
 # Relationship progress is advanced ONLY here (on a completed focus). Monotonic.
 func _apply_focus_completion_progress() -> void:
+	if first_focus_unix <= 0:
+		first_focus_unix = int(Time.get_unix_time_from_system())
 	# Whole-minute length of the session that just finished, for the {focus_minutes}
 	# token (e.g. ep01_01's "这 {focus_minutes} 分钟值了"). 0 for the 3-sec test chip.
 	last_completed_focus_minutes = int(round(focus_duration_seconds / 60.0))
 	var tier := ProgressionGate.openness_tier_for(completed_focus_sessions, total_focus_seconds)
 	yua_openness = maxi(yua_openness, tier)
+	var day := _today_key()
+	focus_days[day] = int(focus_days.get(day, 0)) + last_completed_focus_minutes
+	_refresh_calendar()
+
+func _refresh_calendar() -> void:
+	if calendar_ui == null or not calendar_ui.has_method("set_data"):
+		return
+	var flags: Dictionary = {}
+	if memory_manager != null and memory_manager.has_method("get_story_flags"):
+		flags = memory_manager.call("get_story_flags")
+	var first_key := ""
+	if first_focus_unix > 0:
+		# Local calendar day of the first completed session.
+		var bias_s := int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+		var d := Time.get_datetime_dict_from_unix_time(first_focus_unix + bias_s)
+		first_key = "%04d-%02d-%02d" % [int(d.year), int(d.month), int(d.day)]
+	calendar_ui.set_data(focus_days, first_key, flags)
 
 # Snapshot of deterministic progression state for ProgressionGate. Note: no idle
 # or light-interaction inputs — only focus, returns, flags, and memory presence.
@@ -1473,6 +1795,16 @@ func _handle_special_choice(next_node_id: String) -> bool:
 		"ACTION_GO_60":
 			_go_focus_minutes(60)
 			return true
+		# Ep0 (v12): the questionnaire already collected the nickname, so she
+		# reacts to what the "profile" says instead of asking. A blank answer
+		# falls back to the old asking node.
+		"ACTION_NAME_REACT":
+			if player_nickname.strip_edges().is_empty():
+				_show_node("ep00_name")
+			else:
+				_note_meaningful_interaction()
+				_play_name_reaction_then(player_nickname, "ep00_named")
+			return true
 		_:
 			return false
 
@@ -1522,6 +1854,12 @@ func _set_focus_minutes_from_script(minutes: int, yua_line: String) -> void:
 	_play_voice_for_line("timer_set_%d" % minutes, dialogue_text.text)
 
 func _start_focus_from_script() -> void:
+	# Ep0 can end through the task-input route (ep00_tools → TASK_INPUT → a
+	# duration chip), which skips ep00_close and its set_flags; the story flag
+	# must still land here, or "intro seen" splits between the boolean and the
+	# flag again (the bug ep0_once.gd guards against).
+	if has_seen_intro and memory_manager != null and memory_manager.has_method("set_story_flag") 			and not bool(memory_manager.call("get_story_flag", "intro_seen", false)):
+		memory_manager.call("set_story_flag", "intro_seen", true)
 	focus_running = true
 	focus_started_count += 1
 	focus_click_count = 0
@@ -1639,7 +1977,7 @@ func _handle_player_text(raw_text: String) -> void:
 	_handle_ai_route(route)
 
 # --- typed-answer routing (node "typed_routes", see ScriptedDialogueManager) ---
-const TYPED_ROUTE_AI_TIMEOUT_SECONDS := 12.0
+const TYPED_ROUTE_AI_TIMEOUT_SECONDS := 16.0
 var _typed_route_token: int = 0
 
 func _current_node_typed_routes() -> Dictionary:
@@ -1666,6 +2004,8 @@ func _try_typed_route(text: String) -> bool:
 					return true
 	# Unmatched: keep what they typed (short), then AI beat or scripted cover.
 	_remember_player_value(remember_key, text.left(24))
+	if bool(routes.get("remember_said", false)):
+		_remember_player_said(remember_key, text)
 	var fallback_next := str(routes.get("fallback_next", ""))
 	var ai_mode := str(routes.get("ai_mode", ""))
 	var after_ai_next := str(routes.get("after_ai_next", fallback_next))
@@ -1686,10 +2026,7 @@ func _play_typed_route_ai(text: String, ai_mode: String, after_ai_next: String, 
 	var my_token := _typed_route_token
 	_set_status_message(_ui_text("status_thinking"))
 	_render_choices([])
-	var packet := _build_context_packet(ai_mode)
-	var route: Dictionary = await _await_with_timeout(
-		dialogue_router.route_player_text_async(text, true, persona_text, packet, runtime_rules_text, ai_mode),
-		TYPED_ROUTE_AI_TIMEOUT_SECONDS)
+	var route: Dictionary = await _route_with_timeout(text, ai_mode, TYPED_ROUTE_AI_TIMEOUT_SECONDS)
 	if my_token != _typed_route_token:
 		return
 	var reply := str(route.get("text", "")).strip_edges()
@@ -1769,6 +2106,13 @@ func _build_context_packet(mode_id: String) -> String:
 	fields.append("time_bucket=%s" % _time_bucket())
 	if not player_nickname.strip_edges().is_empty():
 		fields.append("player_nickname=%s" % player_nickname)
+	if not player_role.is_empty():
+		var role_label := player_role
+		match player_role:
+			"study": role_label = "student"
+			"work": role_label = "worker"
+			"other": role_label = "other" + ("(" + player_role_text + ")" if not player_role_text.is_empty() else "")
+		fields.append("player_role=%s" % role_label)
 	var player_platform := _remembered_player_value("player_platform")
 	if not player_platform.is_empty():
 		fields.append("player_platform=%s" % player_platform)
@@ -1924,14 +2268,42 @@ func _play_focus_chime() -> void:
 	if ambient_effects != null and ambient_effects.has_method("play_focus_chime"):
 		ambient_effects.play_focus_chime()
 
+# Story episodes per real day (owner + sister, 2026-09-18): focus stays
+# unlimited, but at most this many authored episodes open per calendar day —
+# after that a session ends on the FOCUS_DONE pool. 0 = unlimited.
+# Owner 2026-09-24: parked for now ("can be implemented later") — set back to 2
+# to switch it on. The counter still runs, so turning it on needs nothing else.
+var daily_episode_cap: int = 0
+var _story_eps_today_key: String = ""
+var _story_eps_today: int = 0
+
+func _today_key() -> String:
+	var now: Dictionary = Time.get_datetime_dict_from_system()
+	return "%04d-%02d-%02d" % [int(now.get("year", 0)), int(now.get("month", 0)), int(now.get("day", 0))]
+
+func _story_episodes_left_today() -> int:
+	if daily_episode_cap <= 0:
+		return 999
+	if _story_eps_today_key != _today_key():
+		_story_eps_today_key = _today_key()
+		_story_eps_today = 0
+	return maxi(0, daily_episode_cap - _story_eps_today)
+
+func _count_story_episode_today() -> void:
+	if _story_eps_today_key != _today_key():
+		_story_eps_today_key = _today_key()
+		_story_eps_today = 0
+	_story_eps_today += 1
+
 func _show_focus_complete_node() -> void:
 	# Focus is the only driver of story beats. The gate picks the eligible authored
 	# beat deterministically from saved state + the JSON episode metadata; it never
 	# forces — this fires at the natural moment a focus session ends.
 	var state := _build_progression_state()
 	var beat_node := ProgressionGate.select_focus_complete_node(state, episode_metadata)
-	if not beat_node.is_empty() and scripted_dialogue_manager.has_dialogue_node(beat_node):
+	if not beat_node.is_empty() and scripted_dialogue_manager.has_dialogue_node(beat_node) and _story_episodes_left_today() > 0:
 		current_story_milestone = ProgressionGate.current_milestone_label(state)
+		_count_story_episode_today()
 		_show_node(beat_node)
 		return
 	# No episode eligible: pick from the FOCUS_DONE_REPEAT pool so the player who
@@ -2071,6 +2443,18 @@ func _save_persistent_state() -> void:
 		"current_story_milestone": current_story_milestone,
 		"yua_openness": yua_openness,
 		"player_nickname": player_nickname,
+		"player_role": player_role,
+		"player_role_text": player_role_text,
+		"intake_done": intake_done,
+		"story_eps_today_key": _story_eps_today_key,
+		"story_eps_today": _story_eps_today,
+		"greeting_fired": greeting_fired,
+		"returns_today_key": returns_today_key,
+		"returns_today": returns_today,
+		"first_focus_unix": first_focus_unix,
+		"last_callback_unix": last_callback_unix,
+		"focus_days": focus_days,
+		"calendar_visible": calendar_ui.is_card_visible() if calendar_ui != null else true,
 		"ai_features_enabled": ai_features_enabled,
 		"last_seen_at": Time.get_datetime_string_from_system(),
 		"last_seen_unix": int(Time.get_unix_time_from_system()),
@@ -2122,6 +2506,27 @@ func _load_persistent_state() -> void:
 	yua_openness = int(data.get("yua_openness", 0))
 	current_story_milestone = str(data.get("current_story_milestone", ""))
 	player_nickname = str(data.get("player_nickname", ""))
+	player_role = str(data.get("player_role", ""))
+	player_role_text = str(data.get("player_role_text", ""))
+	intake_done = bool(data.get("intake_done", false))
+	_story_eps_today_key = str(data.get("story_eps_today_key", ""))
+	_story_eps_today = int(data.get("story_eps_today", 0))
+	var loaded_fired = data.get("greeting_fired", {})
+	greeting_fired = loaded_fired.duplicate(true) if typeof(loaded_fired) == TYPE_DICTIONARY else {}
+	first_focus_unix = int(data.get("first_focus_unix", 0))
+	last_callback_unix = int(data.get("last_callback_unix", 0))
+	var loaded_days = data.get("focus_days", {})
+	focus_days = loaded_days.duplicate() if typeof(loaded_days) == TYPE_DICTIONARY else {}
+	if calendar_ui != null:
+		calendar_ui.set_card_visible(bool(data.get("calendar_visible", true)))
+	_refresh_calendar()
+	# Launches today, counting this one (same-day return lines).
+	var today_key := _today_key()
+	if str(data.get("returns_today_key", "")) == today_key:
+		returns_today = int(data.get("returns_today", 0)) + 1
+	else:
+		returns_today = 1
+	returns_today_key = today_key
 	ai_features_enabled = bool(data.get("ai_features_enabled", true))
 	# Count this launch as a return once, if we've met Yua before.
 	if has_seen_intro and last_seen_unix > 0:

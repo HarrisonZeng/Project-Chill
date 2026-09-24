@@ -20,6 +20,7 @@
 [ext_resource type="Texture2D" path="res://assets/art/ui/icons/play.svg" id="ic_play"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/icons/prev.svg" id="ic_prev"]
 [ext_resource type="Texture2D" path="res://assets/art/ui/icons/next.svg" id="ic_next"]
+[ext_resource type="Script" path="res://scripts/ui/calendar_controller.gd" id="15_calendar"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_placeholder"]
 bg_color = Color(0.996078, 0.980392, 0.941176, 0.92)
@@ -593,6 +594,36 @@ theme_override_font_sizes/font_size = 11
 text = "· no tasks ·"
 horizontal_alignment = 1
 
+[node name="HerNotebookPanel" type="PanelContainer" parent="OverlayLayer/Tools"]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -334.0
+offset_top = 300.0
+offset_right = -24.0
+offset_bottom = 500.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"PanelGlass"
+
+[node name="Col" type="VBoxContainer" parent="OverlayLayer/Tools/HerNotebookPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="OverlayLayer/Tools/HerNotebookPanel/Col"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.239216, 0.164706, 0.141176, 0.95)
+theme_override_font_sizes/font_size = 16
+text = "Yua 的本子"
+
+[node name="Rows" type="VBoxContainer" parent="OverlayLayer/Tools/HerNotebookPanel/Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
 [node name="TasksResizeHandle" type="Button" parent="OverlayLayer/Tools" unique_id=1805921862]
 visible = false
 custom_minimum_size = Vector2(8, 40)
@@ -604,6 +635,80 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_resize_handle")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_resize_handle")
 theme_override_styles/hover = SubResource("StyleBoxFlat_resize_handle")
 flat = true
+
+[node name="Calendar" type="Control" parent="OverlayLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("15_calendar")
+
+[node name="CalendarButton" type="Button" parent="OverlayLayer/Calendar"]
+layout_mode = 0
+offset_left = 124.0
+offset_top = 90.0
+offset_right = 172.0
+offset_bottom = 134.0
+theme_type_variation = &"IconButton"
+icon_alignment = 1
+expand_icon = true
+
+[node name="CalendarCard" type="PanelContainer" parent="OverlayLayer/Calendar"]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 158.0
+offset_right = 318.0
+offset_bottom = 168.0
+theme_type_variation = &"PanelGlass"
+
+[node name="Col" type="VBoxContainer" parent="OverlayLayer/Calendar/CalendarCard"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Header" type="HBoxContainer" parent="OverlayLayer/Calendar/CalendarCard/Col"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="PrevButton" type="Button" parent="OverlayLayer/Calendar/CalendarCard/Col/Header"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(0.462745, 0.352941, 0.270588, 0.9)
+theme_override_font_sizes/font_size = 18
+text = "‹"
+flat = true
+
+[node name="MonthLabel" type="Button" parent="OverlayLayer/Calendar/CalendarCard/Col/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_colors/font_color = Color(0.239216, 0.164706, 0.141176, 0.95)
+theme_override_colors/font_hover_color = Color(0.239216, 0.164706, 0.141176, 1)
+theme_override_font_sizes/font_size = 16
+text = "2026年9月"
+flat = true
+
+[node name="NextButton" type="Button" parent="OverlayLayer/Calendar/CalendarCard/Col/Header"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(0.462745, 0.352941, 0.270588, 0.9)
+theme_override_font_sizes/font_size = 18
+text = "›"
+flat = true
+
+[node name="Grid" type="Control" parent="OverlayLayer/Calendar/CalendarCard/Col"]
+custom_minimum_size = Vector2(0, 202)
+layout_mode = 2
+
+[node name="Footer" type="Label" parent="OverlayLayer/Calendar/CalendarCard/Col"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.462745, 0.352941, 0.270588, 0.85)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
 
 [node name="Dialogue" type="Control" parent="OverlayLayer" unique_id=975727535]
 layout_mode = 1

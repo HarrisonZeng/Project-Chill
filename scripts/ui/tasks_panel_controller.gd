@@ -14,6 +14,10 @@ const PANEL_MAX_WIDTH := 560.0
 const PANEL_MIN_HEIGHT := 250.0
 const PANEL_MAX_HEIGHT := 720.0
 const PANEL_MIN_TOP := 110.0
+# Her notebook card sits above the player's panel (owner, 2026-09-24); it must
+# stay clear of the timer card (bottom edge ~254 px) above it.
+const HER_CARD_MIN_TOP := 266.0
+const HER_CARD_GAP := 16.0
 
 @onready var tasks_tab: Button = $TasksTab
 @onready var tasks_panel: PanelContainer = $TasksPanel
@@ -23,8 +27,17 @@ const PANEL_MIN_TOP := 110.0
 @onready var new_task_input: LineEdit = $TasksPanel/Col/NewTaskInput
 @onready var tasks_counter: Label = $TasksPanel/Col/Counter
 @onready var tasks_resize_handle: Button = $TasksResizeHandle
+@onready var her_panel: PanelContainer = get_node_or_null("HerNotebookPanel")
+@onready var her_title: Label = get_node_or_null("HerNotebookPanel/Col/Title")
+@onready var her_rows: VBoxContainer = get_node_or_null("HerNotebookPanel/Col/Rows")
 
 var todo_items: Array[Dictionary] = []
+# Yua's notebook rows (read-only, from notebook_manager via main_scene). Shown
+# in their own paper card stacked above the player's panel (owner, 2026-09-24 —
+# it used to sit under the player's list and got lost in the scroll); crossed-
+# out lines are a thin strike, stalled ones get a pencil "…". Never compared
+# with the player's.
+var yua_items: Array = []
 var language: String = "en"
 var panel_visible: bool = false
 var hovered_task_index: int = -1
@@ -32,6 +45,10 @@ var resizing: bool = false
 var resize_start_mouse_position: Vector2 = Vector2.ZERO
 var resize_start_left: float = 0.0
 var resize_start_top: float = 0.0
+var _laying_out_her: bool = false
+# Where the player (or the saved layout) put the panel's top edge. Her card may
+# push the panel down while it needs the room; it comes back up to this.
+var _tasks_top_pref: float = NAN
 
 const ICON_CHECK: Texture2D = preload("res://assets/art/ui/icons/check.svg")
 const ICON_BOX: Texture2D = preload("res://assets/art/ui/icons/box.svg")
@@ -49,6 +66,10 @@ func _ready() -> void:
 		new_task_input.text_submitted.connect(_on_new_task_submitted)
 	if tasks_resize_handle != null:
 		tasks_resize_handle.gui_input.connect(_on_resize_handle_input)
+	if her_panel != null:
+		# Her wrapped lines only know their height once they know their width,
+		# so re-fit the card whenever its content settles.
+		her_panel.minimum_size_changed.connect(func(): _layout_her_panel.call_deferred())
 	refresh_controls()
 
 func _input(event: InputEvent) -> void:
@@ -72,6 +93,8 @@ func apply_language(lang: String) -> void:
 	language = lang
 	if tasks_title != null:
 		tasks_title.text = UiStrings.t("tasks.title", language)
+	if her_title != null:
+		her_title.text = UiStrings.t("tasks.yua_card_title", language)
 	if new_task_input != null:
 		new_task_input.placeholder_text = UiStrings.t("tasks.new_placeholder", language)
 	if tasks_close_button != null:
@@ -122,6 +145,8 @@ func set_panel_visible(visible: bool) -> void:
 
 func refresh_controls() -> void:
 	if tasks_tab != null:
+		# While the panel is open the tab would sit under her card; the × closes.
+		tasks_tab.visible = not panel_visible
 		var pending := 0
 		for item in todo_items:
 			if not bool(item.get("completed", false)):
@@ -137,7 +162,11 @@ func refresh_controls() -> void:
 		tasks_resize_handle.visible = panel_visible
 		if panel_visible:
 			_update_resize_handle_position()
+	_update_her_panel_visibility()
 	_update_counter()
+
+func is_her_panel_visible() -> bool:
+	return her_panel != null and her_panel.visible
 
 # --- internals ---
 
@@ -161,6 +190,89 @@ func add_todo_item(text: String, completed: bool = false) -> void:
 	todo_items.append({"text": clean_text, "completed": completed})
 	render_tasks()
 
+func set_yua_items(items: Array) -> void:
+	yua_items = items.duplicate(true)
+	render_tasks()
+
+func _update_her_panel_visibility() -> void:
+	if her_panel == null:
+		return
+	her_panel.visible = panel_visible and not yua_items.is_empty()
+	if her_panel.visible:
+		_layout_her_panel.call_deferred()
+
+# Her card: same width as the player's panel, bottom edge just above it, height
+# fitted to her lines. If the player's panel was dragged too tall to leave room,
+# it gives way (never her card into the timer).
+func _layout_her_panel() -> void:
+	if her_panel == null or tasks_panel == null or not her_panel.visible:
+		return
+	var her_h := her_panel.get_combined_minimum_size().y
+	var min_tasks_top := HER_CARD_MIN_TOP + her_h + HER_CARD_GAP
+	if is_nan(_tasks_top_pref):
+		_tasks_top_pref = tasks_panel.offset_top
+	var anchor_px := tasks_panel.anchor_top * get_viewport_rect().size.y
+	var want_top := maxf(_tasks_top_pref, min_tasks_top - anchor_px)
+	if not is_equal_approx(want_top, tasks_panel.offset_top):
+		_laying_out_her = true
+		_apply_panel_offsets(tasks_panel.offset_left, want_top)
+		_laying_out_her = false
+	var tasks_top_px := anchor_px + tasks_panel.offset_top
+	her_panel.offset_left = tasks_panel.offset_left
+	her_panel.offset_right = tasks_panel.offset_right
+	her_panel.offset_bottom = tasks_top_px - HER_CARD_GAP
+	her_panel.offset_top = her_panel.offset_bottom - her_h
+
+func _render_yua_section() -> void:
+	if her_rows == null:
+		return
+	for child in her_rows.get_children():
+		her_rows.remove_child(child)
+		child.free()
+	if yua_items.is_empty():
+		_update_her_panel_visibility()
+		return
+	for row_data in yua_items:
+		var data: Dictionary = row_data
+		var done := bool(data.get("done", false))
+		var stalled := bool(data.get("stalled", false))
+		var is_top := bool(data.get("top", false))
+		var text := str(data.get("text", ""))
+		var line := RichTextLabel.new()
+		line.bbcode_enabled = true
+		line.fit_content = true
+		line.scroll_active = false
+		line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# Her goal (the top line) a size up; chores at 15.
+		var font_size := 16 if is_top else 15
+		line.add_theme_font_size_override("normal_font_size", font_size)
+		# Espresso ink, not the pale soft ink — the review found it hard to read
+		# in a small window. Done lines fade back.
+		var ink := Color(0.239216, 0.164706, 0.141176, 0.45 if done else (0.95 if is_top else 0.85))
+		line.add_theme_color_override("default_color", ink)
+		var body := text
+		if data.has("total"):
+			var p := int(data.get("progress", 0))
+			var t := maxi(1, int(data.get("total", 5)))
+			body += "  " + "■".repeat(clampi(p, 0, t)) + "□".repeat(maxi(0, t - p))
+		if stalled and not done:
+			body += " …"
+		line.text = "· " + body
+		if done:
+			# A hand-drawn pencil strike. BBCode [s] draws nothing with the bundled
+			# CJK font (it has no strikeout metrics), so draw the line ourselves.
+			line.draw.connect(_draw_strike.bind(line, font_size, ink))
+		her_rows.add_child(line)
+	_update_her_panel_visibility()
+
+func _draw_strike(line: RichTextLabel, font_size: int, ink: Color) -> void:
+	var font := line.get_theme_font("normal_font")
+	var x0 := font.get_string_size("· ", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x if font != null else 12.0
+	var x1 := float(line.get_content_width())
+	var h := float(line.get_content_height())
+	line.draw_line(Vector2(x0 - 2.0, h * 0.58), Vector2(x1 + 2.0, h * 0.50), Color(ink, 0.85), 1.5, true)
+
 func render_tasks() -> void:
 	if tasks_rows == null:
 		return
@@ -176,6 +288,7 @@ func render_tasks() -> void:
 		ghost.add_theme_color_override("font_color", Color(0.462745, 0.352941, 0.270588, 0.6))  # soft ink on paper
 		ghost.add_theme_font_size_override("font_size", 13)
 		tasks_rows.add_child(ghost)
+		_render_yua_section()
 		_update_counter()
 		return
 
@@ -263,6 +376,7 @@ func render_tasks() -> void:
 
 		tasks_rows.add_child(row)
 
+	_render_yua_section()
 	_update_counter()
 
 func _on_tab_pressed() -> void:
@@ -338,6 +452,12 @@ func _apply_panel_offsets(left_offset: float, top_offset: float) -> void:
 	tasks_panel.offset_left = clamped_left
 	tasks_panel.offset_top = clamped_top_px - anchor_top_px
 	_update_resize_handle_position()
+	if not _laying_out_her:
+		_tasks_top_pref = tasks_panel.offset_top
+	if her_panel != null and her_panel.visible and not _laying_out_her:
+		_laying_out_her = true
+		_layout_her_panel()
+		_laying_out_her = false
 
 func _update_resize_handle_position() -> void:
 	if tasks_resize_handle == null or tasks_panel == null:

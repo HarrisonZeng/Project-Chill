@@ -215,6 +215,7 @@ func _apply_collapse() -> void:
 	_set_visible("OverlayLayer/HUD/FocusCard", _chrome_open)
 	_set_visible("OverlayLayer/HUD/CallStatusPill", _chrome_open)
 	_set_visible("OverlayLayer/Tools", _chrome_open)
+	_set_visible("OverlayLayer/Calendar", _chrome_open)
 	if not _chrome_open:
 		_set_visible("SettingsPanel", false)
 	if _music_toggle != null:

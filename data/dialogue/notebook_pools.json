@@ -1,0 +1,66 @@
+{
+  "_doc": "Yua's living notebook (docs/Ambient_and_Systems_Draft_v1.md §D). top_by_flag: first matching story flag wins (ordered latest-first). chapter_pools / life_pool: daily chores she rolls on a new real day; each carries the one-line mention for 完成 / 拖延. standing: items that are always there (别打游戏 flips; 不催{name} is always done). long: goals with a progress bar. Lines are 草稿 (2026-09-23).",
+  "top_by_flag": [
+    ["ep60_seen", "第二本"],
+    ["ep57_seen", "不决定"],
+    ["ep53_seen", "等"],
+    ["ep47_seen", ""],
+    ["ep39_seen", "结局"],
+    ["ep24_seen", "第三章"],
+    ["ep12_seen", "写第二章"],
+    ["ep02_seen", "写一章"],
+    ["intro_seen", "我的小项目"]
+  ],
+  "top_rewrite_lines": ["小说嘛……今天开了又关了。别问。", "顶上那行我又写了一遍。不是拖，是……好吧是拖。"],
+  "chapter_pools": {
+    "1": [
+      {"key": "cards3", "text": "荐书卡三张", "done": "对了，卡写完了，三张。第三张我自己看了两遍。", "stalled": "卡……别看我本子。我知道。"},
+      {"key": "stock", "text": "补进货单", "done": "进货单交了。店长说『哦』。就一个字，我等了三天。", "stalled": "进货单还没写。它在本子上瞪我。"},
+      {"key": "machine", "text": "擦咖啡机", "done": "咖啡机擦了。亮得能照人，照出来的人很困。", "stalled": "咖啡机没擦。它比我还油。"},
+      {"key": "dust", "text": "给三年没人碰的那本擦灰", "done": "那本三年没人碰的书，我擦了。还是没人碰。", "stalled": "那本书还没擦。它等了三年，不差这一天。"},
+      {"key": "door", "text": "跟自动门谈判", "done": "跟自动门谈了。它没同意，但我说完了。", "stalled": "自动门那边……谈判推迟。它不开，我不谈。"}
+    ],
+    "2": [
+      {"key": "shift_sat", "text": "周六早班", "done": "周六早班上完了。六点开灯，鱼比人起得早。", "stalled": "周六早班……我把闹钟按掉了三次。第四次去了。"},
+      {"key": "mug", "text": "洗小七的杯子", "done": "小七的杯子洗了。仇人的脸擦得锃亮，我是不是有病。", "stalled": "杯子还没洗。它上面的脸在笑，我不想碰。"},
+      {"key": "penguin_script", "text": "背企鹅讲解词", "done": "企鹅讲解词背完了。其实早就会了，背是为了不超时。", "stalled": "讲解词没背。反正一开口就是二十分钟，背不背一样。"},
+      {"key": "hina_bf", "text": "给 Hina 带早饭", "done": "给 Hina 带了早饭。她说太咸。她自己要的。", "stalled": "Hina 的早饭忘了。她说没事。她记着呢。"},
+      {"key": "uniform", "text": "晾工作服", "done": "工作服晾了。还是有鱼味。可能永远有了。", "stalled": "工作服没晾。它在洗衣机里等我，湿的。"}
+    ],
+    "3": [
+      {"key": "latte", "text": "练拉花（像企鹅）", "done": "拉花今天像了一次企鹅。老板说像鸭子。算像。", "stalled": "拉花……今天像一滩。不写了。"},
+      {"key": "menu", "text": "写菜单牌", "done": "菜单牌写完了。老板说字比咖啡好卖。不知道该高兴还是不该。", "stalled": "菜单牌没写。老板一只手，我两只手，还是没写。"},
+      {"key": "pills", "text": "记老板的止痛药时间", "done": "老板的止痛药时间记住了。比记我自己的事清楚。", "stalled": "止痛药时间又忘了。老板自己也忘了。两个人一起疼。"},
+      {"key": "cup4", "text": "第四杯之前停", "done": "今天第三杯停了。手没抖。……好吧抖了一点。", "stalled": "第四杯还是喝了。手在抖，不是咖啡，是被人催的。"}
+    ],
+    "4": [
+      {"key": "cards40", "text": "写四十张卡", "done": "四十张写完了。手是我的，字不像我的。", "stalled": "写到二十七张。剩下的明天，它们不会跑。"},
+      {"key": "water", "text": "给花换水", "done": "花换水了。比给人做早饭还讲究。", "stalled": "花没换水。它们今天看起来在生气。"},
+      {"key": "meteor", "text": "背流星雨时刻", "done": "流星雨时刻背下来了。八月十二，凌晨两点，别问我怎么记住的。", "stalled": "流星雨几号来着。又忘了。它不会等我。"},
+      {"key": "guestbook", "text": "民宿留言本抄一句", "done": "留言本抄了一句。只住一晚的人写的。我抄完想了一下午。", "stalled": "留言本没抄。今天没人住。"}
+    ],
+    "5": [
+      {"key": "postcards", "text": "明信片补货", "done": "明信片补货了。补了十张。乐观。", "stalled": "明信片没补。剩三张，够卖一周。"},
+      {"key": "count", "text": "数明信片", "done": "明信片今天卖了两张。数了三遍，还是两张。", "stalled": "今天没人买明信片。我数了，零。"},
+      {"key": "pretend", "text": "装作不在乎", "done": "今天装作不在乎，装了一整天。累。", "stalled": "没装住。店长看我一眼我就问他看了没。他说没有。"},
+      {"key": "opening", "text": "改开头", "done": "开头改了。第九版。", "stalled": "开头没改。第八版还在瞪我。"}
+    ]
+  },
+  "life_pool": [
+    {"key": "laundry", "text": "收衣服", "done": "衣服终于收了。给自己记一功，你不用鼓掌。", "stalled": "衣服还在外面。梅雨季，不怪我。"},
+    {"key": "detergent", "text": "买洗衣液", "done": "洗衣液买了。买了两瓶，怕再忘。", "stalled": "洗衣液还没买。用洗洁精顶了一次，别学。"},
+    {"key": "mom", "text": "回妈妈消息", "done": "回了我妈。她没吵。", "stalled": "我妈的消息……还没回。本子上那个『…』是我加的。"},
+    {"key": "plant", "text": "给绿萝浇水", "done": "绿萝浇水了。它看起来很意外。", "stalled": "绿萝没浇。它比我能扛。"},
+    {"key": "lamp", "text": "修台灯", "done": "台灯修好了。拍了一下就好了。修理费：一巴掌。", "stalled": "台灯还是那样。拍了三下，它更暗了。"},
+    {"key": "cup", "text": "洗杯子（一周了）", "done": "杯子洗了。一周了。里面长了个新生态。", "stalled": "杯子……第八天。它现在是我室友了。"}
+  ],
+  "standing": {
+    "no_games": {"text": "别打游戏", "done": "今天没打游戏。本子上那行我留着，怕自己忘。", "undone": "『别打游戏』又划掉了。是划掉『别』字。……当我没说。"},
+    "no_nag": {"text": "不催{name}", "after_flag": "ep05_seen", "mention": "本子上那条『不催{name}』——我做到了。"}
+  },
+  "long": {
+    "laptop": {"text": "攒一台不会黑屏的", "after_flag": "ep20_seen", "done_flag": "ep49_seen", "total": 5,
+               "progress": "电脑的钱又攒了一格。这周在馆里多站了两天。", "done": "买了。不会黑屏的那种。……希望。"}
+  },
+  "rent": {"text": "房租", "done": "房租交了。这个月活下来了。"}
+}

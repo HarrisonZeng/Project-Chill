@@ -26,21 +26,25 @@ func setup(main: Node) -> void:
 	_attach("OverlayLayer/HUD/FocusCard", "sprig.png", Vector2(-40, -36), 40, 14.0, true)
 	# Tasks notebook: tape at the top.
 	_attach("OverlayLayer/Tools/TasksPanel", "tape.png", Vector2(96, -18), 140, 4.0)
+	# Her notebook card (2026-09-24): its own strip of tape, tilted the other way.
+	_attach("OverlayLayer/Tools/HerNotebookPanel", "tape.png", Vector2(150, -18), 120, -5.0)
+	# Calendar card: tape across the top-right corner, a sprig bottom-left.
+	_attach("OverlayLayer/Calendar/CalendarCard", "tape.png", Vector2(-120, -20), 140, 7.0, false, false, true)
 	# Music card: a small sprig in the bottom-left corner.
 	_attach("BottomLeftMusicBar", "sprig.png", Vector2(6, -46), 40, -16.0, false, true)
-	# Dialogue plate: the sticker tag replaces the plain "Yua" label.
-	var tag := _attach("BottomPanel/DialoguePanel/DialogueCard", "tag_yua.png", Vector2(16, -24), 118, -3.0)
+	# Dialogue plate: the sticker tag replaces the plain "Yua" label. It sits
+	# on the card's top edge, not over the first line (owner, 2026-09-24).
+	var tag := _attach("BottomPanel/DialoguePanel/DialogueCard", "tag_yua.png", Vector2(16, -42), 118, -3.0)
 	if tag != null:
 		var plain := _main.get_node_or_null("BottomPanel/DialoguePanel/DialogueCard/DialogueMargin/VBox/SpeakerTag")
 		if plain is CanvasItem:
 			(plain as CanvasItem).visible = false
-	_attach("BottomPanel/DialoguePanel/DialogueCard", "sprig.png", Vector2(-54, -54), 48, 22.0, true)
 
 # Place one piece over a panel. `offset` is measured from the panel's top-left
 # corner, or from its bottom-right when `from_end` is set (bottom-left when
-# `from_bottom_left`); `width` is the drawn width in px; `rot_deg` is the
+# `from_bottom_left`, top-right when `from_top_right`); `width` is the drawn width in px; `rot_deg` is the
 # hand-placed tilt.
-func _attach(panel_path: String, file: String, offset: Vector2, width: float, rot_deg: float, from_end: bool = false, from_bottom_left: bool = false) -> TextureRect:
+func _attach(panel_path: String, file: String, offset: Vector2, width: float, rot_deg: float, from_end: bool = false, from_bottom_left: bool = false, from_top_right: bool = false) -> TextureRect:
 	var panel := _main.get_node_or_null(panel_path)
 	if not (panel is Control):
 		return null
@@ -72,6 +76,8 @@ func _attach(panel_path: String, file: String, offset: Vector2, width: float, ro
 			base += p.size - piece.size
 		elif from_bottom_left:
 			base += Vector2(0, p.size.y - piece.size.y)
+		elif from_top_right:
+			base += Vector2(p.size.x, 0)
 		piece.position = base + offset
 		piece.visible = p.visible
 	place.call()

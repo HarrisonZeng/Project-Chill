@@ -54,14 +54,14 @@ grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 0
 mouse_default_cursor_shape = 2
-theme_override_styles/panel = SubResource("StyleBox_subtitle_bg")
+theme_type_variation = &"PanelGlass"
 
 [node name="DialogueMargin" type="MarginContainer" parent="DialogueCard" unique_id=1273634983]
 layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 0
 
 [node name="VBox" type="VBoxContainer" parent="DialogueCard/DialogueMargin" unique_id=1943327605]
 layout_mode = 2

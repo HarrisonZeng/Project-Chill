@@ -160,6 +160,7 @@ func _sanitize_typed_routes(raw: Variant) -> Dictionary:
 		return {}
 	var cleaned: Dictionary = {
 		"remember_key": str(raw.get("remember_key", "")).strip_edges(),
+		"remember_said": bool(raw.get("remember_said", false)),
 		"ai_mode": str(raw.get("ai_mode", "")).strip_edges(),
 		"after_ai_next": str(raw.get("after_ai_next", "")).strip_edges(),
 		"fallback_next": str(raw.get("fallback_next", "")).strip_edges(),
@@ -238,6 +239,12 @@ func _sanitize_choices(raw_choices: Variant) -> Array:
 		var remember_value = choice.get("remember", null)
 		if typeof(remember_value) == TYPE_DICTIONARY and remember_value.has("key"):
 			entry["remember"] = remember_value.duplicate(true)
+		# Optional {"key", "map": {value: node}, "default": node}: the chip's
+		# destination depends on something she remembers (Ep11 seats the player
+		# by the platform they named in Ep6). Falls back to "next" when unset.
+		var by_memory = choice.get("next_by_memory", null)
+		if typeof(by_memory) == TYPE_DICTIONARY and by_memory.has("key") and typeof(by_memory.get("map", null)) == TYPE_DICTIONARY:
+			entry["next_by_memory"] = by_memory.duplicate(true)
 		cleaned.append(entry)
 	return cleaned
 

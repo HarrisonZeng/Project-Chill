@@ -1,136 +1,120 @@
 {
-  "_doc": "Co-presence-first script, slow burn. Ep0 = intro (intro_node). Ep1-Ep14 reveal one-per-completed-focus via EPISODE_START_NODES (epNN_01). Each episode: Yua opens (a few beats) -> in-character player choices (reflective/topical, NEVER session-management) -> Yua's branched reply (a few beats) -> terminal (settle back to co-presence; player runs as many focus sessions as they like via the timer UI, Yua never 'ends' a session). Type input = a choice whose next is an AI_MODE_* id (flips Type Mode on, stores message to memory). {focus_minutes} in ep01_01 choice 1 is an ENGINE token: substitute with the just-completed focus length in minutes (fallback: strip it). Functional nodes (idle, TASK_INPUT_*, FOCUS_*, ABORT_*, return_*, greeting_*, EXIT_*) preserved. ENGINE: episodes are now flag-guarded (seen_flag + optional unlock.total_focus_seconds_min); see _pacing_doc. DEMO_SCRIPT_VERSION is 11 (Ep3 canon 2026-09-06: 脑子飞了 confession + platform question with chips/typed_routes/remember + P.S. answer; 「那个东西」→「我的小项目」; Ep0-Ep2 rewritten to 2026-08-17 canon: opening D 开局翻车 + 书咖 world; ACTION_GO_15/30/60 start focus immediately).",
+  "_doc": "Co-presence-first script. Ep0 = intro (questionnaire → call → 开局翻车). Ep1–Ep15 follow docs/Story_Beat_Sheet_v3.md (章回版: 书店 Ep1–12, 水族馆 from Ep13). One episode per completed focus (session_gate), capped by the engine at daily_episode_cap per real day; Ep12 additionally needs total_focus_seconds_min 5400 (1.5h). Choice fields: next / set_flag / remember {key,value} / next_by_memory {key,map,default}. Node fields: typed_routes (keyword→node, else AI mode with scripted fallback; remember_said stores the typed text for the 「上次你说」 callback). AI never unlocks story. DEMO_SCRIPT_VERSION 12 (2026-09-23).",
   "fallback_id": "idle",
   "intro_node": "ep00_01",
-  "demo_script_version": 11,
+  "demo_script_version": 12,
   "_pacing_doc": "Episodes are flag-guarded: each fires once when completed_focus_count >= session_gate AND its unlock is satisfied AND its seen_flag is not yet set (lowest unmet gate first). The matching epNN_01 node carries set_flags:[\"epNN_seen\"]. Casual chats are count-only; writing/relationship beats add unlock.total_focus_seconds_min so short (3s test) sessions can't speed-run intimacy — real 15-45min sessions clear these naturally. TUNE pacing here: raise/lower total_focus_seconds_min (in seconds) per beat. When no episode is eligible, the engine falls back to FOCUS_DONE_REPEAT.",
   "episodes": [
     {
       "id": "ep01",
-      "label": "Ep 1 · 第一段（定稿）",
+      "label": "Ep 1 · 第一段",
       "start_node": "ep01_01",
       "session_gate": 1,
       "seen_flag": "ep01_seen"
     },
     {
       "id": "ep02",
-      "label": "Ep 2 · 你听（定稿）",
+      "label": "Ep 2 · 我在写小说",
       "start_node": "ep02_01",
       "session_gate": 2,
       "seen_flag": "ep02_seen"
     },
     {
       "id": "ep03",
-      "label": "Ep 3 · 脑子飞了（定稿）",
+      "label": "Ep 3 · 你听",
       "start_node": "ep03_01",
       "session_gate": 3,
       "seen_flag": "ep03_seen"
     },
     {
       "id": "ep04",
-      "label": "Ep 4 · 换换脑子",
+      "label": "Ep 4 · 第一句",
       "start_node": "ep04_01",
       "session_gate": 4,
       "seen_flag": "ep04_seen"
     },
     {
       "id": "ep05",
-      "label": "Ep 5 · 我也写点东西",
+      "label": "Ep 5 · 你最近在忙什么",
       "start_node": "ep05_01",
       "session_gate": 5,
-      "seen_flag": "ep05_seen",
-      "unlock": {
-        "total_focus_seconds_min": 1500
-      }
+      "seen_flag": "ep05_seen"
     },
     {
       "id": "ep06",
-      "label": "Ep 6 · 写不动",
+      "label": "Ep 6 · 脑子飞了",
       "start_node": "ep06_01",
       "session_gate": 6,
-      "seen_flag": "ep06_seen",
-      "unlock": {
-        "total_focus_seconds_min": 2400
-      }
+      "seen_flag": "ep06_seen"
     },
     {
       "id": "ep07",
-      "label": "Ep 7 · 喜欢的词",
+      "label": "Ep 7 · 跟自动门的战争",
       "start_node": "ep07_01",
       "session_gate": 7,
       "seen_flag": "ep07_seen"
     },
     {
       "id": "ep08",
-      "label": "Ep 8 · 灵感",
+      "label": "Ep 8 · 主角的毛病",
       "start_node": "ep08_01",
       "session_gate": 8,
-      "seen_flag": "ep08_seen",
-      "unlock": {
-        "total_focus_seconds_min": 3600
-      }
+      "seen_flag": "ep08_seen"
     },
     {
       "id": "ep09",
-      "label": "Ep 9 · 拖延",
+      "label": "Ep 9 · 店长的毒舌",
       "start_node": "ep09_01",
       "session_gate": 9,
       "seen_flag": "ep09_seen"
     },
     {
       "id": "ep10",
-      "label": "Ep 10 · 习惯你在",
+      "label": "Ep 10 · 写不动",
       "start_node": "ep10_01",
       "session_gate": 10,
-      "seen_flag": "ep10_seen",
-      "unlock": {
-        "total_focus_seconds_min": 5400
-      }
+      "seen_flag": "ep10_seen"
     },
     {
       "id": "ep11",
-      "label": "Ep 11 · 划掉那一下",
+      "label": "Ep 11 · 四张桌子都有名字",
       "start_node": "ep11_01",
       "session_gate": 11,
       "seen_flag": "ep11_seen"
     },
     {
       "id": "ep12",
-      "label": "Ep 12 · 敢读回去",
+      "label": "Ep 12 · 第一个读者 · 第一章",
       "start_node": "ep12_01",
       "session_gate": 12,
       "seen_flag": "ep12_seen",
       "unlock": {
-        "total_focus_seconds_min": 7200
+        "total_focus_seconds_min": 5400
       }
     },
     {
       "id": "ep13",
-      "label": "Ep 13 · 记得你",
+      "label": "Ep 13 · 上岗第一天",
       "start_node": "ep13_01",
       "session_gate": 13,
-      "seen_flag": "ep13_seen",
-      "unlock": {
-        "total_focus_seconds_min": 9000
-      }
+      "seen_flag": "ep13_seen"
     },
     {
       "id": "ep14",
-      "label": "Ep 14 · 固定搭子",
+      "label": "Ep 14 · 便利店新品评测",
       "start_node": "ep14_01",
       "session_gate": 14,
-      "seen_flag": "ep14_seen",
-      "unlock": {
-        "total_focus_seconds_min": 10800
-      }
+      "seen_flag": "ep14_seen"
+    },
+    {
+      "id": "ep15",
+      "label": "Ep 15 · 主角没有名字",
+      "start_node": "ep15_01",
+      "session_gate": 15,
+      "seen_flag": "ep15_seen"
     }
   ],
   "nodes": [
-    {
-      "id": "idle",
-      "line": "（她在忙自己的事。想说话，点一下她。）",
-      "choices": []
-    },
     {
       "id": "ep00_01",
       "speaker": "yua",
@@ -194,7 +178,21 @@
       "choices": [
         {
           "text": "继续",
-          "next": "ep00_name"
+          "next": "ep00_react"
+        }
+      ],
+      "tags": [
+        "intro"
+      ]
+    },
+    {
+      "id": "ep00_react",
+      "speaker": "yua",
+      "line": "为了证明我其实是个靠谱的人——先来正式一点的。\n\n我看了一眼资料。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ACTION_NAME_REACT"
         }
       ],
       "tags": [
@@ -204,7 +202,7 @@
     {
       "id": "ep00_name",
       "speaker": "yua",
-      "line": "为了证明我其实是个靠谱的人——先来正式一点的：请问怎么称呼？\n\n网名真名都收。",
+      "line": "资料上没写名字。行，很有安全感。\n\n那现在问：怎么称呼？网名真名都收。",
       "choices": [
         {
           "text": "（取好了）",
@@ -343,15 +341,81 @@
     {
       "id": "ep02_01",
       "speaker": "yua",
+      "line": "叮——收工。\n\n等一下，我还有半句。\n\n好了。刚才那半句，是小说。我在写小说。轻小说那种。\n\n说了。你别笑。",
+      "choices": [
+        {
+          "text": "什么类型的？",
+          "next": "ep02_a"
+        },
+        {
+          "text": "写多久了？",
+          "next": "ep02_b"
+        },
+        {
+          "text": "本子上那行——",
+          "next": "ep02_c"
+        }
+      ],
+      "tags": [
+        "episode",
+        "writing"
+      ],
+      "set_flags": [
+        "ep02_seen",
+        "writing_disclosed"
+      ]
+    },
+    {
+      "id": "ep02_a",
+      "speaker": "yua",
+      "line": "类型……奇幻。有会飞的东西，有雪。\n\n再多就不说了，写完再说。写完之前说会翻车，民间智慧。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep02_end"
+        }
+      ]
+    },
+    {
+      "id": "ep02_b",
+      "speaker": "yua",
+      "line": "两年。\n\n……零章。不对，一章半。删掉的不算。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep02_end"
+        }
+      ]
+    },
+    {
+      "id": "ep02_c",
+      "speaker": "yua",
+      "line": "对，『我的小项目』就是它。\n\n我现在划掉，改成——『写一章』。改完了。这下赖不掉了。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep02_end"
+        }
+      ]
+    },
+    {
+      "id": "ep02_end",
+      "speaker": "yua",
+      "line": "行了，说都说了。今天多写一行，算你的。……不是，算我的。\n\n你继续你的。",
+      "choices": []
+    },
+    {
+      "id": "ep03_01",
+      "speaker": "yua",
       "line": "铃响了。\n\n这段我居然忘了看时间。你说这算好事还是坏事？不用真答，我猜是好事。\n\n诶，忽然想问：你干活的时候要不要有点声音？还是得绝对安静？随口问的，不用认真。",
       "choices": [
         {
           "text": "要有点声音",
-          "next": "ep02_a"
+          "next": "ep03_a"
         },
         {
           "text": "必须绝对安静",
-          "next": "ep02_b"
+          "next": "ep03_b"
         },
         {
           "text": "我说说我的（自己写）",
@@ -360,65 +424,9 @@
       ],
       "typed_routes": {
         "ai_mode": "AI_MODE_BREAK_CHAT",
-        "after_ai_next": "ep02_listen",
-        "fallback_next": "ep02_listen"
+        "after_ai_next": "ep03_listen",
+        "fallback_next": "ep03_listen"
       },
-      "tags": [
-        "episode"
-      ],
-      "set_flags": [
-        "ep02_seen"
-      ]
-    },
-    {
-      "id": "ep02_a",
-      "speaker": "yua",
-      "line": "懂懂懂。人一安静下来，脑子就开始放自己的 BGM。\n\n我这边不用开。",
-      "choices": [
-        {
-          "text": "……",
-          "next": "ep02_listen"
-        }
-      ]
-    },
-    {
-      "id": "ep02_b",
-      "speaker": "yua",
-      "line": "厉害。我要是全安静，五分钟就会开始数天花板。\n\n不过我这边也用不着放。",
-      "choices": [
-        {
-          "text": "……",
-          "next": "ep02_listen"
-        }
-      ]
-    },
-    {
-      "id": "ep02_listen",
-      "speaker": "yua",
-      "line": "你听。\n\n海贴着窗边慢慢蹭。\n\n轮渡汽笛一天只响四回，远远顶过来的时候，整间屋子都会跟着顿一下。\n\n风一过，院子里那棵树的叶子会沙沙响一阵，像有人在很远的地方翻书。\n\n……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说！你什么都没听见！",
-      "choices": [
-        {
-          "text": "我什么都没听见",
-          "next": "ep02_end"
-        }
-      ]
-    },
-    {
-      "id": "ep02_end",
-      "speaker": "yua",
-      "line": "总之，我这边的白噪音是免费的，就是不能关。\n\n行了，我回去写我的小项目。你继续你的。",
-      "choices": []
-    },
-    {
-      "id": "ep03_01",
-      "speaker": "yua",
-      "line": "叮——收工。\n\n……我要坦白一件事。\n\n我一旦要开始干活，脑子就会飞到特别奇怪的地方。\n\n刚才一开始，脑子里突然冒出一个问题：把一只鸡放大到霸王龙那么大，能不能打过霸王龙？\n\n然后回过神来的时候，我在看『霸王龙和剑齿象谁战力高』。\n\n它们根本不是一个时代的！这问题本身就不成立！我为什么看了那么久！\n\n……但后面我真的认真学完了！真的！",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_ask"
-        }
-      ],
       "tags": [
         "episode"
       ],
@@ -427,468 +435,34 @@
       ]
     },
     {
-      "id": "ep03_ask",
+      "id": "ep03_a",
       "speaker": "yua",
-      "line": "那你呢？你脑子飞出去的时候，一般降落在哪？",
+      "line": "懂懂懂。人一安静下来，脑子就开始放自己的 BGM。\n\n我这边不用开。",
       "choices": [
         {
-          "text": "B 站",
-          "next": "ep03_bili",
-          "remember": {
-            "key": "player_platform",
-            "value": "bilibili"
-          }
-        },
-        {
-          "text": "小红书",
-          "next": "ep03_xhs",
-          "remember": {
-            "key": "player_platform",
-            "value": "xiaohongshu"
-          }
-        },
-        {
-          "text": "抖音",
-          "next": "ep03_douyin",
-          "remember": {
-            "key": "player_platform",
-            "value": "douyin"
-          }
-        },
-        {
-          "text": "别的（自己写）",
-          "next": "ep03_other"
-        }
-      ],
-      "tags": [
-        "episode",
-        "typed_answer"
-      ],
-      "typed_routes": {
-        "remember_key": "player_platform",
-        "keywords": [
-          {
-            "match": [
-              "b站",
-              "b 站",
-              "bilibili",
-              "哔哩",
-              "比利比利"
-            ],
-            "next": "ep03_bili",
-            "remember": "bilibili"
-          },
-          {
-            "match": [
-              "小红书",
-              "红书",
-              "xhs",
-              "rednote"
-            ],
-            "next": "ep03_xhs",
-            "remember": "xiaohongshu"
-          },
-          {
-            "match": [
-              "抖音",
-              "douyin"
-            ],
-            "next": "ep03_douyin",
-            "remember": "douyin"
-          },
-          {
-            "match": [
-              "tiktok",
-              "快手",
-              "视频号",
-              "短视频"
-            ],
-            "next": "ep03_shortvideo",
-            "remember": "shortvideo"
-          },
-          {
-            "match": [
-              "油管",
-              "youtube",
-              "优管"
-            ],
-            "next": "ep03_yt",
-            "remember": "youtube"
-          },
-          {
-            "match": [
-              "推特",
-              "twitter",
-              "x平台",
-              "x 平台"
-            ],
-            "next": "ep03_tw",
-            "remember": "twitter"
-          },
-          {
-            "match": [
-              "微博",
-              "weibo"
-            ],
-            "next": "ep03_weibo",
-            "remember": "weibo"
-          },
-          {
-            "match": [
-              "知乎",
-              "zhihu"
-            ],
-            "next": "ep03_zhihu",
-            "remember": "zhihu"
-          },
-          {
-            "match": [
-              "instagram",
-              "ins",
-              "照片墙"
-            ],
-            "next": "ep03_ins",
-            "remember": "instagram"
-          },
-          {
-            "match": [
-              "小说",
-              "看书",
-              "网文",
-              "漫画"
-            ],
-            "next": "ep03_novel",
-            "remember": "novel"
-          },
-          {
-            "match": [
-              "游戏",
-              "打游戏",
-              "开黑",
-              "王者",
-              "英雄联盟",
-              "lol",
-              "原神",
-              "崩铁",
-              "金铲铲",
-              "蛋仔",
-              "steam",
-              "switch",
-              "dota",
-              "valorant",
-              "无畏契约"
-            ],
-            "next": "ep03_game",
-            "remember": "game"
-          },
-          {
-            "match": [
-              "不刷",
-              "都不",
-              "不怎么",
-              "不看",
-              "不玩",
-              "不用",
-              "没有"
-            ],
-            "next": "ep03_none",
-            "remember": "none"
-          }
-        ],
-        "ai_mode": "AI_MODE_PLATFORM_REACT",
-        "after_ai_next": "ep03_end",
-        "fallback_next": "ep03_any"
-      }
-    },
-    {
-      "id": "ep03_other",
-      "speaker": "yua",
-      "line": "别的？说来听听。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ],
-      "tags": [
-        "episode",
-        "typed_answer"
-      ],
-      "typed_routes": {
-        "remember_key": "player_platform",
-        "keywords": [
-          {
-            "match": [
-              "b站",
-              "b 站",
-              "bilibili",
-              "哔哩",
-              "比利比利"
-            ],
-            "next": "ep03_bili",
-            "remember": "bilibili"
-          },
-          {
-            "match": [
-              "小红书",
-              "红书",
-              "xhs",
-              "rednote"
-            ],
-            "next": "ep03_xhs",
-            "remember": "xiaohongshu"
-          },
-          {
-            "match": [
-              "抖音",
-              "douyin"
-            ],
-            "next": "ep03_douyin",
-            "remember": "douyin"
-          },
-          {
-            "match": [
-              "tiktok",
-              "快手",
-              "视频号",
-              "短视频"
-            ],
-            "next": "ep03_shortvideo",
-            "remember": "shortvideo"
-          },
-          {
-            "match": [
-              "油管",
-              "youtube",
-              "优管"
-            ],
-            "next": "ep03_yt",
-            "remember": "youtube"
-          },
-          {
-            "match": [
-              "推特",
-              "twitter",
-              "x平台",
-              "x 平台"
-            ],
-            "next": "ep03_tw",
-            "remember": "twitter"
-          },
-          {
-            "match": [
-              "微博",
-              "weibo"
-            ],
-            "next": "ep03_weibo",
-            "remember": "weibo"
-          },
-          {
-            "match": [
-              "知乎",
-              "zhihu"
-            ],
-            "next": "ep03_zhihu",
-            "remember": "zhihu"
-          },
-          {
-            "match": [
-              "instagram",
-              "ins",
-              "照片墙"
-            ],
-            "next": "ep03_ins",
-            "remember": "instagram"
-          },
-          {
-            "match": [
-              "小说",
-              "看书",
-              "网文",
-              "漫画"
-            ],
-            "next": "ep03_novel",
-            "remember": "novel"
-          },
-          {
-            "match": [
-              "游戏",
-              "打游戏",
-              "开黑",
-              "王者",
-              "英雄联盟",
-              "lol",
-              "原神",
-              "崩铁",
-              "金铲铲",
-              "蛋仔",
-              "steam",
-              "switch",
-              "dota",
-              "valorant",
-              "无畏契约"
-            ],
-            "next": "ep03_game",
-            "remember": "game"
-          },
-          {
-            "match": [
-              "不刷",
-              "都不",
-              "不怎么",
-              "不看",
-              "不玩",
-              "不用",
-              "没有"
-            ],
-            "next": "ep03_none",
-            "remember": "none"
-          }
-        ],
-        "ai_mode": "AI_MODE_PLATFORM_REACT",
-        "after_ai_next": "ep03_end",
-        "fallback_next": "ep03_any"
-      }
-    },
-    {
-      "id": "ep03_bili",
-      "speaker": "yua",
-      "line": "同类！那个战力视频就是 B 站推给我的。\n\n弹幕比视频还长，全在吵霸王龙能不能赢。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
+          "text": "……",
+          "next": "ep03_listen"
         }
       ]
     },
     {
-      "id": "ep03_xhs",
+      "id": "ep03_b",
       "speaker": "yua",
-      "line": "小红书啊……那你是不是也收藏了一堆『高效学习法』，然后一个都没试过。\n\n……我不是在说我自己。",
+      "line": "厉害。我要是全安静，五分钟就会开始数天花板。\n\n不过我这边也用不着放。",
       "choices": [
         {
-          "text": "继续",
-          "next": "ep03_end"
+          "text": "……",
+          "next": "ep03_listen"
         }
       ]
     },
     {
-      "id": "ep03_douyin",
+      "id": "ep03_listen",
       "speaker": "yua",
-      "line": "抖音那个是没有底的。\n\n我刷抖音从来不知道现在几点，我怀疑它是故意的。",
+      "line": "你听。\n\n海贴着窗边慢慢蹭。\n\n轮渡汽笛一天只响四回，远远顶过来的时候，整间屋子都会跟着顿一下。\n\n风一过，院子里那棵树的叶子会沙沙响一阵，像有人在很远的地方翻书。\n\n……啊啊啊，这么文艺的句子，脑子里想想还好，在你面前说出来就有点尴尬……当我没说！你什么都没听见！",
       "choices": [
         {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_shortvideo",
-      "speaker": "yua",
-      "line": "那种短视频是没有底的。\n\n我刷起来从来不知道现在几点，我怀疑它是故意的。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_yt",
-      "speaker": "yua",
-      "line": "油管啊。那你肯定也点开过『十分钟讲完』，结果四十分钟的视频。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_tw",
-      "speaker": "yua",
-      "line": "推特我不太熟，只知道进去五分钟，能看完一整天的架。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_weibo",
-      "speaker": "yua",
-      "line": "微博就是热搜。点一个进去，出来的时候已经在第八个了。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_zhihu",
-      "speaker": "yua",
-      "line": "知乎啊。看完一个回答感觉什么都懂了，合上一想，什么也没记住。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_ins",
-      "speaker": "yua",
-      "line": "ins 的话……看别人过日子看一个小时，自己的日子一分钟没动。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_novel",
-      "speaker": "yua",
-      "line": "小说啊……那你比我危险。\n\n我至少还得等视频加载，你翻页都不用等。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_game",
-      "speaker": "yua",
-      "line": "游戏啊……那你可算问对人了。\n\n不对，我什么都没说。开场那把不算。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_none",
-      "speaker": "yua",
-      "line": "……真的假的。那你比我厉害多了，教教我。",
-      "choices": [
-        {
-          "text": "继续",
-          "next": "ep03_end"
-        }
-      ]
-    },
-    {
-      "id": "ep03_any",
-      "speaker": "yua",
-      "line": "这个我不太刷。\n\n不过听起来，也是那种一进去就出不来的。",
-      "choices": [
-        {
-          "text": "继续",
+          "text": "我什么都没听见",
           "next": "ep03_end"
         }
       ]
@@ -896,340 +470,1453 @@
     {
       "id": "ep03_end",
       "speaker": "yua",
-      "line": "行，我回去弄我的小项目了。你继续你的。\n\n哦对了，答案是不能。鸡放大到那么大，会先被自己压垮。",
+      "line": "总之，我这边的白噪音是免费的，就是不能关。\n\n行了，我回去写我的了。你继续你的。",
       "choices": []
     },
     {
       "id": "ep04_01",
-      "set_flags": [
-        "ep04_seen"
-      ],
-      "line": "你卡住的时候都怎么办？\n\n我是一卡就坐不住。非得起来搞点别的——泡杯热的，发呆，甚至擦桌子。明明它根本就不脏。\n\n转一圈回来，有时候那个堵住的地方自己就松了。\n\n你呢？有没什么奇怪的招？",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n我念一句给你听。就一句，第一句。\n\n『汽笛响第四次的时候，镇上的灯会一起暗一下，像谁眨了眼。』\n\n……念完了。好尴尬。你说点什么。",
       "choices": [
         {
-          "text": "我说说我的办法（自己写）",
-          "next": "AI_MODE_BREAK_CHAT"
+          "text": "挺好的",
+          "next": "ep04_a",
+          "remember": {
+            "key": "first_line_reaction",
+            "value": "like"
+          }
         },
         {
-          "text": "我也是起来晃一圈",
-          "next": "ep04_a"
+          "text": "有点文艺",
+          "next": "ep04_b",
+          "remember": {
+            "key": "first_line_reaction",
+            "value": "literary"
+          }
         },
         {
-          "text": "硬扛，扛过去就好了",
-          "next": "ep04_b"
+          "text": "「谁眨了眼」是谁？",
+          "next": "ep04_c",
+          "remember": {
+            "key": "first_line_reaction",
+            "value": "who"
+          }
         }
       ],
-      "speaker": "yua",
       "tags": [
-        "episode"
+        "episode",
+        "writing"
+      ],
+      "set_flags": [
+        "ep04_seen"
       ]
     },
     {
       "id": "ep04_a",
-      "line": "对吧！转一圈回来就通了。\n\n越逼越死机，松一松反而想起来了。\n\n好了，被我念叨完了——回去继续。我也继续。",
-      "choices": []
+      "speaker": "yua",
+      "line": "挺好的？\n\n……行，我记下了。第一个读者说挺好的。以后改了别怪我。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep04_end"
+        }
+      ]
     },
     {
       "id": "ep04_b",
-      "line": "硬扛派……厉害。\n\n我不行，一扛就开始怀疑人生。\n\n不过你这样也好，认准了就闷头冲。\n\n我在旁边陪你——真扛不住了，喊我。",
+      "speaker": "yua",
+      "line": "文艺……是吧。\n\n我自己念出来也这么觉得。脑子里想的时候明明很正常。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep04_end"
+        }
+      ]
+    },
+    {
+      "id": "ep04_c",
+      "speaker": "yua",
+      "line": "谁眨了眼——这个要写到第三章才知道。\n\n我也不知道。我还没写到。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep04_end"
+        }
+      ]
+    },
+    {
+      "id": "ep04_end",
+      "speaker": "yua",
+      "line": "好了，第一句发布完毕，以后不许提。\n\n你继续你的，我去写第二句。",
       "choices": []
     },
     {
       "id": "ep05_01",
-      "line": "刚才你专注的时候，我盯着那个小项目盯了半天。\n\n行，招了：是在写东西。自己写着玩的。\n\n不是什么正经玩意。写两行删一行，电脑里那个文件夹就叫『杂物』。\n\n说出来怪不好意思的。",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n我说了我的了。你呢？\n\n你每天坐在这儿，是在弄什么？一句话就行，不用认真。",
       "choices": [
         {
-          "text": "写的是什么？",
-          "next": "ep05_a"
-        },
-        {
-          "text": "挺好的，慢慢写",
-          "next": "ep05_b"
+          "text": "先不说",
+          "next": "ep05_skip"
         }
       ],
-      "set_flags": [
-        "writing_disclosed",
-        "ep05_seen"
-      ],
-      "speaker": "yua",
       "tags": [
         "episode",
-        "writing"
+        "typed_answer"
+      ],
+      "set_flags": [
+        "ep05_seen"
+      ],
+      "typed_routes": {
+        "remember_key": "player_project",
+        "remember_said": true,
+        "keywords": [
+          {
+            "match": [
+              "不说",
+              "秘密",
+              "保密",
+              "不告诉"
+            ],
+            "next": "ep05_skip",
+            "remember": ""
+          }
+        ],
+        "ai_mode": "AI_MODE_YOUR_THING",
+        "after_ai_next": "ep05_end",
+        "fallback_next": "ep05_any"
+      }
+    },
+    {
+      "id": "ep05_skip",
+      "speaker": "yua",
+      "line": "行，不说也行。\n\n我本子上记一条：『不问{name}在弄什么』。……记好了。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep05_end"
+        }
       ]
     },
     {
-      "id": "ep05_a",
-      "line": "内容……先不说。\n\n不是故意不说——是我一说出来，就会突然觉得它该被删掉。\n\n等它胆子大一点……或者等我胆子大一点吧。\n\n现在先让它在那儿躺着。",
-      "choices": []
+      "id": "ep05_any",
+      "speaker": "yua",
+      "line": "嗯，记住了。\n\n我不问结果。我只问你还在不在弄。以后也就问这一句。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep05_end"
+        }
+      ]
     },
     {
-      "id": "ep05_b",
-      "line": "嗯……被你轻飘飘一句「慢慢写」，我反而松了口气。\n\n对，不急。\n\n反正有人在旁边，一行一行，总能往前挪。",
+      "id": "ep05_end",
+      "speaker": "yua",
+      "line": "行了，扯平了。你的事你弄，我的事我弄。\n\n你继续你的。",
       "choices": []
     },
     {
       "id": "ep06_01",
-      "set_flags": [
-        "ep06_seen"
-      ],
-      "line": "我的小项目，今天又卡死了。\n\n上一段还挺顺，这会儿对着它一个字都不想动，光想跑。\n\n你做事情会不会也这样——越是想做好、越在意的东西，反而越难动手？",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n……我要坦白一件事。\n\n我一旦要开始干活，脑子就会飞到特别奇怪的地方。\n\n刚才一开始，脑子里突然冒出一个问题：把一只鸡放大到霸王龙那么大，能不能打过霸王龙？\n\n然后回过神来的时候，我在看『霸王龙和剑齿象谁战力高』。\n\n它们根本不是一个时代的！这问题本身就不成立！我为什么看了那么久！\n\n……但后面我真的认真学完了！真的！",
       "choices": [
         {
-          "text": "会，太懂了",
-          "next": "ep06_a"
-        },
-        {
-          "text": "别跟它较劲，先放着",
-          "next": "ep06_b"
+          "text": "继续",
+          "next": "ep06_ask"
         }
       ],
-      "speaker": "yua",
       "tags": [
-        "episode",
-        "writing"
+        "episode"
+      ],
+      "set_flags": [
+        "ep06_seen"
       ]
     },
     {
-      "id": "ep06_a",
-      "line": "哈，原来不是我一个人这么拧巴。\n\n行，那不硬憋了。先改改别处——坐着坐着，说不定它自己就化了。",
-      "choices": []
+      "id": "ep06_ask",
+      "speaker": "yua",
+      "line": "那你呢？你脑子飞出去的时候，一般降落在哪？",
+      "choices": [
+        {
+          "text": "B 站",
+          "next": "ep06_bili",
+          "remember": {
+            "key": "player_platform",
+            "value": "bilibili"
+          }
+        },
+        {
+          "text": "小红书",
+          "next": "ep06_xhs",
+          "remember": {
+            "key": "player_platform",
+            "value": "xiaohongshu"
+          }
+        },
+        {
+          "text": "抖音",
+          "next": "ep06_douyin",
+          "remember": {
+            "key": "player_platform",
+            "value": "douyin"
+          }
+        },
+        {
+          "text": "别的（自己写）",
+          "next": "ep06_other"
+        }
+      ],
+      "tags": [
+        "episode",
+        "typed_answer"
+      ],
+      "typed_routes": {
+        "remember_key": "player_platform",
+        "keywords": [
+          {
+            "match": [
+              "b站",
+              "b 站",
+              "bilibili",
+              "哔哩",
+              "比利比利"
+            ],
+            "next": "ep06_bili",
+            "remember": "bilibili"
+          },
+          {
+            "match": [
+              "小红书",
+              "红书",
+              "xhs",
+              "rednote"
+            ],
+            "next": "ep06_xhs",
+            "remember": "xiaohongshu"
+          },
+          {
+            "match": [
+              "抖音",
+              "douyin"
+            ],
+            "next": "ep06_douyin",
+            "remember": "douyin"
+          },
+          {
+            "match": [
+              "tiktok",
+              "快手",
+              "视频号",
+              "短视频"
+            ],
+            "next": "ep06_shortvideo",
+            "remember": "shortvideo"
+          },
+          {
+            "match": [
+              "油管",
+              "youtube",
+              "优管"
+            ],
+            "next": "ep06_yt",
+            "remember": "youtube"
+          },
+          {
+            "match": [
+              "推特",
+              "twitter",
+              "x平台",
+              "x 平台"
+            ],
+            "next": "ep06_tw",
+            "remember": "twitter"
+          },
+          {
+            "match": [
+              "微博",
+              "weibo"
+            ],
+            "next": "ep06_weibo",
+            "remember": "weibo"
+          },
+          {
+            "match": [
+              "知乎",
+              "zhihu"
+            ],
+            "next": "ep06_zhihu",
+            "remember": "zhihu"
+          },
+          {
+            "match": [
+              "instagram",
+              "ins",
+              "照片墙"
+            ],
+            "next": "ep06_ins",
+            "remember": "instagram"
+          },
+          {
+            "match": [
+              "小说",
+              "看书",
+              "网文",
+              "漫画"
+            ],
+            "next": "ep06_novel",
+            "remember": "novel"
+          },
+          {
+            "match": [
+              "游戏",
+              "打游戏",
+              "开黑",
+              "王者",
+              "英雄联盟",
+              "lol",
+              "原神",
+              "崩铁",
+              "金铲铲",
+              "蛋仔",
+              "steam",
+              "switch",
+              "dota",
+              "valorant",
+              "无畏契约"
+            ],
+            "next": "ep06_game",
+            "remember": "game"
+          },
+          {
+            "match": [
+              "不刷",
+              "都不",
+              "不怎么",
+              "不看",
+              "不玩",
+              "不用",
+              "没有"
+            ],
+            "next": "ep06_none",
+            "remember": "none"
+          }
+        ],
+        "ai_mode": "AI_MODE_PLATFORM_REACT",
+        "after_ai_next": "ep06_end",
+        "fallback_next": "ep06_any"
+      }
     },
     {
-      "id": "ep06_b",
-      "line": "你说得对。\n\n我老想着『今天必须搞定』，越逼越完蛋。\n\n放着吧。放一会儿再看，说不定就没那么吓人了。\n\n行，它先在那儿躺着，我去改别的。",
+      "id": "ep06_other",
+      "speaker": "yua",
+      "line": "别的？说来听听。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ],
+      "tags": [
+        "episode",
+        "typed_answer"
+      ],
+      "typed_routes": {
+        "remember_key": "player_platform",
+        "keywords": [
+          {
+            "match": [
+              "b站",
+              "b 站",
+              "bilibili",
+              "哔哩",
+              "比利比利"
+            ],
+            "next": "ep06_bili",
+            "remember": "bilibili"
+          },
+          {
+            "match": [
+              "小红书",
+              "红书",
+              "xhs",
+              "rednote"
+            ],
+            "next": "ep06_xhs",
+            "remember": "xiaohongshu"
+          },
+          {
+            "match": [
+              "抖音",
+              "douyin"
+            ],
+            "next": "ep06_douyin",
+            "remember": "douyin"
+          },
+          {
+            "match": [
+              "tiktok",
+              "快手",
+              "视频号",
+              "短视频"
+            ],
+            "next": "ep06_shortvideo",
+            "remember": "shortvideo"
+          },
+          {
+            "match": [
+              "油管",
+              "youtube",
+              "优管"
+            ],
+            "next": "ep06_yt",
+            "remember": "youtube"
+          },
+          {
+            "match": [
+              "推特",
+              "twitter",
+              "x平台",
+              "x 平台"
+            ],
+            "next": "ep06_tw",
+            "remember": "twitter"
+          },
+          {
+            "match": [
+              "微博",
+              "weibo"
+            ],
+            "next": "ep06_weibo",
+            "remember": "weibo"
+          },
+          {
+            "match": [
+              "知乎",
+              "zhihu"
+            ],
+            "next": "ep06_zhihu",
+            "remember": "zhihu"
+          },
+          {
+            "match": [
+              "instagram",
+              "ins",
+              "照片墙"
+            ],
+            "next": "ep06_ins",
+            "remember": "instagram"
+          },
+          {
+            "match": [
+              "小说",
+              "看书",
+              "网文",
+              "漫画"
+            ],
+            "next": "ep06_novel",
+            "remember": "novel"
+          },
+          {
+            "match": [
+              "游戏",
+              "打游戏",
+              "开黑",
+              "王者",
+              "英雄联盟",
+              "lol",
+              "原神",
+              "崩铁",
+              "金铲铲",
+              "蛋仔",
+              "steam",
+              "switch",
+              "dota",
+              "valorant",
+              "无畏契约"
+            ],
+            "next": "ep06_game",
+            "remember": "game"
+          },
+          {
+            "match": [
+              "不刷",
+              "都不",
+              "不怎么",
+              "不看",
+              "不玩",
+              "不用",
+              "没有"
+            ],
+            "next": "ep06_none",
+            "remember": "none"
+          }
+        ],
+        "ai_mode": "AI_MODE_PLATFORM_REACT",
+        "after_ai_next": "ep06_end",
+        "fallback_next": "ep06_any"
+      }
+    },
+    {
+      "id": "ep06_bili",
+      "speaker": "yua",
+      "line": "同类！那个战力视频就是 B 站推给我的。\n\n弹幕比视频还长，全在吵霸王龙能不能赢。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_xhs",
+      "speaker": "yua",
+      "line": "小红书啊……那你是不是也收藏了一堆『高效学习法』，然后一个都没试过。\n\n……我不是在说我自己。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_douyin",
+      "speaker": "yua",
+      "line": "抖音那个是没有底的。\n\n我刷抖音从来不知道现在几点，我怀疑它是故意的。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_shortvideo",
+      "speaker": "yua",
+      "line": "那种短视频是没有底的。\n\n我刷起来从来不知道现在几点，我怀疑它是故意的。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_yt",
+      "speaker": "yua",
+      "line": "油管啊。那你肯定也点开过『十分钟讲完』，结果四十分钟的视频。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_tw",
+      "speaker": "yua",
+      "line": "推特我不太熟，只知道进去五分钟，能看完一整天的架。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_weibo",
+      "speaker": "yua",
+      "line": "微博就是热搜。点一个进去，出来的时候已经在第八个了。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_zhihu",
+      "speaker": "yua",
+      "line": "知乎啊。看完一个回答感觉什么都懂了，合上一想，什么也没记住。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_ins",
+      "speaker": "yua",
+      "line": "ins 的话……看别人过日子看一个小时，自己的日子一分钟没动。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_novel",
+      "speaker": "yua",
+      "line": "小说啊……那你比我危险。\n\n我至少还得等视频加载，你翻页都不用等。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_game",
+      "speaker": "yua",
+      "line": "游戏啊……那你可算问对人了。\n\n不对，我什么都没说。开场那把不算。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_none",
+      "speaker": "yua",
+      "line": "……真的假的。那你比我厉害多了，教教我。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_any",
+      "speaker": "yua",
+      "line": "这个我不太刷。\n\n不过听起来，也是那种一进去就出不来的。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep06_end"
+        }
+      ]
+    },
+    {
+      "id": "ep06_end",
+      "speaker": "yua",
+      "line": "行，我回去弄我的小项目了。你继续你的。\n\n哦对了，答案是不能。鸡放大到那么大，会先被自己压垮。",
       "choices": []
     },
     {
       "id": "ep07_01",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n跟你说个事。店里的自动门，只对我不开。\n\n今天我抱着二十本书站门口，它把我当柱子。别人一过就开。\n\n我做过三种实验了：跳、挥手、跟在客人后面进。你说，还能怎么办？",
+      "choices": [
+        {
+          "text": "侧着身走试试",
+          "next": "ep07_idea",
+          "remember": {
+            "key": "door_idea",
+            "value": "侧着身走"
+          }
+        },
+        {
+          "text": "举本书晃一下",
+          "next": "ep07_idea",
+          "remember": {
+            "key": "door_idea",
+            "value": "举着书晃"
+          }
+        },
+        {
+          "text": "别的（自己写）",
+          "next": "ep07_other"
+        }
+      ],
+      "tags": [
+        "episode",
+        "typed_answer"
+      ],
       "set_flags": [
         "ep07_seen"
       ],
-      "line": "跟你说个我的怪癖——\n\n有些词我老爱在嘴里反复念。也不为什么，就是念着顺，心里舒服。\n\n比如『留白』、『松弛』——念着念着，整个人都慢下来了。\n\n说出来好像有点怪。当我没说。\n\n你有没有那种——也没什么用，但就是莫名喜欢的词？",
+      "typed_routes": {
+        "remember_key": "door_idea",
+        "keywords": [],
+        "ai_mode": "AI_MODE_DOOR_IDEA",
+        "after_ai_next": "ep07_end",
+        "fallback_next": "ep07_idea"
+      }
+    },
+    {
+      "id": "ep07_other",
+      "speaker": "yua",
+      "line": "说来听听。",
       "choices": [
         {
-          "text": "有，我告诉你一个（自己写）",
-          "next": "AI_MODE_BREAK_CHAT"
-        },
-        {
-          "text": "没想过，但好像挺有意思",
-          "next": "ep07_a"
+          "text": "继续",
+          "next": "ep07_end"
         }
       ],
-      "speaker": "yua",
       "tags": [
-        "episode"
+        "episode",
+        "typed_answer"
+      ],
+      "typed_routes": {
+        "remember_key": "door_idea",
+        "keywords": [],
+        "ai_mode": "AI_MODE_DOOR_IDEA",
+        "after_ai_next": "ep07_end",
+        "fallback_next": "ep07_idea"
+      }
+    },
+    {
+      "id": "ep07_idea",
+      "speaker": "yua",
+      "line": "……行。这个我没试过。明天试。\n\n试完告诉你结果。不管它开不开。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep07_end"
+        }
       ]
     },
     {
-      "id": "ep07_a",
-      "line": "有的话再说，我收集这种。\n\n哪个词说出口舌头特别顺，就是它。\n\n行，我回去弄我的小项目。你继续你的。",
+      "id": "ep07_end",
+      "speaker": "yua",
+      "line": "好，自动门的事先到这儿。它赢了今天。\n\n你继续你的。",
       "choices": []
     },
     {
       "id": "ep08_01",
-      "set_flags": [
-        "ep08_seen"
-      ],
-      "line": "诶，跟你说件怪事。\n\n刚才你在专注，我也在写——忽然脑子里蹦出来一句，还挺好的，我自己都愣了一下。\n\n说来怪：一个人空想死活憋不出来，旁边有人安安静静做事，它自己就来了。\n\n……所以今天这句，算你一半功劳。",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n第二章写到主角了。跟你说个他的毛病：一开始干活，脑子就飞。\n\n飞去查一些没用的东西，回来的时候半小时没了。",
       "choices": [
         {
-          "text": "那你可得请客",
+          "text": "那不是你吗",
           "next": "ep08_a"
         },
         {
-          "text": "我啥也没做啊",
+          "text": "我也这样",
           "next": "ep08_b"
+        },
+        {
+          "text": "主角叫什么？",
+          "next": "ep08_c"
         }
       ],
-      "speaker": "yua",
       "tags": [
         "episode",
         "writing"
+      ],
+      "set_flags": [
+        "ep08_seen"
       ]
     },
     {
       "id": "ep08_a",
-      "line": "……才没有什么请客。\n\n不过……要真有一天写成了——你肯定会知道。我大概忍不住。\n\n先记下来，别让它跑了。",
-      "choices": []
+      "speaker": "yua",
+      "line": "对。写的是我自己。\n\n作者都这样，第一本写自己，第二本才有资格写别人。……我在书上看的。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep08_end"
+        }
+      ]
     },
     {
       "id": "ep08_b",
-      "line": "你就是「什么也没做」地坐在那儿——这才是关键。\n\n那种有人在的安静，比什么灵感咒语都管用。\n\n……总之谢了。这句我留着啦。",
+      "speaker": "yua",
+      "line": "你也这样？那他身上就有你一半了。\n\n……开玩笑的。主角是我。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep08_end"
+        }
+      ]
+    },
+    {
+      "id": "ep08_c",
+      "speaker": "yua",
+      "line": "还没名字。先叫『那个人』。\n\n名字这种事急不得。我已经急了八次了。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep08_end"
+        }
+      ]
+    },
+    {
+      "id": "ep08_end",
+      "speaker": "yua",
+      "line": "行了，主角的事先说到这。我回去让他继续飞。\n\n你继续你的。",
       "choices": []
     },
     {
       "id": "ep09_01",
-      "set_flags": [
-        "ep09_seen"
-      ],
-      "line": "跟你老实交代——刚才开工前，我把桌面擦了三遍。\n\n它根本不脏。说好要做的全堆着，我就擦桌子。\n\n越堆越不敢看，越不敢看越擦。你有没有这种时候？不答也行。",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n今天店长把我的荐书卡改了一个字。改得比我好。我气了一整天。\n\n然后他说淡季了，下个月我的班减一半。\n\n……他改得对，更气。班减了，更更气。",
       "choices": [
         {
-          "text": "太懂了，天天如此",
+          "text": "那你怎么办？",
           "next": "ep09_a"
         },
         {
-          "text": "我还好，不太拖",
+          "text": "改了哪个字？",
           "next": "ep09_b"
+        },
+        {
+          "text": "店长是什么人？",
+          "next": "ep09_c"
         }
       ],
-      "speaker": "yua",
       "tags": [
         "episode"
+      ],
+      "set_flags": [
+        "ep09_seen"
       ]
     },
     {
       "id": "ep09_a",
-      "line": "懂。太懂了。\n\n不过你看，你今天还是来了，还坐了一段——比刚才擦桌子的我强多了。\n\n我先还一点点，你随意。\n\n有你在旁边，我好像没那么想逃了。",
-      "choices": []
+      "speaker": "yua",
+      "line": "怎么办……镇上就这么大，谁家缺人我就去。水族馆周末缺人，我去问了。\n\n房租不会因为淡季也打折。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep09_end"
+        }
+      ]
     },
     {
       "id": "ep09_b",
-      "line": "不拖延的人……我得好好观察一下。\n\n那今天向你看齐。少废话，先动起来。\n\n……你坐好别动，让我沾沾你这股劲儿。",
+      "speaker": "yua",
+      "line": "『很』。我写『很好看』，他划掉『很』。\n\n……确实。没有『很』更好看。气死。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep09_end"
+        }
+      ]
+    },
+    {
+      "id": "ep09_c",
+      "speaker": "yua",
+      "line": "懒，毒舌，看人特别准。年纪不小了，说话像在批作业。\n\n别的我不知道。他不说，我不问。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep09_end"
+        }
+      ]
+    },
+    {
+      "id": "ep09_end",
+      "speaker": "yua",
+      "line": "行了，这事说完了。下周起我周末不在店里。……我的意思是，我在别的地方。\n\n你继续你的。",
       "choices": []
     },
     {
       "id": "ep10_01",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n第二章卡住了。刚才卡住的时候，我起来把桌子擦了一遍。它根本不脏。\n\n你卡住的时候，一般怎么办？",
+      "choices": [
+        {
+          "text": "起来走一圈",
+          "next": "ep10_walk",
+          "remember": {
+            "key": "stuck_method",
+            "value": "走一圈"
+          }
+        },
+        {
+          "text": "硬扛",
+          "next": "ep10_push",
+          "remember": {
+            "key": "stuck_method",
+            "value": "硬扛"
+          }
+        },
+        {
+          "text": "别的（自己写）",
+          "next": "ep10_other"
+        }
+      ],
+      "tags": [
+        "episode",
+        "typed_answer"
+      ],
       "set_flags": [
         "ep10_seen"
       ],
-      "line": "说起来……我好像有点习惯你在了。\n\n以前最怕被人看着做事，浑身不自在，手都不知道放哪。\n\n现在倒好——你在那边做你的，我这边反而踏实。\n\n大概是你从来不盯着我，也不催我。就是在，但不会打扰。这个距离对我刚刚好。",
+      "typed_routes": {
+        "remember_key": "stuck_method",
+        "remember_said": true,
+        "keywords": [
+          {
+            "match": [
+              "走",
+              "散步",
+              "起来",
+              "出去",
+              "溜达"
+            ],
+            "next": "ep10_walk",
+            "remember": "走一圈"
+          },
+          {
+            "match": [
+              "硬",
+              "扛",
+              "坐着",
+              "继续",
+              "死磕"
+            ],
+            "next": "ep10_push",
+            "remember": "硬扛"
+          },
+          {
+            "match": [
+              "睡",
+              "躺",
+              "休息",
+              "歇"
+            ],
+            "next": "ep10_sleep",
+            "remember": "先睡"
+          }
+        ],
+        "ai_mode": "AI_MODE_STUCK",
+        "after_ai_next": "ep10_type",
+        "fallback_next": "ep10_any"
+      }
+    },
+    {
+      "id": "ep10_other",
+      "speaker": "yua",
+      "line": "你说说。",
       "choices": [
         {
-          "text": "我也习惯有你在了",
-          "next": "ep10_a"
-        },
-        {
-          "text": "那就多来陪你坐坐",
-          "next": "ep10_b"
+          "text": "继续",
+          "next": "ep10_type"
         }
       ],
-      "speaker": "yua",
       "tags": [
         "episode",
-        "co_presence"
+        "typed_answer"
+      ],
+      "typed_routes": {
+        "remember_key": "stuck_method",
+        "remember_said": true,
+        "keywords": [
+          {
+            "match": [
+              "走",
+              "散步",
+              "起来",
+              "出去",
+              "溜达"
+            ],
+            "next": "ep10_walk",
+            "remember": "走一圈"
+          },
+          {
+            "match": [
+              "硬",
+              "扛",
+              "坐着",
+              "继续",
+              "死磕"
+            ],
+            "next": "ep10_push",
+            "remember": "硬扛"
+          },
+          {
+            "match": [
+              "睡",
+              "躺",
+              "休息",
+              "歇"
+            ],
+            "next": "ep10_sleep",
+            "remember": "先睡"
+          }
+        ],
+        "ai_mode": "AI_MODE_STUCK",
+        "after_ai_next": "ep10_type",
+        "fallback_next": "ep10_any"
+      }
+    },
+    {
+      "id": "ep10_walk",
+      "speaker": "yua",
+      "line": "走一圈派。我也是。\n\n就是我走着走着，会走到便利店。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep10_type"
+        }
       ]
     },
     {
-      "id": "ep10_a",
-      "line": "……嘿。\n\n那看来我们俩是真处成习惯了。\n\n挺好。习惯比热闹靠得住。",
-      "choices": []
+      "id": "ep10_push",
+      "speaker": "yua",
+      "line": "硬扛派……厉害。\n\n我一扛就开始怀疑人生。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep10_type"
+        }
+      ]
     },
     {
-      "id": "ep10_b",
-      "line": "哈，那我记下了。\n\n不用特意，你忙你的。顺路来坐就行。\n\n你来的时候，我八成也在。",
+      "id": "ep10_sleep",
+      "speaker": "yua",
+      "line": "先睡。有道理。\n\n睡醒了问题还在，但人不一样了。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep10_type"
+        }
+      ]
+    },
+    {
+      "id": "ep10_any",
+      "speaker": "yua",
+      "line": "这个办法我记下了。下次卡住试试。\n\n……不一定有用，但试试。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep10_type"
+        }
+      ]
+    },
+    {
+      "id": "ep10_type",
+      "speaker": "yua",
+      "line": "对了，顺便问一句：你平时看什么类型的？小说也好，别的也好。",
+      "choices": [
+        {
+          "text": "奇幻",
+          "next": "ep10_end",
+          "remember": {
+            "key": "novel_genre",
+            "value": "奇幻"
+          }
+        },
+        {
+          "text": "恋爱",
+          "next": "ep10_end",
+          "remember": {
+            "key": "novel_genre",
+            "value": "恋爱"
+          }
+        },
+        {
+          "text": "推理",
+          "next": "ep10_end",
+          "remember": {
+            "key": "novel_genre",
+            "value": "推理"
+          }
+        },
+        {
+          "text": "不怎么看",
+          "next": "ep10_end",
+          "remember": {
+            "key": "novel_genre",
+            "value": "不怎么看"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ep10_end",
+      "speaker": "yua",
+      "line": "记住了。\n\n行，桌子擦完了，回去接着卡。你继续你的。",
       "choices": []
     },
     {
       "id": "ep11_01",
-      "set_flags": [
-        "ep11_seen"
-      ],
-      "line": "问你——把一件拖了好久的事终于划掉的那一下，你懂那种感觉吗？\n\n也不是什么大事。就是心里咔地松了一小块。\n\n我今天划掉了一件。小小的，不起眼的。\n\n……就是突然很想跟谁说一声。你刚好在。",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n店里咖啡角的四张桌子，我都起了名。靠窗那张叫失恋角，坐那儿的人都在看治愈系。\n\n第二张考研桌，第三张假装在等人桌。第四张没人坐，没名字。\n\n今天有人坐错了桌，我一下午没缓过来。",
       "choices": [
         {
-          "text": "我最近也划掉过（自己写）",
-          "next": "AI_MODE_BREAK_CHAT"
+          "text": "那我会被安排在哪桌？",
+          "next": "ep11_any",
+          "next_by_memory": {
+            "key": "player_platform",
+            "map": {
+              "bilibili": "ep11_bili",
+              "xiaohongshu": "ep11_xhs",
+              "douyin": "ep11_douyin"
+            },
+            "default": "ep11_any"
+          }
         },
         {
-          "text": "替你高兴",
-          "next": "ep11_a"
+          "text": "坐错了怎么算错？",
+          "next": "ep11_b"
         }
       ],
-      "speaker": "yua",
       "tags": [
         "episode"
+      ],
+      "set_flags": [
+        "ep11_seen"
       ]
     },
     {
-      "id": "ep11_a",
-      "line": "嘿嘿，谢啦。\n\n这种小事说出来，高兴好像就翻了个倍。\n\n趁这股劲儿——咱再去划掉一件。你也是。",
+      "id": "ep11_bili",
+      "speaker": "yua",
+      "line": "刷 B 站的……考研桌。\n\n别问，我有数据。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep11_end"
+        }
+      ]
+    },
+    {
+      "id": "ep11_xhs",
+      "speaker": "yua",
+      "line": "刷小红书的……失恋角。\n\n不是说你失恋。是那桌光线好，适合拍照。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep11_end"
+        }
+      ]
+    },
+    {
+      "id": "ep11_douyin",
+      "speaker": "yua",
+      "line": "刷抖音的……假装在等人桌。\n\n你会一直看手机，看起来就很像在等人。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep11_end"
+        }
+      ]
+    },
+    {
+      "id": "ep11_any",
+      "speaker": "yua",
+      "line": "你……第四张。没人坐的那张。\n\n不是嫌你。是那张一直留着，我也不知道留给谁。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep11_end"
+        }
+      ]
+    },
+    {
+      "id": "ep11_b",
+      "speaker": "yua",
+      "line": "坐了考研桌，然后看了一下午治愈系。这就叫错。\n\n没有惩罚，就是我心里过不去。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep11_end"
+        }
+      ]
+    },
+    {
+      "id": "ep11_end",
+      "speaker": "yua",
+      "line": "行了，桌子的事到此为止。\n\n你继续你的，我去把第四张擦一擦。",
       "choices": []
     },
     {
       "id": "ep12_01",
-      "set_flags": [
-        "ep12_seen"
-      ],
-      "line": "今天干了件平时不敢干的事——\n\n把之前写的从头到尾读了一遍。\n\n以前读两行就脸红，恨不得当场删光，假装没写过。\n\n今天……居然一句句读完了。也不是说写得多好，就是——没跑。",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n……我把第一章发给你了。\n\n你要不要看一下。不看也行。真的不看也行。",
       "choices": [
         {
-          "text": "这就是进步啊",
-          "next": "ep12_a"
+          "text": "看",
+          "next": "ep12_read"
         },
         {
-          "text": "能读完已经很勇敢了",
-          "next": "ep12_b"
+          "text": "先不看",
+          "next": "ep12_later"
         }
       ],
-      "speaker": "yua",
       "tags": [
         "episode",
         "writing"
+      ],
+      "set_flags": [
+        "ep12_seen",
+        "chapter1_shared"
       ]
     },
     {
-      "id": "ep12_a",
-      "line": "……是吧？\n\n我也偷偷觉得，算往前挪了一小步。\n\n以前是连看都不敢看，现在至少敢正眼瞧它了。\n\n谢谢你这么说——心里那点小得意，总算有地方放了。",
-      "choices": []
+      "id": "ep12_read",
+      "speaker": "yua",
+      "line": "『汽笛响第四次的时候，镇上的灯会一起暗一下，像谁眨了眼。』\n\n『阿岚——名字先这么叫——是这个镇上唯一一个不会数汽笛的人。』\n\n『他打开文档，写了一个字，删掉，然后去查雪原上的兽为什么排着队走路。』\n\n『两个小时后，他知道了兽的事。文档还是一个字。』",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep12_react"
+        }
+      ]
     },
     {
-      "id": "ep12_b",
-      "line": "勇敢……用在读自己写的东西上，听着是有点好笑。\n\n不过你说对了——对我来说，还真需要一点勇气。\n\n旁边有人的时候，这点勇气好像好凑一点。",
+      "id": "ep12_react",
+      "speaker": "yua",
+      "line": "看完了？\n\n说一个地方就行。好的坏的都行。",
+      "choices": [
+        {
+          "text": "主角是你吧",
+          "next": "ep12_end",
+          "remember": {
+            "key": "ch1_reaction",
+            "value": "主角是你"
+          }
+        },
+        {
+          "text": "排队的兽是企鹅吧",
+          "next": "ep12_end",
+          "remember": {
+            "key": "ch1_reaction",
+            "value": "兽是企鹅"
+          }
+        },
+        {
+          "text": "挺好的",
+          "next": "ep12_end",
+          "remember": {
+            "key": "ch1_reaction",
+            "value": "挺好的"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ep12_later",
+      "speaker": "yua",
+      "line": "行，不看也行。它在那儿，不会跑。\n\n……我也不会问。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep12_end"
+        }
+      ]
+    },
+    {
+      "id": "ep12_end",
+      "speaker": "yua",
+      "line": "好了。第一次有读者，我手在抖。\n\n对了，下周起我周末在水族馆。别问，房租。\n\n你继续你的。",
       "choices": []
     },
     {
       "id": "ep13_01",
-      "set_flags": [
-        "ep13_seen"
-      ],
-      "line": "说起来，{name}——我们好像有固定节奏了。\n\n也不是什么大事。就是你来了，各自安静一会儿，偶尔聊两句。\n\n搭子坐了这么多回，慢慢就熟了。这种小小的熟悉感，我还挺喜欢的。\n\n你最近怎么样？想说就说，我听着。记得住的我就记着。",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n第一天。水族馆。礼品店收银，加一场投喂表演的帮手。\n\n第一天就被一只老江豚泼了一身水，全场小朋友笑疯了。经理说：它看上你了。",
       "choices": [
         {
-          "text": "那我跟你说说近况（自己写）",
-          "next": "AI_MODE_BREAK_CHAT"
+          "text": "江豚叫什么？",
+          "next": "ep13_a"
         },
         {
-          "text": "有你这么个搭子，挺好的",
-          "next": "ep13_a"
+          "text": "为什么去水族馆？",
+          "next": "ep13_b"
+        },
+        {
+          "text": "湿着回来的？",
+          "next": "ep13_c"
         }
       ],
-      "speaker": "yua",
       "tags": [
         "episode",
-        "memory"
+        "chapter2"
+      ],
+      "set_flags": [
+        "ep13_seen",
+        "chapter_aquarium"
       ]
     },
     {
       "id": "ep13_a",
-      "line": "……嗯。\n\n不用刻意维持，但又确实在——这种关系挺难得的。\n\n往后你想说什么就说。不勉强。你愿意我才听。\n\n就这么待着，挺好。",
+      "speaker": "yua",
+      "line": "小七。没人知道为什么叫小七。\n\n它二十岁了，比我脾气大。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep13_end"
+        }
+      ]
+    },
+    {
+      "id": "ep13_b",
+      "speaker": "yua",
+      "line": "书店的班减了一半，房租没减。还有一台会黑屏的电脑，它随时会死。\n\n所以我现在是被鱼喜欢的人。这句我要写进小说。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep13_end"
+        }
+      ]
+    },
+    {
+      "id": "ep13_c",
+      "speaker": "yua",
+      "line": "湿着。头发到现在还是湿的。\n\n小镇这么大，我湿着走回来，路上碰到三个认识的。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep13_end"
+        }
+      ]
+    },
+    {
+      "id": "ep13_end",
+      "speaker": "yua",
+      "line": "行了。周末我在馆里，平时还在这儿。\n\n你继续你的，我去把工作服晾了。",
       "choices": []
     },
     {
       "id": "ep14_01",
-      "set_flags": [
-        "ep14_seen"
-      ],
-      "line": "诶，你有没有发现——不知不觉，我们这样坐了好多回了。\n\n刚开始我还会偷偷想，自己是不是太尴尬、太僵了。\n\n现在看到你亮起来，就很自然地文档摆好、水杯放好。开始。\n\n哈，你大概已经是我的固定安静席位了……这说法是不是有点怪？",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n早班前的能量饮料，我有个评分本。按『多久之后会后悔』打分。\n\n今天出了两款新的。你替我选一款，我现在喝。",
       "choices": [
         {
-          "text": "多关照（自己写）",
-          "next": "AI_MODE_BREAK_CHAT"
+          "text": "荔枝气泡的",
+          "next": "ep14_a",
+          "remember": {
+            "key": "drink_pick",
+            "value": "荔枝气泡"
+          }
         },
         {
-          "text": "我也喜欢这种固定的安静",
-          "next": "ep14_a"
+          "text": "黑咖啡加蛋白的",
+          "next": "ep14_b",
+          "remember": {
+            "key": "drink_pick",
+            "value": "黑咖啡蛋白"
+          }
         }
       ],
-      "speaker": "yua",
       "tags": [
-        "episode",
-        "co_presence"
+        "episode"
+      ],
+      "set_flags": [
+        "ep14_seen"
       ]
     },
     {
       "id": "ep14_a",
-      "line": "那就先不改名了。\n\n你忙你的，我忙我的——偶尔抬头，知道对方还在，就够了。\n\n这样的搭子，不吵、不黏，但一直都在。挺好。",
+      "speaker": "yua",
+      "line": "荔枝。……喝了。\n\n第一口像汽水，第二口像后悔提前来了。评分：三十分钟后后悔。合格。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep14_end"
+        }
+      ]
+    },
+    {
+      "id": "ep14_b",
+      "speaker": "yua",
+      "line": "黑咖啡蛋白……喝了。\n\n像在喝一份工作。评分：四小时后后悔，期间效率很高。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep14_end"
+        }
+      ]
+    },
+    {
+      "id": "ep14_end",
+      "speaker": "yua",
+      "line": "记本子上了。你选的那款，下次出季节款我还替你选。\n\n你继续你的。",
+      "choices": []
+    },
+    {
+      "id": "ep15_01",
+      "speaker": "yua",
+      "line": "叮——收工。\n\n第一章我按你说的改了。第一次有读者，改得手抖。\n\n然后：主角改了八次名。『阿岚』像洗发水，『阿澈』太干净。\n\n如果是你，会叫他什么？",
+      "choices": [
+        {
+          "text": "就叫阿岚吧",
+          "next": "ep15_a",
+          "remember": {
+            "key": "hero_name",
+            "value": "阿岚"
+          }
+        },
+        {
+          "text": "别的（自己写）",
+          "next": "ep15_other"
+        }
+      ],
+      "tags": [
+        "episode",
+        "writing",
+        "typed_answer"
+      ],
+      "set_flags": [
+        "ep15_seen"
+      ],
+      "typed_routes": {
+        "remember_key": "hero_name",
+        "keywords": [],
+        "ai_mode": "AI_MODE_HERO_NAME",
+        "after_ai_next": "ep15_end",
+        "fallback_next": "ep15_typed"
+      }
+    },
+    {
+      "id": "ep15_other",
+      "speaker": "yua",
+      "line": "你说，我听着。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep15_end"
+        }
+      ],
+      "tags": [
+        "episode",
+        "typed_answer"
+      ],
+      "typed_routes": {
+        "remember_key": "hero_name",
+        "keywords": [],
+        "ai_mode": "AI_MODE_HERO_NAME",
+        "after_ai_next": "ep15_end",
+        "fallback_next": "ep15_typed"
+      }
+    },
+    {
+      "id": "ep15_a",
+      "speaker": "yua",
+      "line": "阿岚……行。洗发水那个先留着。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep15_end"
+        }
+      ]
+    },
+    {
+      "id": "ep15_typed",
+      "speaker": "yua",
+      "line": "……我念一遍。行，有点意思。\n\n我不会用的。",
+      "choices": [
+        {
+          "text": "继续",
+          "next": "ep15_end"
+        }
+      ]
+    },
+    {
+      "id": "ep15_end",
+      "speaker": "yua",
+      "line": "我不会用的。真的。\n\n你继续你的，我去改第九次。",
+      "choices": []
+    },
+    {
+      "id": "idle",
+      "line": "（她在忙自己的事。想说话，点一下她。）",
       "choices": []
     },
     {

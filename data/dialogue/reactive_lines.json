@@ -1,5 +1,5 @@
 {
-  "_doc": "Short reactive line pools. Add new categories by adding a new key with a string array. Categories used by main_scene.gd: focus_click (click during focus, 3-min reply cooldown), idle_click_prefocus (click with no conversation open, before first-ever completed focus — soft timer nudge by showing HER move, never by asking), idle_click (same but after first completed focus — plain co-presence), view_<weather> (rain/day/night/sunset/seaside/treetops — one of these replaces an idle_click line about a third of the time, keyed to the current window view). RULE for every pool (docs/Script_Audit_2026-09-06.md §5): lines are about HER state, never a comment on the player's state — no 偷懒/放弃/走神/眼睛看屏幕, no 算数, no 明天/下次.",
+  "_doc": "Short reactive line pools. Add new categories by adding a new key with a string array. Categories used by main_scene.gd: focus_click (click during focus, 3-min reply cooldown), idle_click_prefocus (click with no conversation open, before first-ever completed focus — soft timer nudge by showing HER move, never by asking), idle_click (same but after first completed focus — plain co-presence), view_<weather> (rain/day/night/sunset/seaside/treetops — one of these replaces an idle_click line about a third of the time, keyed to the current window view). RULE for every pool (docs/Script_Audit_2026-09-06.md §5): lines are about HER state, never a comment on the player's state — no 偷懒/放弃/走神/眼睛看屏幕, no 算数, no 明天/下次. idle_click_ch2..ch5 (2026-09-23): chapter-flavoured idle clicks, used half the time from chapter 2 on.",
   "idle_click_prefocus": [
     "嗯？我在。\n\n我先开我的了，你随意。",
     "怎么啦。\n\n计时器我摆好了……先说好，不是催你。",
@@ -53,5 +53,22 @@
   "view_treetops": [
     "风一过，那棵树又在翻书了。",
     "叶子响了一阵。我以为有人来了。"
+  ],
+  "idle_click_ch2": [
+    "嗯？在。手上有鱼味，隔着屏幕闻不到吧。",
+    "怎么啦。今天小七泼了我两次，创纪录。",
+    "在的在的。企鹅的事我可以讲二十分钟，你确定要点我？"
+  ],
+  "idle_click_ch3": [
+    "嗯？我在。今天拉花像一只生气的江豚。进步了，昨天像一滩。",
+    "怎么啦。老板在后面睡，吧台归我。"
+  ],
+  "idle_click_ch4": [
+    "嗯？在。手上有花粉。",
+    "怎么啦。今天替人写了四十张卡，嗓子是哑的，虽然不用说话。"
+  ],
+  "idle_click_ch5": [
+    "嗯？我在。自动门今天也开了，我还是不习惯。",
+    "怎么啦。稿子在店长桌上，我在这儿装死。"
   ]
 }

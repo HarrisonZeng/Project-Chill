@@ -50,6 +50,16 @@ class MockAiProvider extends AiProvider:
 			return "行，那就这个。我这边也开了。"
 		if mode_id == "AI_MODE_PLATFORM_REACT":
 			return "这个我不太刷。不过听起来，也是那种一进去就出不来的。"
+		if mode_id == "AI_MODE_YOUR_THING":
+			return "嗯，记住了。我不问结果，只问你还在不在弄。"
+		if mode_id == "AI_MODE_DOOR_IDEA":
+			return "这个我没试过。明天试，试完告诉你。"
+		if mode_id == "AI_MODE_STUCK":
+			return "这个办法我记下了。下次卡住试试。"
+		if mode_id == "AI_MODE_HERO_NAME":
+			return "……我念一遍。行，有点意思。我不会用的。"
+		if mode_id == "AI_MODE_LAST_TIME":
+			return "对了，你上次说的那个——我没忘。就这句。"
 		# Offline stand-in for the real provider. Mandarin only, in her voice, and
 		# never a comment on the player's productivity — she reacts to what they
 		# said, then goes back to her own work (audit §5 BLOCK: the English
@@ -266,11 +276,21 @@ func _request_chat_completion(payload: Dictionary, api_key: String, endpoint_url
 	]
 
 	var body: String = JSON.stringify(payload)
-	http_request.timeout = maxf(timeout_seconds, 1.0)
+
+	# One HTTPRequest node PER CALL. The callers give up on a slow model after
+	# ~12 s (name reaction, typed routes, greeting callback) but the request
+	# keeps running; with a single shared node every later call then failed
+	# with "HTTPRequest is processing a request" until it finished — which is
+	# exactly what the live check caught. A fresh node per call cannot collide;
+	# an abandoned one frees itself when its own request completes or times out.
+	var req := HTTPRequest.new()
+	add_child(req)
+	req.timeout = maxf(timeout_seconds, 1.0)
 
 	var request_url: String = endpoint_url if not endpoint_url.is_empty() else DEFAULT_CHAT_COMPLETIONS_URL
-	var err: int = http_request.request(request_url, headers, HTTPClient.METHOD_POST, body)
+	var err: int = req.request(request_url, headers, HTTPClient.METHOD_POST, body)
 	if err != OK:
+		req.queue_free()
 		last_error = "request_failed_%s" % str(err)
 		return {
 			"text": FALLBACK_REPLY,
@@ -280,7 +300,8 @@ func _request_chat_completion(payload: Dictionary, api_key: String, endpoint_url
 			"fallback_used": true
 		}
 
-	var result: Array = await http_request.request_completed
+	var result: Array = await req.request_completed
+	req.queue_free()
 	if int(result[0]) != HTTPRequest.RESULT_SUCCESS:
 		last_error = "request_result_%s" % str(result[0])
 		return {

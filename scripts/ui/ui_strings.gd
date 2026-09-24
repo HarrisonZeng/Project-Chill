@@ -41,6 +41,7 @@ const STRINGS := {
 	"tasks.counter_empty": {"zh": "· 还没有任务 ·", "en": "· no tasks ·"},
 	"tasks.tab.label": {"zh": "任务", "en": "Tasks"},
 	"tasks.resize.tooltip": {"zh": "拖动调整任务面板大小", "en": "Drag to resize tasks panel"},
+	"tasks.yua_title": {"zh": "· 她的本子 ·", "en": "· her notebook ·"},
 	"music.no_track": {"zh": "未加载音乐", "en": "No track loaded"},
 	"music.song_prefix": {"zh": "歌曲：", "en": "Song: "},
 	"music.play": {"zh": "播放", "en": "Play"},
@@ -50,6 +51,21 @@ const STRINGS := {
 	"music.mode.random": {"zh": "随机", "en": "Random"},
 	"voice.on": {"zh": "语音开", "en": "Voice On"},
 	"voice.off": {"zh": "语音关", "en": "Voice Off"},
+	# 2026-09-24: her notebook as its own card; the calendar card on the left.
+	"tasks.yua_card_title": {"zh": "Yua 的本子", "en": "Yua's notebook"},
+	"calendar.tooltip": {"zh": "日历", "en": "Calendar"},
+	"calendar.month": {"zh": "%d年%d月", "en": "%s %d"},
+	"calendar.prev": {"zh": "上个月", "en": "Previous month"},
+	"calendar.next": {"zh": "下个月", "en": "Next month"},
+	"calendar.back_today": {"zh": "回到今天", "en": "Back to today"},
+	"calendar.weekdays": {"zh": "一,二,三,四,五,六,日", "en": "M,T,W,T,F,S,S"},
+	"calendar.focus_day": {"zh": "一起专注了 %d 分钟", "en": "Focused together · %d min"},
+	"calendar.focus_day_short": {"zh": "一起专注过", "en": "Focused together"},
+	"calendar.first_day": {"zh": "第一次一起专注", "en": "Our first focus session"},
+	"calendar.rent": {"zh": "Yua：交房租", "en": "Yua: rent day"},
+	"calendar.today_is": {"zh": "今天是%s", "en": "Today: %s"},
+	"calendar.tomorrow_is": {"zh": "明天是%s", "en": "Tomorrow: %s"},
+	"calendar.today_line": {"zh": "%d月%d日 · 周%s", "en": "%s %d · %s"},
 }
 
 static func t(key: String, lang: String = "en") -> String:
