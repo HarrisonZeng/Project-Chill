@@ -117,6 +117,8 @@ var dialogue_typewriter_total_chars: int = 0
 # beats shown one at a time; the player clicks to advance to the next beat, and
 # choices only appear after the final beat.
 var dialogue_beats: Array = []
+# The whole line behind the current beats (tokens applied), for history and tests.
+var dialogue_full_text: String = ""
 var dialogue_beat_index: int = 0
 var pending_choice_payloads: Array = []
 var current_choice_payloads: Array = []
@@ -160,6 +162,7 @@ var companion_face: Node = null
 var ai_features_enabled: bool = true
 const ENGAGED_GAP_CAP_SECONDS := 60     # cap a single engaged-time gap (AFK-safe)
 const NAME_INPUT_TAG := "name_input"    # narrative tags the Ep0 name node with this
+const TASK_INPUT_TAG := "task_input"    # a typed line here becomes the focus task (Ep0 «你也随手来一句？»)
 
 # Loaded from data/dialogue/* on _ready. See REACTIVE_LINES_PATH / AI_MODES_PATH
 # constants and the loader helpers near the bottom of the file.
@@ -244,6 +247,9 @@ func _setup_launch_flow() -> void:
 		intake.z_index = 900
 		add_child(intake)
 		intake.finished.connect(_on_intake_finished)
+		# Ask the model for her reaction to the name the moment it is typed, so
+		# the line is ready when Ep0 reaches «我看了一眼资料».
+		intake.nickname_entered.connect(_prefetch_name_reaction)
 		intake.call("start")
 		return
 	_setup_call_intro()
@@ -269,6 +275,7 @@ func _on_intake_finished(answers: Dictionary) -> void:
 	_intake_ran_this_launch = true
 	if memory_manager != null and memory_manager.has_method("set_player_nickname"):
 		memory_manager.call("set_player_nickname", player_nickname)
+	_prefetch_name_reaction(player_nickname)  # no-op if the nickname step already asked
 	_save_persistent_state()
 	var call_intro := get_node_or_null("CallIntro")
 	if call_intro != null:
@@ -308,6 +315,7 @@ func _setup_call_intro() -> void:
 func _process(delta: float) -> void:
 	_update_dialogue_typewriter(delta)
 	_update_focus_timer()
+	_release_stuck_reply_wait()
 	# Her hands type while a focus session runs. Idempotent, so driving it from
 	# here beats touching every place focus_running is set.
 	if companion_face != null:
@@ -657,8 +665,8 @@ func _ui_text(key: String) -> String:
 			return "计时已暂停" if zh else "Timer paused"
 		"status_focus_complete":
 			return "这一段结束了" if zh else "Focus block complete"
-		"status_thinking":
-			return "正在回复……" if zh else "Replying..."
+		"status_sending":
+			return "发送中……" if zh else "Sending..."
 		"status_enter_minutes":
 			return "先填一个分钟数" if zh else "Enter a number of minutes first."
 		"history":
@@ -776,6 +784,7 @@ func _highlight_duration_chip(minutes: int) -> void:
 
 func _show_node(node_id: String) -> void:
 	_enter_scripted_mode()
+	_typed_route_spent_node = ""
 	current_node_id = node_id
 	var node_data: Dictionary = scripted_dialogue_manager.get_dialogue_node(node_id)
 	_show_node_data(node_data)
@@ -897,29 +906,35 @@ func _clear_choice_buttons() -> void:
 # reply. We only auto-grab focus where typing is the expected action (name/task
 # capture, or an AI-mode chip), so it never steals focus from quick-reply chips.
 func _should_autofocus_input() -> bool:
+	return _node_wants_typing()
+
+# Owner rule (2026-09-10): the type box exists only when Type Mode is on —
+# EXCEPT at the beats that are literally asking the player to type, where it
+# appears alongside the buttons. Those beats are:
+#   - the Ep0 name ask and the focus-task asks (tagged in the JSON);
+#   - any node whose JSON declares typed_routes — it has an answer to read;
+#   - right after a 自己写 / 说会儿话 chip (current_ai_mode_id is set and she
+#     has just said «你说，我听着»). Missing this one is the 2026-09-25 bug:
+#     she asked, and no box ever opened.
+# A typed-answer node closes again once its one AI beat has played — after
+# that the only way on is her 继续 back into the script (bounded AI).
+func _node_wants_typing() -> bool:
 	if current_ai_mode_id != "":
 		return true
-	if _current_node_has_tag(NAME_INPUT_TAG):
+	if _current_node_has_tag(NAME_INPUT_TAG) or _is_task_input_node():
 		return true
-	if current_node_id == "TASK_INPUT_001":
-		return true
-	if not _current_node_typed_routes().is_empty():
-		return true
-	return current_node_id == "ep00_04"
+	return current_node_id != _typed_route_spent_node and not _current_node_typed_routes().is_empty()
 
-# Always-on Type Mode: once a line finishes typing (and we're not mid-focus), the
-# input box is shown, and scripted choice chips are shown alongside it when the
-# node has them. The two live in stacked bands so they no longer fight for one slot.
+func _is_task_input_node() -> bool:
+	return current_node_id == "TASK_INPUT_001" or _current_node_has_tag(TASK_INPUT_TAG)
+
+# Once a line finishes typing (and we're not mid-focus), the reply slot shows
+# the node's choice chips, plus the type box where she is asking for words.
+# The two live in stacked bands so they no longer fight for one slot.
 func _update_response_slot_visibility(has_visible_choices: bool = false) -> void:
 	var ready := not dialogue_typewriter_active and not focus_running
-	# The reply slot belongs to the buttons unless the player has switched Type
-	# Mode on. When a node offers no buttons at all, the type box stays available
-	# so there is always some way to answer her.
-	# Owner rule (2026-09-10): the type box exists only when Type Mode is on —
-	# EXCEPT at the beats that are literally asking the player to type (the Ep0
-	# name ask, the focus-task ask), where it appears alongside the buttons.
-	var node_needs_typing := _current_node_has_tag(NAME_INPUT_TAG) or current_node_id == "TASK_INPUT_001"
-	var show_type := ready and (type_mode_active or node_needs_typing)
+	var node_needs_typing := _node_wants_typing()
+	var show_type := ready and not _is_awaiting_reply() and (type_mode_active or node_needs_typing)
 	var show_choices := ready and has_visible_choices and (not show_type or node_needs_typing)
 	if choice_list != null:
 		choice_list.visible = show_choices
@@ -974,6 +989,8 @@ func _on_subtitle_input(event: InputEvent) -> void:
 	_on_subtitle_clicked()
 
 func _on_subtitle_clicked() -> void:
+	if _is_awaiting_reply():
+		return  # 发送中: nothing skips past a reply on its way
 	# While the typewriter is running, click skips to the full beat immediately.
 	if dialogue_typewriter_active:
 		_finish_dialogue_typewriter()
@@ -1038,6 +1055,7 @@ func _set_dialogue_text(text: String) -> void:
 	# final beat finishes (see _finish_dialogue_typewriter).
 	pending_choice_payloads.clear()
 	_clear_choice_buttons()
+	dialogue_full_text = text
 	dialogue_beats = _split_into_beats(text)
 	dialogue_beat_index = 0
 	if dialogue_beats.is_empty():
@@ -1082,6 +1100,7 @@ func _hide_dialogue_text() -> void:
 	dialogue_typewriter_total_chars = 0
 	dialogue_beats = []
 	dialogue_beat_index = 0
+	dialogue_full_text = ""
 	pending_choice_payloads.clear()
 	if dialogue_text != null:
 		dialogue_text.text = ""
@@ -1096,15 +1115,55 @@ func _hide_dialogue_text() -> void:
 	if input_row != null:
 		input_row.visible = false
 
-# Split a line into paragraph beats on blank lines. Single-paragraph lines yield
-# one beat, so they behave exactly as before (type out, then show choices).
+# Split a line into beats: one sentence per click (owner, 2026-09-26 — "so each
+# ep feels longer"), for authored lines and AI replies alike. Blank lines still
+# separate beats. Choices appear after the last beat.
 func _split_into_beats(text: String) -> Array:
 	var beats: Array = []
 	for chunk in text.split("\n\n"):
-		var trimmed := str(chunk).strip_edges()
-		if not trimmed.is_empty():
-			beats.append(trimmed)
+		for sentence in _split_sentences(str(chunk).strip_edges()):
+			beats.append(sentence)
 	return beats
+
+const SENTENCE_ENDERS := "。！？!?"
+const QUOTE_OPENERS := "「『“‘（(《"
+const QUOTE_CLOSERS := "」』”’）)》"
+
+# Cuts after 。！？ (a run like «？！» stays together, as does a closing quote
+# right after it). Never cuts inside 「」『』（）: a quoted sentence, her novel's
+# 『…』 paragraphs, or a （narration） line stays one beat. «……» alone is a
+# pause inside a sentence, not an end — «我刚刚在……学习。» is one beat.
+func _split_sentences(text: String) -> Array:
+	var out: Array = []
+	if text.is_empty():
+		return out
+	var depth := 0
+	var start := 0
+	var i := 0
+	var n := text.length()
+	while i < n:
+		var ch := text[i]
+		if QUOTE_OPENERS.contains(ch):
+			depth += 1
+		elif QUOTE_CLOSERS.contains(ch):
+			depth = maxi(depth - 1, 0)
+		elif depth == 0 and SENTENCE_ENDERS.contains(ch):
+			var j := i + 1
+			while j < n and SENTENCE_ENDERS.contains(text[j]):
+				j += 1
+			while j < n and QUOTE_CLOSERS.contains(text[j]):
+				j += 1
+			var piece := text.substr(start, j - start).strip_edges()
+			if not piece.is_empty():
+				out.append(piece)
+			start = j
+			i = j
+			continue
+		i += 1
+	var rest := text.substr(start).strip_edges()
+	if not rest.is_empty():
+		out.append(rest)
+	return out
 
 func _has_more_beats() -> bool:
 	return dialogue_beat_index < dialogue_beats.size() - 1
@@ -1184,6 +1243,8 @@ func _make_choice_style(background: Color, border: Color) -> StyleBoxFlat:
 	return style
 
 func _on_character_clicked() -> void:
+	if _is_awaiting_reply():
+		return  # 发送中
 	if focus_running:
 		_show_focus_click_line()
 		return
@@ -1620,27 +1681,87 @@ func _capture_player_nickname(nickname: String) -> void:
 
 # --- Ep0 name reaction -------------------------------------------------------
 const NAME_REACT_TIMEOUT_SECONDS := 16.0
+# A questionnaire-time request may run the service's full HTTP timeout (20 s);
+# M3 took 12–16 s on the name reaction on 2026-09-26, so 16 s would drop some.
+const NAME_REACT_PREFETCH_SECONDS := 20.0
 var _name_react_token: int = 0
+# The questionnaire hands over the nickname a good half-minute before Ep0 needs
+# it (role pick, matching, the ringing call, five intro beats), so the model is
+# asked right then and its line is usually waiting by «我看了一眼资料». Same
+# box shape as _route_into_box: {name, done, route, started_ms}.
+var _name_react_prefetch: Dictionary = {}
+
+# Called when the player submits a nickname in the questionnaire. Fire-and-forget:
+# nothing waits on it here; _play_name_reaction_then picks up the result.
+func _prefetch_name_reaction(nickname: String) -> void:
+	var clean := nickname.strip_edges()
+	if clean.is_empty() or not ai_features_enabled:
+		return
+	if dialogue_router == null or not dialogue_router.has_method("route_player_text_async"):
+		return
+	if str(_name_react_prefetch.get("name", "")) == clean:
+		return  # already asked
+	# The context packet reads the nickname; the intake only stores it on finish.
+	player_nickname = clean
+	_name_react_prefetch = {"name": clean, "done": false, "route": {}, "started_ms": Time.get_ticks_msec()}
+	_route_into_box(clean, "AI_MODE_NAME_REACT", _name_react_prefetch)
+
+# The model's line for this name, if one is usable. The offline mock is not a
+# reaction to a name (it answers «嗯，听见了…» to anything), so only a real
+# provider counts — otherwise the scripted classifier below speaks.
+func _name_reaction_from_route(route: Dictionary) -> String:
+	if str(route.get("mode", "")) != "ai" or not bool(route.get("success", false)):
+		return ""
+	if bool(route.get("fallback_used", false)) or str(route.get("provider", "")) == "mock":
+		return ""
+	return str(route.get("text", "")).strip_edges()
+
+# Her «{name}……» while the model is still answering. A click continues the
+# intro without the reaction, so the wait can never strand the player — before
+# this, clicking Yua here dropped Ep0 for an idle line.
+func _show_name_react_wait(nickname: String, next_id: String) -> void:
+	_set_dialogue_text("%s……" % nickname)
+	_render_choices([{"text": "继续", "next": next_id, "internal_return": true}])
+
+# A late reply must not land on whatever the player has moved on to (the live
+# check caught a slow name reaction overwriting Ep5, with a 继续 back into Ep0).
+func _name_react_still_wanted(token: int) -> bool:
+	return token == _name_react_token and current_node_id == "ep00_name_react"
 
 func _play_name_reaction_then(nickname: String, next_id: String) -> void:
 	_name_react_token += 1
 	var my_token := _name_react_token
 	_enter_scripted_mode()
 	current_node_id = "ep00_name_react"
-	_set_dialogue_text("%s……" % nickname)
 	_set_status_message("")
 	_render_choices([])
 
 	var reaction := ""
-	var ai_ok := false
-	if ai_features_enabled and dialogue_router != null and dialogue_router.has_method("route_player_text_async"):
+	var prefetch := _name_react_prefetch
+	if str(prefetch.get("name", "")) == nickname:
+		# Asked during the questionnaire. Ready → say it now; still on its way →
+		# wait out what is left of its time behind her «{name}……».
+		if not bool(prefetch.get("done", false)):
+			_show_name_react_wait(nickname, next_id)
+			var deadline := int(prefetch.get("started_ms", 0)) + int(NAME_REACT_PREFETCH_SECONDS * 1000.0)
+			while not bool(prefetch.get("done", false)) and Time.get_ticks_msec() < deadline:
+				await get_tree().process_frame
+			if not _name_react_still_wanted(my_token):
+				return
+		if bool(prefetch.get("done", false)):
+			reaction = _name_reaction_from_route(prefetch.get("route", {}))
+	elif ai_features_enabled and dialogue_router != null and dialogue_router.has_method("route_player_text_async"):
+		# Name typed in Ep0 itself (blank questionnaire answer): ask now, behind
+		# 发送中 like any other typed line.
+		_set_dialogue_text("%s……" % nickname)
+		_begin_awaiting_reply()
 		var route: Dictionary = await _route_with_timeout(nickname, "AI_MODE_NAME_REACT", NAME_REACT_TIMEOUT_SECONDS)
-		if my_token != _name_react_token:
-			return  # superseded (player reset mid-await)
-		if bool(route.get("success", false)) and not bool(route.get("fallback_used", false)):
-			reaction = str(route.get("text", "")).strip_edges()
-			ai_ok = not reaction.is_empty()
-	if not ai_ok:
+		if my_token == _name_react_token:
+			_end_awaiting_reply()
+		if not _name_react_still_wanted(my_token):
+			return
+		reaction = _name_reaction_from_route(route)
+	if reaction.is_empty():
 		reaction = _scripted_name_reaction(nickname)
 
 	_set_dialogue_text(reaction)
@@ -1930,7 +2051,7 @@ func _on_input_submitted(submitted_text: String) -> void:
 
 func _handle_player_text(raw_text: String) -> void:
 	var text := raw_text.strip_edges()
-	if text.is_empty():
+	if text.is_empty() or _is_awaiting_reply():
 		return
 
 	player_input.clear()
@@ -1942,7 +2063,7 @@ func _handle_player_text(raw_text: String) -> void:
 		return
 
 	# Task input node: a typed line becomes the focus task, not an AI message.
-	if current_node_id == "TASK_INPUT_001":
+	if _is_task_input_node():
 		_capture_focus_task(text)
 		return
 
@@ -1962,10 +2083,11 @@ func _handle_player_text(raw_text: String) -> void:
 	# Type Mode is always on: any other typed line routes to the AI. (The old
 	# AIModeToggle checkbox was removed from the UI; there is no "off" state.)
 	_note_meaningful_interaction()
-	_set_status_message(_ui_text("status_thinking"))
+	_begin_awaiting_reply()
 	memory_manager.process_player_message(text)
 	var mode_id := current_ai_mode_id if not current_ai_mode_id.is_empty() else current_node_id
 	var context_packet := _build_context_packet(mode_id)
+	var asked_at_node := current_node_id
 	var route: Dictionary = await dialogue_router.route_player_text_async(
 		text,
 		true,
@@ -1974,11 +2096,48 @@ func _handle_player_text(raw_text: String) -> void:
 		runtime_rules_text,
 		mode_id
 	)
+	_end_awaiting_reply()
+	# The model takes seconds. If the player has since started the timer or the
+	# story has moved to another beat, the reply is stale — dropping it beats
+	# writing over the new scene (the live check caught one landing on Ep5).
+	if focus_running or current_node_id != asked_at_node:
+		return
 	_handle_ai_route(route)
+
+# --- 发送中: a reply to something the player typed is on its way -------------
+# Owner, 2026-09-26: after sending, show 「发送中……」 and let nothing skip past
+# it — no click on her or the card, no typing, no timer start — so her reply
+# can never land on a scene the player already left. If a request ever hangs,
+# the lock lets go by itself after AWAITING_REPLY_MAX_MS (requests time out at
+# 16–20 s), so the game can't freeze.
+const AWAITING_REPLY_MAX_MS := 25000
+var _awaiting_reply_since_ms: int = 0
+
+func _begin_awaiting_reply() -> void:
+	_awaiting_reply_since_ms = maxi(Time.get_ticks_msec(), 1)
+	_set_status_message(_ui_text("status_sending"))
+	_update_response_slot_visibility(choice_list != null and choice_list.visible)
+
+func _end_awaiting_reply() -> void:
+	if _awaiting_reply_since_ms <= 0:
+		return
+	_awaiting_reply_since_ms = 0
+	_set_status_message("")
+	_update_response_slot_visibility(choice_list != null and choice_list.visible)
+
+func _is_awaiting_reply() -> bool:
+	return _awaiting_reply_since_ms > 0
+
+func _release_stuck_reply_wait() -> void:
+	if _awaiting_reply_since_ms > 0 and Time.get_ticks_msec() - _awaiting_reply_since_ms > AWAITING_REPLY_MAX_MS:
+		_end_awaiting_reply()
 
 # --- typed-answer routing (node "typed_routes", see ScriptedDialogueManager) ---
 const TYPED_ROUTE_AI_TIMEOUT_SECONDS := 16.0
 var _typed_route_token: int = 0
+# The typed-answer node whose one AI beat has been used: the type box stays
+# closed there until the story moves on (see _node_wants_typing).
+var _typed_route_spent_node: String = ""
 
 func _current_node_typed_routes() -> Dictionary:
 	if scripted_dialogue_manager == null or not scripted_dialogue_manager.has_dialogue_node(current_node_id):
@@ -2024,11 +2183,19 @@ func _try_typed_route(text: String) -> bool:
 func _play_typed_route_ai(text: String, ai_mode: String, after_ai_next: String, fallback_next: String) -> void:
 	_typed_route_token += 1
 	var my_token := _typed_route_token
-	_set_status_message(_ui_text("status_thinking"))
+	# One beat only: close the box while she answers and after — the way on is
+	# her 继续 into the authored next node, not a second round of chat here.
+	_typed_route_spent_node = current_node_id
+	current_ai_mode_id = ""
 	_render_choices([])
+	_begin_awaiting_reply()
+	var my_node := current_node_id
 	var route: Dictionary = await _route_with_timeout(text, ai_mode, TYPED_ROUTE_AI_TIMEOUT_SECONDS)
 	if my_token != _typed_route_token:
 		return
+	_end_awaiting_reply()
+	if focus_running or current_node_id != my_node:
+		return  # moved on anyway (the lock self-released, or a debug jump)
 	var reply := str(route.get("text", "")).strip_edges()
 	var ai_ok := str(route.get("mode", "")) == "ai" and bool(route.get("success", false)) and not reply.is_empty()
 	if not ai_ok:
@@ -2036,6 +2203,8 @@ func _play_typed_route_ai(text: String, ai_mode: String, after_ai_next: String, 
 		if scripted_dialogue_manager.has_dialogue_node(fallback_next):
 			_show_node(fallback_next)
 		else:
+			# No authored cover: her «再发一遍？» needs the box back.
+			_typed_route_spent_node = ""
 			_handle_ai_route(route)
 		return
 	_set_dialogue_text(reply)
@@ -2187,6 +2356,8 @@ func _handle_ai_route(route: Dictionary) -> void:
 	_play_voice_for_line(voice_line_id, dialogue_text.text)
 
 func _on_start_focus_pressed() -> void:
+	if _is_awaiting_reply():
+		return  # 发送中 — at most AWAITING_REPLY_MAX_MS
 	_start_focus_from_script()
 
 func _on_stop_focus_pressed() -> void:

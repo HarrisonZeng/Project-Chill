@@ -48,6 +48,8 @@ class MockAiProvider extends AiProvider:
 			return "那就先歇一下。我也停一停，杯子都空了。"
 		if mode_id == "AI_MODE_CHECKIN":
 			return "行，那就这个。我这边也开了。"
+		if mode_id == "AI_MODE_SOUND":
+			return "懂了，各有各的开法。我这边倒是用不着放什么。"
 		if mode_id == "AI_MODE_PLATFORM_REACT":
 			return "这个我不太刷。不过听起来，也是那种一进去就出不来的。"
 		if mode_id == "AI_MODE_YOUR_THING":

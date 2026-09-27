@@ -184,6 +184,56 @@ either. What still does: feel, pacing, animation, audio.
 
 ## Session Log
 
+- **2026-09-26 (one sentence per click · 发送中 lock · Ep3 AI fixed · matched copy):** Owner asks:
+  drop 「也是第一次使用」; Ep3 (声音) AI mode seems broken — add a 「发送中」 no-skip wait after typing;
+  make every line one sentence per click so episodes feel longer. `check.ps1` green (32 scenarios);
+  `ai_live -Ai` 24/24 three runs in a row.
+  - **Matched screen** (`intake_controller.gd`): now just 「已匹配 · Yua」.
+  - **One sentence per click** (`main_scene._split_sentences`): beats cut after 。！？ (runs like ？！
+    and a closing quote stay attached); never inside 「」『』（） — quoted lines, her novel's 『…』
+    paragraphs and （narration） stay whole; «……» mid-sentence is not an end. Applies to authored
+    lines and AI replies. Across all episodes 214 beats → 354 (×1.7); Ep0 18 → 42.
+    `dialogue_full_text` keeps the whole line (harness `full_line()` reads it).
+  - **Ep3 AI was answering the wrong question**: its typed answer used the generic
+    AI_MODE_BREAK_CHAT, and the context packet never says what she just asked, so replies ignored
+    "sound". New AI_MODE_SOUND (knows the question; ends on 「我这边倒是不用放什么」 without describing
+    her sounds, so 「你听」 still lands) + an on-topic offline mock line. Live: 「雨声啊，挺稳的。我这边
+    倒是不用放什么。」 Also fixed PLATFORM_REACT's stale 「第三次」 → 「第六次」 (it is Ep6 since v12).
+  - **发送中 lock**: after any typed line that waits on the model (typed answers, free chat, a name
+    typed in Ep0) the status shows 「发送中……」 (was 「正在回复……」) and clicks on her / the card,
+    typing and the timer start are ignored until the reply lands. Self-releases after 25 s so a
+    hung request can't freeze the game.
+  - Tests: new `sentence_beats` (28: splitter cases, one click per sentence, 发送中 blocks every skip,
+    stuck lock releases); `ai_live` adds Ep3; `intake_look` waits by the clock for the matched shot.
+
+- **2026-09-25/26 (type box on every "you say" beat · AI name reaction from the questionnaire):**
+  Owner: «AI mode is still bugged — text box doesn't pop up when prompted like in ep0 and the ep
+  about sounds» + «after the 昵称, generate an AI response for Yua on the name for the intro».
+  `check.ps1` green (31 scenarios); live `ai_live -Ai` 19/19 three runs in a row.
+  - **Type box bug** (`main_scene.gd` `_node_wants_typing`): the box rule only knew the Ep0 name ask
+    and TASK_INPUT_001, so every 自己写 chip (Ep3 「我说说我的」, 说会儿话) left her saying 「你说，我听着」
+    with nothing to type in, and the typed-answer beats (Ep5, 别的（自己写） in Ep6/7/10/15) could only
+    be clicked past. Now the box also opens after a 自己写 chip, at any node with `typed_routes`
+    (beside its chips), and at Ep0 「你也随手来一句？」 (new `task_input` tag on `ep00_tools`; a line
+    typed there becomes the task directly). After a typed answer's one AI beat the box closes and
+    only 继续 remains (bounded AI). The harness hid the bug: `type_reply()` sent text without looking
+    for the box — it now fails when the box is shut (proved: 13 failures on the old rule).
+  - **Name reaction at the questionnaire**: `intake_controller.gd` emits `nickname_entered`;
+    `main_scene._prefetch_name_reaction` asks AI_MODE_NAME_REACT right then, ~30 s before Ep0's
+    「我看了一眼资料」 needs it, so the line is shown at once. Still on its way → 「{name}……」 with a
+    click-through; the offline mock never stands in (it answered 「嗯，听见了…」 to names).
+  - **Two late-reply races fixed** (found by the live check): a slow name reaction overwrote Ep5
+    with a 继续 back into Ep0; a slow free-chat reply overwrote a later scene. Both now drop the
+    reply if the player has moved on or started the timer.
+  - **Name prompt**: 「only name the source if certain」 made M3 deliberate 12–20 s (and still guess
+    wrong: 夜雨声烦 → 魔道祖师/剑三); now a flat rule — never name the work, ask where it's from.
+    Back to ~3 s, matches the owner's spec example 「是不是在哪部里见过」.
+  - **Key**: owner's MiniMax key saved as the Windows User env var `MINIMAX_API_KEY` (not in the
+    repo). Godot must be fully restarted to see it. Before this there was no key, so every AI line
+    in the owner's game was the offline mock.
+  - Tests: new `type_box` (26), `name_prefetch` (17); `ai_live` now drives the real questionnaire
+    end to end and waits by the clock; `play_forward` no longer types into a shut box.
+
 - **2026-09-24 (review fixes · her notebook card · calendar):** From the GPT holistic review
   (`docs/Holistic_Review_2026-09-24.md`) + owner asks. All uncommitted; `check.ps1` green, 26 scenarios.
   - **Story order bug fixed** (`progression_gate.gd`): the lowest unseen episode is now the only

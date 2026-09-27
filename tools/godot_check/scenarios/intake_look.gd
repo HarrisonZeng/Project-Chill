@@ -31,8 +31,10 @@ func run(g) -> void:
 	intake.call("_on_continue")
 	await g.frames(20)
 	await g.shot("intake-4-matching")
-	# wait out the matching timer
-	await g.frames(160)
+	# wait out the 2.4 s matching timer by the clock (a frame count ran short
+	# in windowed runs and photographed 正在匹配 twice)
+	await g.game.get_tree().create_timer(2.7).timeout
+	await g.frames(3)
 	await g.shot("intake-5-matched")
 	var still_alive := is_instance_valid(intake) and not intake.is_queued_for_deletion()
 	g.check("walked every step", (not still_alive) or str(intake.call("current_step")) in ["matching", "matched", ""],

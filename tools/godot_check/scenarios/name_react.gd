@@ -19,7 +19,7 @@ func _react_for(g, nickname: String) -> String:
 	await _walk_to_name_node(g)
 	await g.type_reply(nickname)
 	await g.settle()
-	return g.game.dialogue_text.text
+	return g.full_line()
 
 func run(g) -> void:
 	# Full flow once (real-name bucket): prompt → typed name → reaction → 继续 → ep00_named
@@ -30,7 +30,7 @@ func run(g) -> void:
 	g.choose(0)
 	await g.settle()
 	g.check_node("继续 after reaction → ep00_named", "ep00_named")
-	g.check("ep00_named substitutes {name}", g.game.dialogue_text.text.contains("小林"), g.game.dialogue_text.text)
+	g.check("ep00_named substitutes {name}", g.full_line().contains("小林"), g.full_line())
 
 	# Remaining buckets: exercise the classifier directly (same function the flow
 	# uses when AI is off/unavailable). Re-walking Ep0 inside one scenario is not

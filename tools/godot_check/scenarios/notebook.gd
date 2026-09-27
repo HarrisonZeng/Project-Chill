@@ -75,7 +75,7 @@ func run(g) -> void:
 	g.game.previous_last_seen_unix = int(Time.get_unix_time_from_system()) - 3600 * 5
 	await g.click_yua()
 	g.check("greeting is the notebook mention", g.game.last_greeting_id == "notebook", g.game.last_greeting_id)
-	g.check("… spoken verbatim", g.line().contains("衣服终于收了"), g.line())
+	g.check("… spoken verbatim", g.full_line().contains("衣服终于收了"), g.full_line())
 	g.check("… and consumed", _nb(g).pick_mention() == "")
 
 	# 不催{name} appears after Ep5 and is always done.

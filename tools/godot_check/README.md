@@ -96,6 +96,9 @@ and it is the only mode that interrupts you.
 | `episodes` | Ep1 on the first completed session, **then a full restart**, then Ep2 on the second. The restart is the point: episode flags that live only in memory look correct until the game quits. |
 | `focus_click` | During focus the first click answers and later clicks inside the cooldown give `……`; typing never reaches the AI while she is working. |
 | `type_mode` | A typed reply at a 自己写 choice: no chips afterwards, no UI-speak in her line, chat continues, clicking her still responds. |
+| `type_box` | The reply box opens wherever she asks for words (Ep0 随手来一句, Ep3 自己写, typed-answer beats, 说会儿话) and stays shut at plain choice beats and after a typed answer's one AI beat. |
+| `sentence_beats` | One sentence per click (quotes, 『novel』 paragraphs and （narration） stay whole); while 发送中 is up nothing can skip past her reply; a stuck wait releases itself. |
+| `name_prefetch` | Her reaction to the questionnaire nickname is fetched at once and used in Ep0; a late reply never lands on a later scene; the offline mock never stands in. |
 | `look` | Not a test — the camera. Used by `-Mode shot`. |
 
 ## Two guarantees
@@ -139,9 +142,13 @@ Assertions: `check(label, ok, detail)`, `check_node(label, expected)`,
 Add `const NEEDS_GAME := false` for a scenario that only inspects files, so it
 still runs when the game can't boot.
 
-Two things to know:
+Three things to know:
 
-- Dialogue is revealed one paragraph beat at a time, so `line()` is usually only
+- `type_reply()` fails the scenario if the reply box is not on screen (except
+  mid-focus) — a player can only type where the box is. Check it directly with
+  `type_box_open()`.
+
+- Dialogue is revealed one sentence at a time, so `line()` is usually only
   part of the authored text. Compare against source text with `full_line()`.
 - Don't force-recompile a script that is currently running — it segfaults the
   engine. `lint` excludes `harness.gd` and itself for that reason.

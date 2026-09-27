@@ -271,9 +271,22 @@ func choose(which) -> bool:
 
 
 ## Type into the reply box and send it, the way Type Mode works for a player.
+## A player can only type where the box is on screen, so typing into a hidden
+## box fails the scenario — skipping that check is what let the 2026-09-25 bug
+## through (her «你说，我听着» with no box to answer in). Mid-focus the box is
+## hidden on purpose; scenarios type there to prove the no-AI guard, so that
+## case is exempt.
 func type_reply(text: String) -> void:
+	if not game.focus_running:
+		check("type box is open to type「%s」" % text, type_box_open(), "node=%s" % node_id())
 	game._handle_player_text(text)
 	await settle()
+
+
+## Is the reply box on screen right now?
+func type_box_open() -> bool:
+	var row: Control = game.input_row
+	return row != null and row.is_visible_in_tree()
 
 
 ## Walk the conversation forward like a player who always takes the first option,
@@ -292,8 +305,13 @@ func play_forward(max_steps: int = 60, typed_reply: String = "小雨") -> String
 			await click_card()
 			continue
 		# Nothing on screen to click: either a terminal node, or one waiting on
-		# typed input. Type once — if that moves nothing, this is the end.
+		# typed input. A player can only type where the box is open, so with
+		# the box shut this is the end; otherwise type once — if that moves
+		# nothing, this is the end. (Probing a shut box used to fire a real AI
+		# call under -Ai whose late reply then landed on a later scene.)
 		var before := node_id()
+		if not type_box_open():
+			return before
 		await type_reply(typed_reply)
 		if node_id() == before and choices().is_empty():
 			return before
@@ -340,12 +358,10 @@ func line() -> String:
 
 ## The whole authored line, beats rejoined, tokens already substituted.
 func full_line() -> String:
-	if game.dialogue_beats.is_empty():
-		return str(game.dialogue_text.text)
-	var parts: Array = []
-	for beat in game.dialogue_beats:
-		parts.append(str(beat))
-	return "\n\n".join(parts)
+	# Beats are single sentences now (2026-09-26), so re-joining them no longer
+	# gives the authored text back; the game keeps the whole line for us.
+	var whole := str(game.dialogue_full_text)
+	return whole if not whole.is_empty() else str(game.dialogue_text.text)
 
 
 func sessions() -> int:

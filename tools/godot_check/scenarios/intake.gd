@@ -70,7 +70,7 @@ func run(g) -> void:
 	await g.click_card()
 	await g.settle()
 	g.check("reaction node shows (no asking)", g.node_id() == "ep00_name_react", g.node_id())
-	g.check("reaction mentions the name or 本名", g.line().contains("小林") or g.line().contains("本名"), g.line())
+	g.check("reaction mentions the name or 本名", g.full_line().contains("小林") or g.full_line().contains("本名"), g.full_line())
 	await g.click_card()
 	g.check_node("继续 → ep00_named with the name", "ep00_named")
 	g.check("ep00_named substitutes {name}", g.full_line().contains("小林"), g.full_line())

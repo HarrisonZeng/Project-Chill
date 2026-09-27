@@ -244,7 +244,8 @@
       ],
       "tags": [
         "intro",
-        "co_presence"
+        "co_presence",
+        "task_input"
       ]
     },
     {
@@ -419,11 +420,11 @@
         },
         {
           "text": "我说说我的（自己写）",
-          "next": "AI_MODE_BREAK_CHAT"
+          "next": "AI_MODE_SOUND"
         }
       ],
       "typed_routes": {
-        "ai_mode": "AI_MODE_BREAK_CHAT",
+        "ai_mode": "AI_MODE_SOUND",
         "after_ai_next": "ep03_listen",
         "fallback_next": "ep03_listen"
       },

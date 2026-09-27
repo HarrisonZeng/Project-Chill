@@ -14,6 +14,9 @@ extends Control
 # out and frees itself when done.
 
 signal finished(answers: Dictionary)
+# Emitted as soon as a non-blank nickname is submitted, before the rest of the
+# questions — main_scene uses the head start to fetch Yua's name reaction.
+signal nickname_entered(nickname: String)
 
 const BG := Color(0.101961, 0.070588, 0.062745, 1.0)
 const INK := Color(0.960784, 0.921569, 0.862745, 1.0)
@@ -149,7 +152,6 @@ func _go(index: int) -> void:
 		"matched":
 			_matching = false
 			_prompt.text = "已匹配 · Yua"
-			_hint.text = "（也是第一次使用）"
 			var t := get_tree().create_timer(1.8)
 			t.timeout.connect(_finish)
 
@@ -159,6 +161,8 @@ func _on_continue() -> void:
 			_go(_step + 1)
 		"nickname":
 			answers["nickname"] = _input.text.strip_edges()
+			if not str(answers["nickname"]).is_empty():
+				nickname_entered.emit(answers["nickname"])
 			_go(_step + 1)
 		"role":
 			# "其他" with a typed answer.
